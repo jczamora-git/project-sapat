@@ -62,3 +62,4 @@ export function renderModalVendorItem(v, isActive) {
     </div>
   `;
 }
+

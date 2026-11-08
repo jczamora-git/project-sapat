@@ -245,6 +245,14 @@ export function modalConfirmAddToCart() {
 // ==========================================
 // Dish Editor Modal Methods
 // ==========================================
+export function openDishEditorModal(dishId) {
+  if (dishId) {
+    openEditDishModal(dishId);
+  } else {
+    openAddDishModal();
+  }
+}
+
 export function openAddDishModal() {
   const vendor = SapatStorage.getVendorById(state.currentVendorId);
   document.getElementById('dish-editor-title').textContent = `Add Dish to ${vendor ? vendor.name : 'Stall'}`;
@@ -387,3 +395,4 @@ export function closePickupPass() {
   const modal = document.getElementById('modal-pickup-pass');
   if (modal) modal.classList.remove('active');
 }
+

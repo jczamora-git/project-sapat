@@ -91,3 +91,4 @@ export function renderFeaturedMealCard(dish) {
     </div>
   `;
 }
+

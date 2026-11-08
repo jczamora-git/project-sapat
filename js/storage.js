@@ -693,7 +693,9 @@ class SapatStorage {
   }
 }
 
-window.SapatStorage = SapatStorage;
+if (typeof window !== 'undefined') {
+  window.SapatStorage = SapatStorage;
+}
 
 export {
   SapatStorage,

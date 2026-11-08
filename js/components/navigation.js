@@ -81,3 +81,4 @@ export function updateNavigation(currentRoute = '') {
     `;
   }
 }
+

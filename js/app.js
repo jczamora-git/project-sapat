@@ -36,15 +36,17 @@ function initApp() {
 }
 
 // Global debug API for compatibility
-window.SapatApp = {
-  state,
-  storage: SapatStorage,
-  router,
-  showToast,
-  openRoleModal,
-  openMealModal,
-  openDishEditorModal
-};
+if (typeof window !== 'undefined') {
+  window.SapatApp = {
+    state,
+    storage: SapatStorage,
+    router,
+    showToast,
+    openRoleModal,
+    openMealModal,
+    openDishEditorModal
+  };
+}
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);

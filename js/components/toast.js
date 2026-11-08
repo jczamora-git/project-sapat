@@ -24,3 +24,4 @@ export function showToast(message, type = 'info') {
     toast.classList.remove('show');
   }, 3200);
 }
+
