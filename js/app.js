@@ -34,10 +34,13 @@ const SapatApp = {
     if (savedRole && (savedRole === 'student' || savedRole === 'vendor')) {
       this.currentRole = savedRole;
     } else {
+      this.currentRole = 'student';
       this.openRoleModal();
     }
 
-    this.currentScreen = this.currentRole === 'student' ? 'student-home' : 'vendor-dashboard';
+    // Determine initial screen based on active role and navigate cleanly
+    const initialScreen = this.currentRole === 'student' ? 'student-home' : 'vendor-dashboard';
+    this.navigateTo(initialScreen);
 
     // Global event listeners
     window.addEventListener('sapat:data-updated', () => {
@@ -45,23 +48,24 @@ const SapatApp = {
     });
 
     window.addEventListener('sapat:role-changed', (e) => {
-      this.currentRole = e.detail.role;
-      this.updateRoleUI();
-      this.render();
+      if (e.detail && (e.detail.role === 'student' || e.detail.role === 'vendor')) {
+        this.switchRole(e.detail.role);
+      }
     });
 
     window.addEventListener('sapat:vendor-changed', (e) => {
-      this.currentVendorId = e.detail.vendorId;
-      this.render();
+      if (e.detail && e.detail.vendorId) {
+        this.currentVendorId = e.detail.vendorId;
+        this.render();
+      }
     });
 
     window.addEventListener('sapat:student-vendor-changed', (e) => {
-      this.studentVendorFilter = e.detail.vendorId;
-      this.render();
+      if (e.detail && e.detail.vendorId) {
+        this.studentVendorFilter = e.detail.vendorId;
+        this.render();
+      }
     });
-
-    this.updateRoleUI();
-    this.render();
   },
 
   initClock() {
@@ -85,9 +89,8 @@ const SapatApp = {
     if (role !== 'student' && role !== 'vendor') return;
     this.currentRole = role;
     SapatStorage.saveRole(role);
-    this.currentScreen = role === 'student' ? 'student-home' : 'vendor-dashboard';
-    this.updateRoleUI();
-    this.render();
+    const targetScreen = role === 'student' ? 'student-home' : 'vendor-dashboard';
+    this.navigateTo(targetScreen);
     this.showToast(`Switched to ${role === 'student' ? 'Student' : 'Canteen Vendor'} view`, 'info');
   },
 
@@ -249,12 +252,24 @@ const SapatApp = {
   // Navigation
   // =========================================================================
   navigateTo(screenId) {
+    // Role guard: Ensure screen belongs to current role
+    if (this.currentRole === 'student' && screenId.startsWith('vendor-')) {
+      screenId = 'student-home';
+    } else if (this.currentRole === 'vendor' && screenId.startsWith('student-')) {
+      screenId = 'vendor-dashboard';
+    }
+
+    let target = document.getElementById(`screen-${screenId}`);
+    if (!target) {
+      screenId = this.currentRole === 'student' ? 'student-home' : 'vendor-dashboard';
+      target = document.getElementById(`screen-${screenId}`);
+    }
+
     this.currentScreen = screenId;
 
     const screens = document.querySelectorAll('.screen');
     screens.forEach(s => s.classList.remove('active'));
 
-    const target = document.getElementById(`screen-${screenId}`);
     if (target) {
       target.classList.add('active');
     }
@@ -262,7 +277,7 @@ const SapatApp = {
     const viewport = document.getElementById('screens-viewport');
     if (viewport) viewport.scrollTop = 0;
 
-    this.renderBottomNav();
+    this.updateRoleUI();
     this.render();
   },
 
@@ -274,6 +289,21 @@ const SapatApp = {
   // Master Render Function
   // =========================================================================
   render() {
+    // Safety guard: ensure currentScreen matches role
+    if (this.currentRole === 'student' && !this.currentScreen.startsWith('student-')) {
+      this.currentScreen = 'student-home';
+    } else if (this.currentRole === 'vendor' && !this.currentScreen.startsWith('vendor-')) {
+      this.currentScreen = 'vendor-dashboard';
+    }
+
+    // Ensure corresponding screen element has .active class in DOM
+    const activeScreen = document.querySelector('.screen.active');
+    const expectedScreenEl = document.getElementById(`screen-${this.currentScreen}`);
+    if (!activeScreen || (expectedScreenEl && activeScreen !== expectedScreenEl)) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      if (expectedScreenEl) expectedScreenEl.classList.add('active');
+    }
+
     const vendors = SapatStorage.getVendors();
     const menu = SapatStorage.getMenu();
     const orders = SapatStorage.getOrders();
@@ -1697,8 +1727,9 @@ const SapatApp = {
   }
 };
 
+window.SapatApp = SapatApp;
+
 // Initialize on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
-  window.SapatApp = SapatApp;
   SapatApp.init();
 });
