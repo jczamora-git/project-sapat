@@ -14,7 +14,7 @@ export const vendorDashboardPage = {
   render(container) {
     if (!this._unsubscribe) {
       this._unsubscribe = state.subscribe((event) => {
-        if (event === 'vendor-changed' || event === 'data-reset' || event === 'orders-updated') {
+        if (event === 'vendor-changed' || event === 'data-reset' || event === 'orders-updated' || event === 'menu-updated') {
           const currentScreen = document.getElementById('screen-vendor-dashboard');
           if (currentScreen && container.contains(currentScreen)) {
             this.render(container);
@@ -38,7 +38,7 @@ export const vendorDashboardPage = {
     const totalRemaining = Math.max(0, totalDailyLimit - totalReserved);
     const totalProjectedSales = vendorOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
-    // Generate AI intelligence package
+    // AI Intelligence Package for this vendor
     const forecast = ForecastingService.getVendorForecast(state.currentVendorId);
     const tasteAnalysis = ForecastingService.getCustomerTasteAnalysis(state.currentVendorId);
     const requestedMeals = ForecastingService.getRequestedMeals(state.currentVendorId);
@@ -46,85 +46,92 @@ export const vendorDashboardPage = {
 
     const activeTab = this._activeAiTab || 'prep';
 
+    // Personalized greeting
+    const ownerMap = {
+      'vendor-lita': 'Ate Lita',
+      'vendor-ben': 'Kuya Ben',
+      'vendor-cora': 'Nanay Cora',
+      'vendor-green': 'Chef Marco',
+      'vendor-tess': 'Aling Tess'
+    };
+    const ownerName = ownerMap[currentVendor.id] || currentVendor.name.split("'")[0] || 'Partner';
+    const hour = new Date().getHours();
+    const timeGreeting = hour < 12 ? 'Good morning' : (hour < 17 ? 'Good afternoon' : 'Good evening');
+
+    const highDemandDish = forecast.dishes.find(d => d.actionType === 'increase') || forecast.dishes[0];
+    const surplusDish = forecast.dishes.find(d => d.actionType === 'decrease') || forecast.dishes[forecast.dishes.length - 1];
+    const topWishlist = requestedMeals[0];
+
     container.innerHTML = `
       <section class="screen active" id="screen-vendor-dashboard">
         
-        <!-- 1. Vendor Identity & Operating Status Header -->
-        <div class="vendor-identity-card">
-          <div class="v-identity-left">
-            ${getCanteenBrandMark(currentVendor.id)}
-            <div class="v-identity-info">
-              <div class="v-identity-title-row">
-                <h2 class="v-stall-name">${currentVendor.name}</h2>
-                <span class="v-stall-tag">${currentVendor.stallNumber}</span>
-              </div>
-              <div class="v-identity-meta-row">
-                <span class="v-status-dot-wrap">
+        <!-- 1. Personalized Welcome Card (No Switch Stall Button) -->
+        <div class="vendor-identity-card v-home-welcome-card">
+          <div class="v-welcome-main">
+            <div class="v-welcome-brand-mark">
+              ${getCanteenBrandMark(currentVendor.id)}
+            </div>
+            <div class="v-welcome-text-col">
+              <div class="v-welcome-meta-pill-row">
+                <span class="v-welcome-stall-pill">${currentVendor.stallNumber}</span>
+                <span class="v-welcome-status-pill ${currentVendor.isOpen ? 'online' : 'offline'}">
                   <span class="canteen-status-dot ${currentVendor.isOpen ? 'online' : 'offline'}"></span>
                   ${currentVendor.isOpen ? 'Open for Orders' : 'Stall Closed'}
                 </span>
-                <span class="v-meta-bullet">&bull;</span>
-                <span class="v-stall-hours">${currentVendor.hours}</span>
-                <span class="v-meta-bullet">&bull;</span>
-                <span>${currentVendor.expressWindow || 'Express Window'}</span>
+                <span class="v-welcome-date-pill">Today &bull; Lunch Service</span>
               </div>
-            </div>
-          </div>
-          <button class="v-switch-stall-btn" data-action="open-role-modal" type="button" title="Switch Canteen Stall Account">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-            <span>Switch Stall</span>
-          </button>
-        </div>
-
-        <!-- 2. Integrated Operational Overview KPIs -->
-        <div class="v-kpi-integrated-strip">
-          <div class="v-kpi-col">
-            <span class="v-kpi-label">Incoming Orders</span>
-            <div class="v-kpi-main">
-              <strong class="v-kpi-val">${totalOrdersCount}</strong>
-              <span class="v-kpi-subtag">Pre-orders active</span>
-            </div>
-          </div>
-
-          <div class="v-kpi-col">
-            <span class="v-kpi-label">Reserved Servings</span>
-            <div class="v-kpi-main">
-              <strong class="v-kpi-val">${totalReserved}</strong>
-              <span class="v-kpi-subtag">of ${totalDailyLimit} target</span>
-            </div>
-          </div>
-
-          <div class="v-kpi-col">
-            <span class="v-kpi-label">Remaining Portions</span>
-            <div class="v-kpi-main">
-              <strong class="v-kpi-val ${totalRemaining <= 10 ? 'alert-orange' : ''}">${totalRemaining}</strong>
-              <span class="v-kpi-subtag">Portions left</span>
-            </div>
-          </div>
-
-          <div class="v-kpi-col">
-            <span class="v-kpi-label">Projected Sales</span>
-            <div class="v-kpi-main">
-              <strong class="v-kpi-val">₱${totalProjectedSales.toLocaleString()}</strong>
-              <span class="v-kpi-subtag">Locked revenue</span>
+              <h2 class="v-welcome-greeting">${timeGreeting}, ${ownerName}.</h2>
+              <p class="v-welcome-subtitle">Here's what your kitchen needs to know today &bull; ${currentVendor.name}</p>
             </div>
           </div>
         </div>
 
-        <!-- 3. SAPAT INTELLIGENCE — AI Preparation & Customer Insights -->
+        <!-- 2. Compact Operational Summary Bar -->
+        <div class="v-compact-ops-summary">
+          <div class="v-ops-item">
+            <span class="v-ops-lbl">Incoming Orders</span>
+            <strong class="v-ops-val">${totalOrdersCount}</strong>
+            <span class="v-ops-sub">Active pre-orders</span>
+          </div>
+
+          <div class="v-ops-item">
+            <span class="v-ops-lbl">Reserved Portions</span>
+            <strong class="v-ops-val">${totalReserved}<small class="v-ops-denom">/${totalDailyLimit}</small></strong>
+            <span class="v-ops-sub">${Math.round((totalReserved / (totalDailyLimit || 1)) * 100)}% target booked</span>
+          </div>
+
+          <div class="v-ops-item">
+            <span class="v-ops-lbl">Remaining Portions</span>
+            <strong class="v-ops-val ${totalRemaining <= 10 ? 'alert-orange' : ''}">${totalRemaining}</strong>
+            <span class="v-ops-sub">Portions available</span>
+          </div>
+
+          <div class="v-ops-item">
+            <span class="v-ops-lbl">Projected Sales</span>
+            <strong class="v-ops-val text-primary">₱${totalProjectedSales.toLocaleString()}</strong>
+            <span class="v-ops-sub">Locked revenue</span>
+          </div>
+        </div>
+
+        <!-- 3. AI Insights Feed: "Your Kitchen Insights" -->
         <div class="v-ai-intelligence-section">
-          <div class="v-ai-header">
-            <div class="v-ai-brand-group">
-              <span class="v-ai-badge">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-                SAPAT Intelligence
-              </span>
-              <span class="v-ai-prototype-pill">Prototype Preview &bull; Demo Forecast</span>
+          
+          <div class="v-feed-header-row">
+            <div class="v-feed-title-col">
+              <div class="v-ai-badge">
+                <span class="v-ai-badge-pulse"></span>
+                <span>SAPAT Intelligence</span>
+              </div>
+              <h3 class="v-feed-main-title">Your Kitchen Insights</h3>
+              <p class="v-feed-sub-title">Live recommendations tailored to active reservations, rush schedules, and student tastes</p>
             </div>
-            <p class="v-ai-subtitle">Smart insights for better food preparation and zero kitchen waste.</p>
+            <button class="v-jump-intelligence-btn" data-route="#/vendor/intelligence" type="button" title="Open Deep Analytics & Forecasting">
+              <span>View All Insights</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
           </div>
 
-          <!-- Intelligence Sub-Navigation Tabs -->
+          <!-- Feed Category Tabs -->
           <div class="v-ai-tab-strip">
             <button class="v-ai-tab-btn ${activeTab === 'prep' ? 'active' : ''}" data-ai-tab="prep" type="button">
               <span>Preparation & Demand</span>
@@ -142,10 +149,8 @@ export const vendorDashboardPage = {
             </button>
           </div>
 
+          <!-- TAB 1: PREPARATION & DEMAND FORECAST FEED -->
           ${activeTab === 'prep' ? `
-            <!-- TAB 1: PREPARATION & DEMAND FORECAST -->
-            
-            <!-- Smart Preparation Recommendations Deck -->
             <div class="v-ai-recommendations-block">
               <div class="v-ai-block-heading">
                 <span class="v-block-title">Kitchen Preparation Adjustments</span>
@@ -165,7 +170,7 @@ export const vendorDashboardPage = {
                   }
 
                   return `
-                    <div class="v-ai-dish-card">
+                    <div class="v-ai-dish-card ${d.actionType === 'increase' ? 'highlight-increase' : ''}">
                       <div class="v-ai-dish-top">
                         <div class="v-ai-dish-media">
                           <img src="${d.image}" alt="${d.dishName}" onerror="this.onerror=null; this.src='${getImgFallback()}';">
@@ -184,15 +189,25 @@ export const vendorDashboardPage = {
                           </div>
                         </div>
                       </div>
+
                       <p class="v-ai-rationale">${d.explanation}</p>
+
                       ${d.actionType !== 'maintain' ? `
-                        <div class="v-ai-card-footer">
+                        <div class="v-ai-card-footer v-feed-action-split">
                           <button class="v-ai-apply-btn" type="button" data-action="apply-ai-target" data-dish-id="${d.dishId}" data-target="${d.suggestedTarget}">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             <span>Adjust Daily Target to ${d.suggestedTarget}</span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                          </button>
+                          <button class="v-feed-secondary-link" data-route="#/vendor/prep" type="button">
+                            Review Plan &rarr;
                           </button>
                         </div>
-                      ` : ''}
+                      ` : `
+                        <div class="v-ai-optimal-notice">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          <span>Preparation limit is optimal. Capacity covers reservations with zero surplus risk.</span>
+                        </div>
+                      `}
                     </div>
                   `;
                 }).join('')}
@@ -203,7 +218,7 @@ export const vendorDashboardPage = {
             <div class="v-ai-windows-block">
               <div class="v-ai-block-heading">
                 <span class="v-block-title">Forecasted Demand by Pickup Shift</span>
-                <span class="v-block-sub">Historical campus student rush distribution</span>
+                <span class="v-block-sub">Rush schedule distribution preventing counter bottlenecks</span>
               </div>
 
               <div class="v-pickup-windows-list">
@@ -218,48 +233,7 @@ export const vendorDashboardPage = {
                         <div class="v-win-bar-fill ${w.pct >= 40 ? 'peak' : ''}" style="width: ${w.pct}%;"></div>
                       </div>
                     </div>
-                    <div class="v-window-stat">
-                      <strong>${w.servings}</strong>
-                      <span>(${w.pct}%)</span>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Tomorrow's Demand Forecast -->
-            <div class="v-ai-tomorrow-block">
-              <div class="v-ai-block-heading">
-                <span class="v-block-title">${tomorrowForecast.forecastDate}</span>
-                <span class="v-block-sub">Predictive scenario based on weather and academic calendar</span>
-              </div>
-
-              <div class="v-scenario-banner">
-                <div class="v-scenario-item">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path></svg>
-                  <span><strong>${tomorrowForecast.weatherCondition}</strong> &mdash; ${tomorrowForecast.weatherImpact}</span>
-                </div>
-                <div class="v-scenario-item">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                  <span><strong>${tomorrowForecast.campusSchedule}</strong> &mdash; ${tomorrowForecast.scheduleImpact}</span>
-                </div>
-              </div>
-
-              <div class="v-tomorrow-dishes-grid">
-                ${tomorrowForecast.dishes.map(td => `
-                  <div class="v-tomorrow-dish-card">
-                    <div class="v-tomorrow-dish-head">
-                      <strong>${td.name}</strong>
-                      <span class="v-tomorrow-rec-pill">${td.recommendation}</span>
-                    </div>
-                    <div class="v-tomorrow-dish-stats">
-                      <span>Current: ${td.currentLimit}</span>
-                      <span>&bull;</span>
-                      <span>Projected: <strong>${td.projectedDemand}</strong></span>
-                      <span>&bull;</span>
-                      <span>Suggested: <strong class="v-highlight-target">${td.recommendedTarget}</strong></span>
-                    </div>
-                    <p class="v-tomorrow-rationale">${td.rationale}</p>
+                    <span class="v-window-stat">${w.servings} meals (${w.pct}%)</span>
                   </div>
                 `).join('')}
               </div>
@@ -269,7 +243,7 @@ export const vendorDashboardPage = {
             <div class="v-ai-sustainability-row">
               <div class="v-sust-card">
                 <span class="v-sust-label">Food Waste Prevented</span>
-                <strong class="v-sust-val">${forecast.sustainability.wastePreventedKg} kg</strong>
+                <strong class="v-sust-val text-primary">${forecast.sustainability.wastePreventedKg} kg</strong>
                 <span class="v-sust-desc">Based on locked pre-orders</span>
               </div>
               <div class="v-sust-card">
@@ -279,14 +253,14 @@ export const vendorDashboardPage = {
               </div>
               <div class="v-sust-card">
                 <span class="v-sust-label">Avoided Overproduction</span>
-                <strong class="v-sust-val">${forecast.sustainability.overproductionSavedMeals} meals</strong>
+                <strong class="v-sust-val text-orange">${forecast.sustainability.overproductionSavedMeals} meals</strong>
                 <span class="v-sust-desc">Zero unwanted cooking</span>
               </div>
             </div>
           ` : ''}
 
+          <!-- TAB 2: CUSTOMER TASTE & FEEDBACK AI -->
           ${activeTab === 'taste' ? `
-            <!-- TAB 2: CUSTOMER TASTE & FEEDBACK AI -->
             <div class="v-taste-section">
               <div class="v-taste-hero-card">
                 <div class="v-taste-hero-left">
@@ -303,10 +277,10 @@ export const vendorDashboardPage = {
 
               <!-- Flavor Quality Attributes -->
               <div class="v-flavor-attributes-grid">
-                ${Object.entries(tasteAnalysis.flavorRatings).map(([k, val]) => `
+                ${Object.entries(tasteAnalysis.flavorRatings).map(([key, val]) => `
                   <div class="v-flavor-card">
                     <div class="v-flavor-head">
-                      <span class="v-flavor-name">${k.charAt(0).toUpperCase() + k.slice(1)}</span>
+                      <span class="v-flavor-name">${key.charAt(0).toUpperCase() + key.slice(1)}</span>
                       <strong class="v-flavor-score">${val}%</strong>
                     </div>
                     <div class="v-flavor-bar-track">
@@ -316,7 +290,7 @@ export const vendorDashboardPage = {
                 `).join('')}
               </div>
 
-              <!-- Actionable Insights Breakdown -->
+              <!-- Positive vs Actionable Feedback Breakdown -->
               <div class="v-taste-breakdown-row">
                 <div class="v-insight-box positive">
                   <div class="v-insight-head">
@@ -331,29 +305,29 @@ export const vendorDashboardPage = {
                 <div class="v-insight-box constructive">
                   <div class="v-insight-head">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    <strong>What Students Want Improved</strong>
+                    <strong>Actionable Recipe Recommendations</strong>
                   </div>
                   <ul class="v-insight-list">
-                    ${tasteAnalysis.improvementsNeeded.map(imp => `<li>${imp}</li>`).join('')}
+                    ${tasteAnalysis.improvementsNeeded.map(i => `<li>${i}</li>`).join('')}
                   </ul>
                 </div>
               </div>
 
-              <!-- Recent Verified Reviews -->
+              <!-- Recent Verified Student Reviews -->
               <div class="v-recent-reviews-block">
-                <span class="v-block-title">Recent Student Reviews</span>
+                <span class="v-block-title" style="margin-bottom: 8px; display: block;">Recent Student Reviews</span>
                 <div class="v-reviews-list">
                   ${tasteAnalysis.recentReviews.map(r => `
                     <div class="v-review-card">
                       <div class="v-review-top">
                         <div class="v-review-author">
-                          <span class="v-rev-avatar">${r.initials}</span>
+                          <span class="v-rev-avatar">${r.studentName.charAt(0)}</span>
                           <div>
                             <strong>${r.studentName}</strong>
-                            <span class="v-rev-dept">${r.dept}</span>
+                            <span class="v-rev-dept">${r.department}</span>
                           </div>
                         </div>
-                        <span class="v-rev-tag">${r.tag}</span>
+                        <span class="v-rev-tag">${r.rating}/5 Stars</span>
                       </div>
                       <p class="v-review-comment">"${r.comment}"</p>
                       <div class="v-review-foot">
@@ -364,11 +338,17 @@ export const vendorDashboardPage = {
                   `).join('')}
                 </div>
               </div>
+
+              <div class="v-feed-cta-footer">
+                <button class="btn-secondary-action" data-route="#/vendor/intelligence" type="button">
+                  Open Deep Customer Taste Intelligence Portal &rarr;
+                </button>
+              </div>
             </div>
           ` : ''}
 
+          <!-- TAB 3: REQUESTED MEALS WISHLIST -->
           ${activeTab === 'wishlist' ? `
-            <!-- TAB 3: REQUESTED MEALS WISHLIST -->
             <div class="v-wishlist-section">
               <div class="v-ai-block-heading">
                 <span class="v-block-title">Student Wishlist & Requested Dishes</span>
@@ -407,11 +387,17 @@ export const vendorDashboardPage = {
                   </div>
                 `).join('')}
               </div>
+
+              <div class="v-feed-cta-footer">
+                <button class="btn-secondary-action" data-route="#/vendor/intelligence" type="button">
+                  Analyze All Campus Unmet Demand &rarr;
+                </button>
+              </div>
             </div>
           ` : ''}
 
+          <!-- TAB 4: LIVE PITCH DEMO CONTROLS -->
           ${activeTab === 'simulation' ? `
-            <!-- TAB 4: LIVE PITCH DEMO CONTROLS -->
             <div class="v-simulation-section">
               <div class="v-sim-hero-banner">
                 <div class="v-sim-icon-box">
@@ -469,31 +455,21 @@ export const vendorDashboardPage = {
 
         </div>
 
-        <!-- 4. Active Kitchen Preparation Quotas -->
+        <!-- 4. Active Kitchen Preparation Quotas Overview -->
         <div class="v-section-row-header">
           <div>
-            <h3 class="section-heading">Live Kitchen Quotas</h3>
-            <span class="section-subtext">Active cooking limits and reservation capacity</span>
+            <h3 class="section-heading">Active Kitchen Cooking Limits</h3>
+            <span class="section-subtext">Cooking quotas aligned directly to student pre-orders</span>
           </div>
-          <button class="section-see-all-btn" data-route="#/vendor/prep" type="button">Batch Control</button>
+          <button class="section-see-all-btn" data-route="#/vendor/prep" type="button">Batch Control &rarr;</button>
         </div>
 
         <div class="v-prep-status-stack">
-          ${vendorDishes.map(dish => {
+          ${vendorDishes.slice(0, 4).map(dish => {
             const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
             const isSoldOut = remaining <= 0;
             const pct = Math.min(100, Math.round((dish.reservedServings / dish.dailyLimit) * 100));
             const isHighDemand = pct >= 70;
-
-            let tagClass = 'status-confirmed';
-            let tagText = `${pct}% Reserved`;
-            if (isSoldOut) {
-              tagClass = 'status-cancelled';
-              tagText = 'CAPACITY HIT';
-            } else if (isHighDemand) {
-              tagClass = 'status-preparing';
-              tagText = 'APPROACHING LIMIT';
-            }
 
             return `
               <div class="v-prep-status-card">
@@ -503,27 +479,19 @@ export const vendorDashboardPage = {
                   </div>
                   <div class="v-prep-card-details">
                     <div class="v-prep-status-head">
-                      <h4 class="v-dish-name">${dish.name}</h4>
-                      <span class="order-status-badge ${tagClass}">
-                        ${tagText}
+                      <strong class="v-dish-name">${dish.name}</strong>
+                      <span class="v-quota-stat-pill ${isSoldOut ? 'soldout' : (isHighDemand ? 'warning' : '')}">
+                        ${isSoldOut ? 'Capacity Reached' : `${pct}% Booked`}
                       </span>
                     </div>
                     <div class="v-dish-meta-row">
-                      <span>${dish.categoryName || 'Ulam'} &bull; ₱${dish.price}</span>
-                      <span class="v-quota-stat-pill ${isSoldOut ? 'soldout' : (isHighDemand ? 'warning' : '')}">
-                        <strong>${remaining}</strong> left
-                      </span>
+                      <span>${dish.reservedServings} of ${dish.dailyLimit} portions pre-ordered</span>
+                      <span class="v-dish-remaining-tag">${remaining} left</span>
+                    </div>
+                    <div class="v-dish-quota-bar">
+                      <div class="v-dish-quota-fill ${isSoldOut ? 'soldout' : (isHighDemand ? 'warning' : '')}" style="width: ${pct}%;"></div>
                     </div>
                   </div>
-                </div>
-
-                <div class="v-dish-quota-bar">
-                  <div class="v-dish-quota-fill ${isSoldOut ? 'soldout' : (isHighDemand ? 'warning' : '')}" style="width: ${pct}%;"></div>
-                </div>
-
-                <div class="v-dish-quota-footer">
-                  <span><strong>${dish.reservedServings}</strong> of ${dish.dailyLimit} target reserved</span>
-                  <span class="v-quota-pct-label">${pct}%</span>
                 </div>
               </div>
             `;
@@ -538,92 +506,73 @@ export const vendorDashboardPage = {
 
   attachEvents(container) {
     container.addEventListener('click', (e) => {
-      // Direct navigation
-      const routeEl = e.target.closest('[data-route]');
-      if (routeEl) {
-        const route = routeEl.getAttribute('data-route');
-        if (route) {
-          router.navigate(route);
-          return;
+      // Sub-tab switching for AI Intelligence
+      const tabBtn = e.target.closest('[data-ai-tab]');
+      if (tabBtn) {
+        const tab = tabBtn.getAttribute('data-ai-tab');
+        if (tab) {
+          this._activeAiTab = tab;
+          this.render(container);
         }
-      }
-
-      // Switch stall modal
-      const switchStallBtn = e.target.closest('[data-action="open-role-modal"]');
-      if (switchStallBtn) {
-        openRoleModal();
         return;
       }
 
-      // AI Tab Switching
-      const aiTabBtn = e.target.closest('[data-ai-tab]');
-      if (aiTabBtn) {
-        const tab = aiTabBtn.getAttribute('data-ai-tab');
-        if (tab && tab !== this._activeAiTab) {
-          this._activeAiTab = tab;
-          this.render(container);
-          return;
-        }
-      }
-
-      // Apply AI Target one-click
-      const applyAiBtn = e.target.closest('[data-action="apply-ai-target"]');
-      if (applyAiBtn) {
-        const dishId = applyAiBtn.getAttribute('data-dish-id');
-        const target = parseInt(applyAiBtn.getAttribute('data-target'), 10);
-        if (dishId && !isNaN(target)) {
-          const menu = SapatStorage.getMenu();
-          const dish = menu.find(d => d.id === dishId);
-          if (dish) {
-            dish.dailyLimit = target;
-            SapatStorage.saveMenu(menu);
-            showToast(`Daily target for ${dish.name} updated to ${target} portions.`, 'success');
+      // Apply AI Suggested Target
+      const applyBtn = e.target.closest('[data-action="apply-ai-target"]');
+      if (applyBtn) {
+        const dishId = applyBtn.getAttribute('data-dish-id');
+        const target = parseInt(applyBtn.getAttribute('data-target'), 10);
+        if (dishId && target) {
+          const res = SapatStorage.updateDishDailyLimit(dishId, target);
+          if (res.success) {
+            showToast(`Target quota updated to ${target} portions for ${res.dish.name}!`, 'success');
             this.render(container);
+          } else {
+            showToast(res.message || 'Cannot adjust limit below reserved servings', 'error');
           }
         }
         return;
       }
 
-      // Live Demo Simulation Actions
+      // Navigation links
+      const navBtn = e.target.closest('[data-route]');
+      if (navBtn) {
+        const route = navBtn.getAttribute('data-route');
+        if (route) {
+          router.navigate(route);
+        }
+        return;
+      }
+
+      // Live Demo Pitch Simulation Actions
       const simRushBtn = e.target.closest('[data-action="sim-rush"]');
       if (simRushBtn) {
-        const result = ForecastingService.simulateRushOrders(state.currentVendorId, 5);
-        if (result) {
-          showToast(`Simulated +5 rush pre-orders on ${result.dishName}! AI recalculating target.`, 'success');
-          this._activeAiTab = 'prep';
-          this.render(container);
-        }
+        ForecastingService.simulateRushOrders(state.currentVendorId, 5);
+        showToast('Simulated +5 Rush Pre-orders! Live demand re-forecasted.', 'success');
+        this.render(container);
         return;
       }
 
       const simReviewBtn = e.target.closest('[data-action="sim-review"]');
       if (simReviewBtn) {
-        const newRev = ForecastingService.simulateStudentFeedback(state.currentVendorId);
-        if (newRev) {
-          showToast(`Simulated student review from ${newRev.studentName}!`, 'success');
-          this._activeAiTab = 'taste';
-          this.render(container);
-        }
+        ForecastingService.simulateStudentReview(state.currentVendorId);
+        showToast('Simulated verified student review! Customer Taste recalculated.', 'info');
+        this.render(container);
         return;
       }
 
       const simVoteBtn = e.target.closest('[data-action="sim-vote"]');
       if (simVoteBtn) {
-        const topWish = ForecastingService.getRequestedMeals(state.currentVendorId)[0];
-        if (topWish) {
-          ForecastingService.simulateDishRequest(state.currentVendorId, topWish.dishName);
-          showToast(`Added +1 student vote to ${topWish.dishName}!`, 'success');
-          this._activeAiTab = 'wishlist';
-          this.render(container);
-        }
+        ForecastingService.simulateWishlistVote(state.currentVendorId);
+        showToast('Simulated student vote on wishlist dish! Demand tracking updated.', 'success');
+        this.render(container);
         return;
       }
 
       const simResetBtn = e.target.closest('[data-action="sim-reset"]');
       if (simResetBtn) {
         ForecastingService.resetSimulation(state.currentVendorId);
-        showToast('Demo simulation reset to baseline dataset.', 'info');
-        this._activeAiTab = 'prep';
+        showToast('Simulation reset to clean baseline dataset.', 'info');
         this.render(container);
         return;
       }

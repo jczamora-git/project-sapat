@@ -17,13 +17,21 @@ export function initHeader() {
 
   if (roleBadge) {
     roleBadge.addEventListener('click', () => {
-      openRoleModal();
+      if (state.role === 'vendor') {
+        router.navigate('#/vendor/profile');
+      } else {
+        openRoleModal();
+      }
     });
   }
 
   if (roleIconBtn) {
     roleIconBtn.addEventListener('click', () => {
-      openRoleModal();
+      if (state.role === 'vendor') {
+        router.navigate('#/vendor/profile');
+      } else {
+        openRoleModal();
+      }
     });
   }
 
@@ -63,7 +71,18 @@ export function updateHeader() {
       const stall = v ? v.stallNumber : 'Vendor';
       roleBadge.innerHTML = `<span class="v-live-pulse-dot"></span><span>${stall}</span>`;
       roleBadge.className = 'header-role-badge vendor';
-      roleBadge.title = v ? `Active Stall: ${v.name} (${v.stallNumber}). Tap to switch stall or role.` : 'Tap to switch stall';
+      roleBadge.title = v ? `${v.name} (${v.stallNumber}) - Tap to view Stall Profile` : 'Vendor Stall Profile';
+    }
+  }
+
+  const roleIconBtn = document.getElementById('header-role-btn');
+  if (roleIconBtn) {
+    if (state.role === 'vendor') {
+      roleIconBtn.title = 'Stall Profile & Account';
+      roleIconBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>';
+    } else {
+      roleIconBtn.title = 'Switch Role / Info';
+      roleIconBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>';
     }
   }
 
@@ -74,7 +93,7 @@ export function updateHeader() {
       subtitle.textContent = 'Executive Operations & Analytics';
     } else {
       const v = SapatStorage.getVendorById(state.currentVendorId);
-      subtitle.textContent = v ? `${v.name} • ${v.stallNumber}` : 'Smart Daily Prep & Orders';
+      subtitle.textContent = v ? `${v.name} • ${v.stallNumber}` : 'Kitchen Command & Prep';
     }
   }
 

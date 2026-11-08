@@ -41,8 +41,8 @@ export const vendorPrepPage = {
         <!-- Page Title & Forecast Subtitle -->
         <div class="v-prep-header-row">
           <div>
-            <h2 class="page-main-heading">${currentVendor.stallNumber} Kitchen Prep Control</h2>
-            <p class="page-main-sub">Lock mass-cooking batches to exact pre-orders & adjust daily limits</p>
+            <h2 class="page-main-heading">${currentVendor.name} Prep Control</h2>
+            <p class="page-main-sub">${currentVendor.stallNumber} &bull; Lock cooking batches to confirmed pre-orders & adjust daily limits</p>
           </div>
           <span class="v-ai-preview-pill">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>

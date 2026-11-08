@@ -45,8 +45,8 @@ export const vendorOrdersPage = {
         <!-- Header: Title & Scan Pickup Pass CTA -->
         <div class="v-orders-header-row">
           <div>
-            <h2 class="page-main-heading">${currentVendor.stallNumber} Pre-orders</h2>
-            <p class="page-main-sub">${counts.all - counts.Completed} active reservations requiring kitchen fulfillment</p>
+            <h2 class="page-main-heading">${currentVendor.name} Pre-orders</h2>
+            <p class="page-main-sub">${currentVendor.stallNumber} &bull; ${counts.all - counts.Completed} active reservations requiring kitchen fulfillment</p>
           </div>
           <button class="btn-primary-action v-scan-pickup-btn" data-action="open-qr-scanner" type="button" title="Scan student pickup pass using camera">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><rect x="7" y="7" width="10" height="10"></rect></svg>

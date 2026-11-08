@@ -44,27 +44,24 @@ export const vendorIntelligencePage = {
     container.innerHTML = `
       <section class="screen active" id="screen-vendor-intelligence">
         
-        <!-- 1. Vendor Identity & Live Decision Copilot Banner -->
+        <!-- 1. Full-Width Responsive Header Card (No Competing Switch Button) -->
         <div class="v-ai-hub-header-card">
-          <div class="v-hub-header-top">
-            <div class="v-hub-brand-left">
+          <div class="v-hub-header-brand-row">
+            <div class="v-hub-brand-badge">
               ${getCanteenBrandMark(currentVendor.id)}
-              <div class="v-hub-stall-meta">
-                <div class="v-hub-tag-row">
-                  <span class="v-hub-stall-tag">${currentVendor.stallNumber}</span>
-                  <span class="v-hub-model-pill">
-                    <span class="v-ai-badge-pulse"></span>
-                    Decision Copilot v2.4
-                  </span>
-                </div>
-                <h2 class="v-hub-stall-name">${currentVendor.name}</h2>
-                <span class="v-hub-tagline">Actionable Preparation, Recipe & Menu Intelligence</span>
-              </div>
             </div>
-            <button class="v-switch-stall-btn" data-action="open-role-modal" type="button" title="Switch Stall">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-              <span>Switch Stall</span>
-            </button>
+            <div class="v-hub-header-titles">
+              <div class="v-hub-tag-row">
+                <span class="v-hub-stall-tag">${currentVendor.stallNumber} &bull; ${currentVendor.name}</span>
+                <span class="v-hub-model-pill">
+                  <span class="v-ai-badge-pulse"></span>
+                  Decision Copilot v2.4
+                </span>
+                <span class="v-hub-demo-pill">Prototype Preview &bull; Demo Data</span>
+              </div>
+              <h2 class="v-hub-page-title">SAPAT INTELLIGENCE</h2>
+              <p class="v-hub-tagline">Your kitchen's preparation and customer insights.</p>
+            </div>
           </div>
 
           <!-- Quick KPI Pill Strip -->
@@ -72,18 +69,22 @@ export const vendorIntelligencePage = {
             <div class="v-hub-kpi-chip">
               <span class="v-chip-lbl">Forecast Accuracy</span>
               <strong class="v-chip-val">${forecast.sustainability.prepAccuracyPct}%</strong>
+              <span class="v-chip-sub">Demo Model Precision</span>
             </div>
             <div class="v-hub-kpi-chip">
               <span class="v-chip-lbl">Food Waste Avoided</span>
               <strong class="v-chip-val text-primary">${forecast.sustainability.wastePreventedKg} kg</strong>
+              <span class="v-chip-sub">Predicted Surplus Saved</span>
             </div>
             <div class="v-hub-kpi-chip">
-              <span class="v-chip-lbl">Student Approval</span>
+              <span class="v-chip-lbl">Student Satisfaction</span>
               <strong class="v-chip-val">${taste.sentimentScore}%</strong>
+              <span class="v-chip-sub">${taste.totalReviews} Verified Reviews</span>
             </div>
             <div class="v-hub-kpi-chip">
-              <span class="v-chip-lbl">Unmet Dish Votes</span>
+              <span class="v-chip-lbl">Unmet Meal Requests</span>
               <strong class="v-chip-val text-orange">${requestedMeals.reduce((s, m) => s + m.votes, 0)}</strong>
+              <span class="v-chip-sub">Campus Student Votes</span>
             </div>
           </div>
         </div>
