@@ -156,17 +156,13 @@ html, body {
 }
 
 .app-logo-badge {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--primary) 0%, #047857 100%);
-  color: white;
+  width: 38px;
+  height: 38px;
   border-radius: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 18px;
-  box-shadow: 0 4px 10px var(--primary-glow);
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+  box-shadow: 0 3px 8px var(--primary-glow);
 }
 
 .brand-text-wrap h1 {
