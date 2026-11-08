@@ -161,17 +161,30 @@
       <div id="modal-meal-prep-note" style="font-size: 11px; color: var(--text-muted); margin-top: 6px;"></div>
     </div>
 
-    <!-- Quantity & Add to Cart -->
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
-      <div class="cart-qty-controls">
-        <button class="qty-btn" data-action="modal-qty-minus">-</button>
-        <span class="qty-display" id="modal-meal-qty" style="font-size: 16px; min-width: 24px;">1</span>
-        <button class="qty-btn" data-action="modal-qty-plus">+</button>
+    <!-- Quantity & Add to Preorder Bottom Area -->
+    <div class="modal-order-action-bar">
+      <div class="modal-stepper-wrap">
+        <span class="modal-stepper-label">Quantity</span>
+        <div class="modal-qty-stepper">
+          <button class="modal-stepper-btn" id="modal-qty-minus-btn" data-action="modal-qty-minus" aria-label="Decrease quantity">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <span class="modal-stepper-value" id="modal-meal-qty">1</span>
+          <button class="modal-stepper-btn" id="modal-qty-plus-btn" data-action="modal-qty-plus" aria-label="Increase quantity">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+        </div>
       </div>
 
-      <button class="btn-primary-action" id="modal-btn-add" style="flex: 1;">
-        Add to Preorder
-      </button>
+      <div class="modal-cta-col">
+        <div class="modal-subtotal-meta">
+          <span class="modal-subtotal-label">Subtotal</span>
+          <span class="modal-subtotal-price" id="modal-meal-subtotal">₱0</span>
+        </div>
+        <button class="btn-primary-action modal-confirm-add-btn" id="modal-btn-add">
+          Add to Preorder
+        </button>
+      </div>
     </div>
   </div>
 </div>

@@ -1,22 +1,29 @@
 import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
-import { renderVendorAccountBar } from '../../components/vendor-card.js';
 import { openRoleModal } from '../../components/modals.js';
 import { showToast } from '../../components/toast.js';
 
 export const vendorProfilePage = {
+  _unsubscribe: null,
+
   render(container) {
-    const vendors = SapatStorage.getVendors();
+    if (!this._unsubscribe) {
+      this._unsubscribe = state.subscribe((event) => {
+        if (event === 'vendor-changed' || event === 'data-reset') {
+          const currentScreen = document.getElementById('screen-vendor-profile');
+          if (currentScreen && container.contains(currentScreen)) {
+            this.render(container);
+          }
+        }
+      });
+    }
+
     const currentVendor = SapatStorage.getVendorById(state.currentVendorId);
+    if (!currentVendor) return;
 
     container.innerHTML = `
       <section class="screen active" id="screen-vendor-profile">
         
-        <!-- Stall Account Selector Bar -->
-        <div class="vendor-account-bar">
-          ${renderVendorAccountBar(state.currentVendorId, vendors)}
-        </div>
-
         <!-- Minimal Profile Header -->
         <div class="profile-minimal-header">
           <div class="profile-avatar-circle" style="background: ${currentVendor.avatarColor}; color: white; border: none;">${currentVendor.avatar}</div>
@@ -25,7 +32,19 @@ export const vendorProfilePage = {
           <span class="profile-campus-pill">Main Canteen Hall &bull; Hours: ${currentVendor.hours}</span>
         </div>
 
-        <!-- Metrics Duo -->
+        <!-- Prominent Account Switcher Card -->
+        <div class="v-account-switch-banner">
+          <div class="v-switch-banner-text">
+            <span class="v-switch-banner-title">Current Stall Account</span>
+            <strong class="v-switch-banner-stall">${currentVendor.stallNumber}: ${currentVendor.name}</strong>
+          </div>
+          <button class="btn-primary-action v-switch-role-cta" data-action="open-role-modal">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+            <span>Switch Stall or Role</span>
+          </button>
+        </div>
+
+        <!-- Preparation Performance Metrics Duo -->
         <div class="profile-stats-duo">
           <div class="profile-duo-card">
             <span class="duo-number">${currentVendor.efficiency || '96%'}</span>
@@ -33,7 +52,7 @@ export const vendorProfilePage = {
           </div>
           <div class="profile-duo-card">
             <span class="duo-number">${currentVendor.wasteSaved || '14.8 kg'}</span>
-            <span class="duo-label">Waste Prevented / Week</span>
+            <span class="duo-label">Food Waste Prevented / Week</span>
           </div>
         </div>
 
@@ -47,7 +66,7 @@ export const vendorProfilePage = {
               </div>
               <div class="list-row-content">
                 <strong>Prep Cutoff Window</strong>
-                <p>Cutoff is 30 minutes before each student pickup slot. Lock batches before cooking.</p>
+                <p>Preparation cutoff is 30 minutes before each student pickup slot. Lock batches before mass cooking.</p>
               </div>
             </div>
 
@@ -68,18 +87,13 @@ export const vendorProfilePage = {
           <h4 class="profile-group-heading">Sapat Kitchen Principles</h4>
           <div class="profile-list-card" style="padding: 12px 14px;">
             <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
-              By locking in student pre-orders before mass cooking, school canteens eliminate the guess-work of food preparation, saving raw ingredient costs and preventing food spoilage.
+              By locking in student pre-orders before mass cooking, school canteens eliminate the guesswork of food preparation, saving raw ingredient costs and preventing food spoilage.
             </p>
           </div>
         </div>
 
-        <!-- Actions -->
+        <!-- Danger/Admin Action -->
         <div class="profile-actions-stack">
-          <button class="btn-profile-secondary" data-action="open-role-modal">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-            Switch Role or Stall Account
-          </button>
-          
           <button class="btn-profile-danger" data-action="reset-demo-data">
             Reset Demo Prototype Data
           </button>
@@ -92,17 +106,6 @@ export const vendorProfilePage = {
   },
 
   attachEvents(container) {
-    const select = container.querySelector('[data-action="switch-vendor-account"]');
-    if (select) {
-      select.addEventListener('change', (e) => {
-        const vendorId = e.target.value;
-        state.setCurrentVendor(vendorId);
-        const v = SapatStorage.getVendorById(vendorId);
-        showToast(`Switched account to ${v.name} (${v.stallNumber})`, 'success');
-        this.render(container);
-      });
-    }
-
     container.addEventListener('click', (e) => {
       const roleBtn = e.target.closest('[data-action="open-role-modal"]');
       if (roleBtn) {

@@ -243,10 +243,41 @@ export function openMealModal(dishId) {
     prepNote.textContent = dish.prepNote || 'Fresh batch prepared daily per student preorder target.';
   }
 
+  // Calculate limits with items already in cart
+  const existingInCart = state.cart.find(i => i.id === dish.id);
+  const inCartQty = existingInCart ? existingInCart.quantity : 0;
+  const maxCanAdd = Math.max(0, remaining - inCartQty);
+
+  if (isSoldOut || maxCanAdd <= 0) {
+    state.modalMealQty = 0;
+  } else {
+    state.modalMealQty = 1;
+  }
+
+  if (qty) qty.textContent = String(state.modalMealQty);
+
+  // Subtotal display
+  const subtotal = dish.price * state.modalMealQty;
+  const subtotalEl = document.getElementById('modal-meal-subtotal');
+  if (subtotalEl) subtotalEl.textContent = `₱${subtotal}`;
+
+  // Stepper buttons state
+  const minusBtn = document.getElementById('modal-qty-minus-btn');
+  if (minusBtn) minusBtn.disabled = state.modalMealQty <= 1;
+
+  const plusBtn = document.getElementById('modal-qty-plus-btn');
+  if (plusBtn) plusBtn.disabled = state.modalMealQty >= maxCanAdd || isSoldOut;
+
   const addBtn = document.getElementById('modal-btn-add');
   if (addBtn) {
-    addBtn.disabled = isSoldOut;
-    addBtn.textContent = isSoldOut ? 'Daily Limit Reached (Sold Out)' : 'Add to Preorder';
+    addBtn.disabled = isSoldOut || maxCanAdd <= 0;
+    if (isSoldOut) {
+      addBtn.textContent = 'Daily Limit Reached (Sold Out)';
+    } else if (maxCanAdd <= 0) {
+      addBtn.textContent = 'Limit Reached in Tray';
+    } else {
+      addBtn.textContent = 'Add to Preorder';
+    }
   }
 
   const modal = document.getElementById('modal-meal-details');
@@ -261,9 +292,10 @@ export function closeMealModal() {
 
 export function modalAdjustQty(delta) {
   if (!state.selectedMealForModal) return;
-  const remaining = Math.max(0, state.selectedMealForModal.dailyLimit - state.selectedMealForModal.reservedServings);
+  const dish = state.selectedMealForModal;
+  const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
 
-  const existingInCart = state.cart.find(i => i.id === state.selectedMealForModal.id);
+  const existingInCart = state.cart.find(i => i.id === dish.id);
   const inCartQty = existingInCart ? existingInCart.quantity : 0;
   const maxCanAdd = remaining - inCartQty;
 
@@ -277,7 +309,19 @@ export function modalAdjustQty(delta) {
 
   state.modalMealQty = next;
   const qtyEl = document.getElementById('modal-meal-qty');
-  if (qtyEl) qtyEl.textContent = state.modalMealQty;
+  if (qtyEl) qtyEl.textContent = String(state.modalMealQty);
+
+  // Update subtotal
+  const subtotal = dish.price * state.modalMealQty;
+  const subtotalEl = document.getElementById('modal-meal-subtotal');
+  if (subtotalEl) subtotalEl.textContent = `₱${subtotal}`;
+
+  // Update stepper buttons disabled state
+  const minusBtn = document.getElementById('modal-qty-minus-btn');
+  if (minusBtn) minusBtn.disabled = state.modalMealQty <= 1;
+
+  const plusBtn = document.getElementById('modal-qty-plus-btn');
+  if (plusBtn) plusBtn.disabled = state.modalMealQty >= maxCanAdd;
 }
 
 export function modalConfirmAddToCart() {

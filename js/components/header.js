@@ -51,12 +51,15 @@ export function updateHeader() {
 
   if (roleBadge) {
     if (state.role === 'student') {
-      roleBadge.textContent = 'Student';
+      roleBadge.innerHTML = 'Student';
       roleBadge.className = 'header-role-badge student';
+      roleBadge.title = 'Current Mode: Student. Tap to switch to Canteen Vendor.';
     } else {
       const v = SapatStorage.getVendorById(state.currentVendorId);
-      roleBadge.textContent = v ? v.stallNumber : 'Vendor';
+      const stall = v ? v.stallNumber : 'Vendor';
+      roleBadge.innerHTML = `<span class="v-live-pulse-dot"></span><span>${stall}</span>`;
       roleBadge.className = 'header-role-badge vendor';
+      roleBadge.title = v ? `Active Stall: ${v.name} (${v.stallNumber}). Tap to switch stall or role.` : 'Tap to switch stall';
     }
   }
 
@@ -65,7 +68,7 @@ export function updateHeader() {
       subtitle.textContent = 'Exact portions. Zero waste.';
     } else {
       const v = SapatStorage.getVendorById(state.currentVendorId);
-      subtitle.textContent = v ? v.name : 'Smart Daily Prep & Orders';
+      subtitle.textContent = v ? `${v.name} • ${v.stallNumber}` : 'Smart Daily Prep & Orders';
     }
   }
 

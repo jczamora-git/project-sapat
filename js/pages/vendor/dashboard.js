@@ -1,12 +1,28 @@
 import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
-import { renderVendorAccountBar } from '../../components/vendor-card.js';
+import { router } from '../../router.js';
+import { openRoleModal } from '../../components/modals.js';
 import { showToast } from '../../components/toast.js';
+import { getImgFallback } from '../../components/food-card.js';
 
 export const vendorDashboardPage = {
+  _unsubscribe: null,
+
   render(container) {
-    const vendors = SapatStorage.getVendors();
+    if (!this._unsubscribe) {
+      this._unsubscribe = state.subscribe((event) => {
+        if (event === 'vendor-changed' || event === 'data-reset') {
+          const currentScreen = document.getElementById('screen-vendor-dashboard');
+          if (currentScreen && container.contains(currentScreen)) {
+            this.render(container);
+          }
+        }
+      });
+    }
+
     const currentVendor = SapatStorage.getVendorById(state.currentVendorId);
+    if (!currentVendor) return;
+
     const menu = SapatStorage.getMenu();
     const orders = SapatStorage.getOrders();
 
@@ -34,24 +50,25 @@ export const vendorDashboardPage = {
       smartPrepHTML = `Snack peaks at 9:45 AM & 3:00 PM for <strong>Turon (50 servings)</strong> and <strong>Pancit Bihon (45 servings)</strong>. Fry fresh in 25-minute batches.`;
     }
 
-    const urgentDishes = vendorDishes.filter(d => (d.reservedServings / d.dailyLimit) >= 0.70 || d.reservedServings >= d.dailyLimit);
-
     container.innerHTML = `
       <section class="screen active" id="screen-vendor-dashboard">
         
-        <!-- Stall Account Selector Bar -->
-        <div class="vendor-account-bar">
-          ${renderVendorAccountBar(state.currentVendorId, vendors)}
-        </div>
-
-        <!-- Vendor Header Identity -->
+        <!-- Vendor Stall Identity Card -->
         <div class="vendor-identity-card">
-          <span class="v-stall-tag">${currentVendor.stallNumber} &bull; ${currentVendor.category}</span>
+          <div class="v-identity-top">
+            <span class="v-stall-tag">${currentVendor.stallNumber}</span>
+            <span class="v-stall-category">${currentVendor.category}</span>
+          </div>
           <h2 class="v-stall-name">${currentVendor.name}</h2>
-          <p class="v-stall-hours">Kitchen Target & Pre-order Status (${currentVendor.hours})</p>
+          <div class="v-identity-footer">
+            <span class="v-stall-hours">${currentVendor.hours} &bull; ${currentVendor.expressWindow || 'Express Window'}</span>
+            <button class="v-switch-stall-btn" data-action="open-role-modal" title="Switch Canteen Stall Account">
+              Switch Stall
+            </button>
+          </div>
         </div>
 
-        <!-- 4 Core Operational KPIs -->
+        <!-- 4 Core Operational KPIs (Compact Presentation) -->
         <div class="v-kpi-grid">
           <div class="v-kpi-card">
             <span class="v-kpi-title">Incoming Orders</span>
@@ -68,13 +85,13 @@ export const vendorDashboardPage = {
           <div class="v-kpi-card">
             <span class="v-kpi-title">Remaining Quota</span>
             <strong class="v-kpi-val ${totalRemaining <= 10 ? 'alert-orange' : ''}">${totalRemaining}</strong>
-            <span class="v-kpi-sub">Available to book</span>
+            <span class="v-kpi-sub">Available portions</span>
           </div>
 
           <div class="v-kpi-card">
             <span class="v-kpi-title">Projected Sales</span>
             <strong class="v-kpi-val">₱${totalProjectedSales.toLocaleString()}</strong>
-            <span class="v-kpi-sub">Pre-ordered total</span>
+            <span class="v-kpi-sub">Pre-ordered revenue</span>
           </div>
         </div>
 
@@ -82,48 +99,67 @@ export const vendorDashboardPage = {
         <div class="v-smart-prep-card">
           <div class="v-smart-prep-head">
             <svg class="v-smart-prep-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
-            <strong>Smart Batch Recommendation</strong>
+            <strong>Smart Preparation Recommendation</strong>
           </div>
           <p class="v-smart-prep-body">${smartPrepHTML}</p>
         </div>
 
-        <!-- Kitchen Prep Status Section -->
+        <!-- Kitchen Preparation Status Section -->
         <div class="section-row-header" style="margin-top: 18px;">
           <div>
-            <h3 class="section-heading">Kitchen Prep Status</h3>
-            <span class="section-subtext">Live batch capacity for ${currentVendor.stallNumber} dishes</span>
+            <h3 class="section-heading">Kitchen Preparation Status</h3>
+            <span class="section-subtext">Live cooking quotas & portion limits</span>
           </div>
+          <button class="section-see-all-btn" data-route="#/vendor/prep">Batch Control</button>
         </div>
 
         <div class="v-prep-status-stack">
-          ${urgentDishes.length === 0 ? `
-            <div class="v-prep-safe-notice">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <span>All ${currentVendor.name} dishes are operating within safe preparation limits. No sold-out spikes yet.</span>
-            </div>
-          ` : urgentDishes.map(dish => {
+          ${vendorDishes.map(dish => {
             const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
             const isSoldOut = remaining <= 0;
             const pct = Math.min(100, Math.round((dish.reservedServings / dish.dailyLimit) * 100));
+            const isHighDemand = pct >= 70;
+
+            let tagClass = 'status-confirmed';
+            let tagText = `${pct}% Reserved`;
+            if (isSoldOut) {
+              tagClass = 'status-cancelled';
+              tagText = 'CAPACITY HIT';
+            } else if (isHighDemand) {
+              tagClass = 'status-preparing';
+              tagText = 'APPROACHING LIMIT';
+            }
+
             return `
               <div class="v-prep-status-card">
-                <div class="v-prep-status-head">
-                  <div>
-                    <h4 class="v-dish-name">${dish.name}</h4>
-                    <span class="v-dish-meta">${dish.categoryName} &bull; ₱${dish.price}</span>
+                <div class="v-prep-card-main">
+                  <div class="v-prep-thumb">
+                    <img src="${dish.image}" alt="${dish.name}" loading="lazy" onerror="this.onerror=null; this.src='${getImgFallback()}';">
                   </div>
-                  <span class="order-status-badge ${isSoldOut ? 'status-cancelled' : 'status-preparing'}">
-                    ${isSoldOut ? 'CAPACITY HIT' : '70%+ RESERVED'}
-                  </span>
+                  <div class="v-prep-card-details">
+                    <div class="v-prep-status-head">
+                      <h4 class="v-dish-name">${dish.name}</h4>
+                      <span class="order-status-badge ${tagClass}">
+                        ${tagText}
+                      </span>
+                    </div>
+                    <div class="v-dish-meta-row">
+                      <span>${dish.categoryName || 'Ulam'} &bull; ₱${dish.price}</span>
+                      <span class="v-quota-stat-pill ${isSoldOut ? 'soldout' : (isHighDemand ? 'warning' : '')}">
+                        <strong>${remaining}</strong> left
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                
+
+                <!-- Progress Track -->
                 <div class="v-dish-quota-bar">
-                  <div class="v-dish-quota-fill ${isSoldOut ? 'soldout' : 'warning'}" style="width: ${pct}%;"></div>
+                  <div class="v-dish-quota-fill ${isSoldOut ? 'soldout' : (isHighDemand ? 'warning' : '')}" style="width: ${pct}%;"></div>
                 </div>
 
                 <div class="v-dish-quota-footer">
-                  <span><strong>${dish.reservedServings}</strong> reserved of ${dish.dailyLimit} target</span>
-                  <span class="quota-left-pill ${isSoldOut ? 'soldout' : 'warning'}">${remaining} portions left</span>
+                  <span><strong>${dish.reservedServings}</strong> of ${dish.dailyLimit} target reserved</span>
+                  <span class="v-quota-pct-label">${pct}%</span>
                 </div>
               </div>
             `;
@@ -137,15 +173,23 @@ export const vendorDashboardPage = {
   },
 
   attachEvents(container) {
-    const select = container.querySelector('[data-action="switch-vendor-account"]');
-    if (select) {
-      select.addEventListener('change', (e) => {
-        const vendorId = e.target.value;
-        state.setCurrentVendor(vendorId);
-        const v = SapatStorage.getVendorById(vendorId);
-        showToast(`Switched account to ${v.name} (${v.stallNumber})`, 'success');
-        this.render(container);
-      });
-    }
+    container.addEventListener('click', (e) => {
+      // Direct navigation
+      const routeEl = e.target.closest('[data-route]');
+      if (routeEl) {
+        const route = routeEl.getAttribute('data-route');
+        if (route) {
+          router.navigate(route);
+          return;
+        }
+      }
+
+      // Switch stall
+      const switchStallBtn = e.target.closest('[data-action="open-role-modal"]');
+      if (switchStallBtn) {
+        openRoleModal();
+        return;
+      }
+    });
   }
 };

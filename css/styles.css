@@ -232,6 +232,19 @@ button, input, select, textarea {
   background: var(--accent-orange-soft);
   color: var(--warning-text);
   border-color: var(--accent-orange-border);
+  display: inline-flex;
+  align-items: center;
+}
+
+.v-live-pulse-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-orange);
+  margin-right: 5px;
+  box-shadow: 0 0 0 2px rgba(255, 138, 36, 0.25);
+  animation: pulseDot 2s infinite;
 }
 
 .icon-btn {
@@ -2335,29 +2348,78 @@ button, input, select, textarea {
 }
 
 .vendor-identity-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
   margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.v-identity-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
 }
 
 .v-stall-tag {
-  font-size: 10.5px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 800;
   color: var(--accent-orange-dark);
+  background: var(--accent-orange-soft);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  display: block;
+  display: inline-block;
+}
+
+.v-stall-category {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .v-stall-name {
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.02em;
-  margin: 1px 0;
+  margin: 4px 0 2px;
+}
+
+.v-identity-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .v-stall-hours {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--text-secondary);
+}
+
+.v-switch-stall-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.v-switch-stall-btn:hover {
+  background: var(--primary);
+  color: white;
 }
 
 /* 4-Item Operational KPI Grid */
@@ -2374,6 +2436,8 @@ button, input, select, textarea {
   border-radius: var(--radius-md);
   padding: 12px;
   box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
 }
 
 .v-kpi-title {
@@ -2472,11 +2536,38 @@ button, input, select, textarea {
   box-shadow: var(--shadow-sm);
 }
 
+.v-prep-card-main {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.v-prep-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  background: var(--bg-subtle);
+  flex-shrink: 0;
+}
+
+.v-prep-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.v-prep-card-details {
+  flex: 1;
+  overflow: hidden;
+}
+
 .v-prep-status-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
+  gap: 6px;
 }
 
 .v-dish-name {
@@ -2485,24 +2576,48 @@ button, input, select, textarea {
   color: var(--text-primary);
 }
 
-.v-dish-meta {
+.v-dish-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 11px;
   color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.v-quota-stat-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+}
+
+.v-quota-stat-pill.warning {
+  color: var(--warning-text);
+  background: var(--accent-orange-soft);
+}
+
+.v-quota-stat-pill.soldout {
+  color: var(--error);
+  background: var(--error-bg);
 }
 
 .v-dish-quota-bar {
   width: 100%;
-  height: 4px;
+  height: 5px;
   background: var(--bg-subtle);
   border-radius: var(--radius-full);
   overflow: hidden;
-  margin: 6px 0 8px;
+  margin: 6px 0;
 }
 
 .v-dish-quota-fill {
   height: 100%;
   background: var(--primary);
   border-radius: var(--radius-full);
+  transition: width 0.3s ease;
 }
 
 .v-dish-quota-fill.warning {
@@ -2521,26 +2636,10 @@ button, input, select, textarea {
   color: var(--text-secondary);
 }
 
-.quota-left-pill {
+.v-quota-pct-label {
+  font-size: 11px;
   font-weight: 700;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: var(--radius-xs);
-}
-
-.quota-left-pill.safe {
-  color: var(--primary);
-  background: var(--primary-light);
-}
-
-.quota-left-pill.warning {
-  color: var(--warning-text);
-  background: var(--accent-orange-soft);
-}
-
-.quota-left-pill.soldout {
-  color: var(--error);
-  background: var(--error-bg);
+  color: var(--text-secondary);
 }
 
 /* Batch Adjuster Controls in Prep Page */
@@ -2553,10 +2652,20 @@ button, input, select, textarea {
   align-items: center;
 }
 
+.adjust-text-col {
+  display: flex;
+  flex-direction: column;
+}
+
 .adjust-label {
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.adjust-sub {
+  font-size: 10px;
+  color: var(--text-muted);
 }
 
 .adjust-stepper {
@@ -2566,30 +2675,37 @@ button, input, select, textarea {
 }
 
 .btn-step-adjust {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: var(--radius-xs);
   border: 1px solid var(--border-subtle);
-  background: var(--bg-app);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-primary);
+  background: var(--bg-surface);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
-.btn-step-adjust:hover {
+.btn-step-adjust:hover:not(:disabled) {
   border-color: var(--primary);
-  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.btn-step-adjust:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  color: var(--text-muted);
 }
 
 .adjust-value {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
-  min-width: 28px;
+  min-width: 30px;
   text-align: center;
   color: var(--text-primary);
 }
@@ -2599,20 +2715,26 @@ button, input, select, textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  padding: 12px;
   box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.v-dish-card-body {
+  display: flex;
+  gap: 10px;
 }
 
 .v-dish-thumb-wrap {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-sm);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
   background: var(--bg-subtle);
   flex-shrink: 0;
+  position: relative;
 }
 
 .v-dish-thumb-wrap img {
@@ -2621,13 +2743,32 @@ button, input, select, textarea {
   object-fit: cover;
 }
 
+.v-dish-thumb-tag {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  background: rgba(27, 37, 32, 0.85);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
 .v-dish-info-col {
   flex: 1;
   overflow: hidden;
 }
 
+.v-dish-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+
 .v-dish-title {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
@@ -2635,38 +2776,75 @@ button, input, select, textarea {
   text-overflow: ellipsis;
 }
 
-.v-dish-price-line {
-  font-size: 11px;
-  color: var(--text-secondary);
-  font-weight: 600;
+.v-dish-price {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--primary);
+  flex-shrink: 0;
 }
 
-.v-cat-name {
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
-.v-dish-quota-meta {
+.v-dish-cat-label {
   font-size: 10.5px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  display: block;
   margin-top: 1px;
 }
 
-.text-danger {
-  color: var(--error);
-  font-weight: 700;
+.v-dish-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-xs);
+  padding: 6px 8px;
+  margin: 6px 0 2px;
 }
 
-.text-primary {
-  color: var(--primary);
-  font-weight: 700;
-}
-
-.v-dish-controls-col {
+.v-stat-cell {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+}
+
+.v-cell-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.v-cell-val {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.v-cell-val.soldout {
+  color: var(--error);
+}
+
+.v-cell-val.warning {
+  color: var(--accent-orange);
+}
+
+.v-dish-footer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.v-toggle-status-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.v-toggle-status-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 /* Availability Switch Toggle */
@@ -2716,19 +2894,94 @@ input:checked + .slider-round:before {
 }
 
 .btn-edit-dish {
-  padding: 2px 8px;
+  padding: 5px 10px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
 }
 
 .btn-edit-dish:hover {
-  border-color: var(--text-primary);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Order Management Enhancements */
+.order-pickup-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--primary-light);
+  border-radius: var(--radius-xs);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.order-items-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-xs);
+}
+
+.order-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+}
+
+.order-item-name {
   color: var(--text-primary);
+}
+
+.order-item-price {
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* Status Badges */
+.status-pending {
+  background: #F3F4F6;
+  color: #4B5563;
+  border: 1px solid #E5E7EB;
+}
+
+.status-confirmed {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--primary-light);
+}
+
+.status-preparing {
+  background: var(--accent-orange-soft);
+  color: var(--accent-orange-dark);
+  border: 1px solid var(--accent-orange-border);
+}
+
+.status-completed {
+  background: #F9FAFB;
+  color: #6B7280;
+  border: 1px solid #E5E7EB;
+}
+
+.status-cancelled {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
 }
 
 .v-order-claimed-msg {
@@ -2744,6 +2997,46 @@ input:checked + .slider-round:before {
   font-size: 11px;
   font-weight: 700;
   color: var(--error);
+}
+
+/* Vendor Profile Switch Account Banner */
+.v-account-switch-banner {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.v-switch-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.v-switch-banner-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.v-switch-banner-stall {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.v-switch-role-cta {
+  width: 100%;
+  height: 40px;
+  font-size: 12.5px;
+  font-weight: 700;
 }
 
 /* ==========================================================================
@@ -3052,6 +3345,121 @@ input:checked + .slider-round:before {
   color: var(--text-secondary);
   line-height: 1.35;
   margin-top: 1px;
+}
+
+/* Student Meal Modal Quantity Stepper & Bottom Action Area */
+.modal-order-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.modal-stepper-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.modal-stepper-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.modal-qty-stepper {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.modal-qty-stepper:focus-within {
+  border-color: var(--primary);
+}
+
+.modal-stepper-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  background: var(--bg-surface);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.modal-stepper-btn:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--primary-light);
+}
+
+.modal-stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.modal-stepper-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  min-width: 36px;
+  text-align: center;
+  user-select: none;
+  line-height: 1;
+}
+
+.modal-cta-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.modal-subtotal-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.modal-subtotal-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.modal-subtotal-price {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.modal-confirm-add-btn {
+  width: 100%;
+  height: 40px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
 }
 
 /* Forms in Modal */
