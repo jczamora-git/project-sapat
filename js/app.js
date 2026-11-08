@@ -1,13 +1,16 @@
 /**
  * SAPAT — Smart Food Pre-ordering & Preparation Management
- * Main Application Logic & Reactive Interactions
+ * Multi-Vendor Edition (5 Selectable Canteen Vendors with Independent Inventory)
+ * Vanilla JavaScript & LocalStorage
  */
 
 const SapatApp = {
   // Runtime State
   currentRole: 'student', // 'student' | 'vendor'
+  currentVendorId: 'vendor-lita', // Active vendor in Vendor mode
+  studentVendorFilter: 'all', // 'all' | 'vendor-lita' | 'vendor-ben' | 'vendor-cora' | 'vendor-green' | 'vendor-tess'
   currentScreen: 'student-home',
-  cart: [], // Array of { id, name, price, quantity, image, maxAvailable }
+  cart: [], // Array of { id, name, price, quantity, image, dailyLimit, vendorId, vendorName, vendorStall }
   activeCategory: 'all',
   searchQuery: '',
   ordersTab: 'active', // 'active' | 'history'
@@ -22,20 +25,21 @@ const SapatApp = {
   // =========================================================================
   init() {
     this.initClock();
-    
-    // Check saved role or default
+
+    // Load saved states from storage
+    this.currentVendorId = SapatStorage.getCurrentVendorId() || 'vendor-lita';
+    this.studentVendorFilter = SapatStorage.getStudentSelectedVendor() || 'all';
+
     const savedRole = SapatStorage.getRole();
     if (savedRole && (savedRole === 'student' || savedRole === 'vendor')) {
       this.currentRole = savedRole;
     } else {
-      // First time opening: prompt role selection
       this.openRoleModal();
     }
 
-    // Set initial screen based on role
     this.currentScreen = this.currentRole === 'student' ? 'student-home' : 'vendor-dashboard';
 
-    // Global event listener for storage changes (across tabs or within app)
+    // Global event listeners
     window.addEventListener('sapat:data-updated', () => {
       this.render();
     });
@@ -43,6 +47,16 @@ const SapatApp = {
     window.addEventListener('sapat:role-changed', (e) => {
       this.currentRole = e.detail.role;
       this.updateRoleUI();
+      this.render();
+    });
+
+    window.addEventListener('sapat:vendor-changed', (e) => {
+      this.currentVendorId = e.detail.vendorId;
+      this.render();
+    });
+
+    window.addEventListener('sapat:student-vendor-changed', (e) => {
+      this.studentVendorFilter = e.detail.vendorId;
       this.render();
     });
 
@@ -65,7 +79,7 @@ const SapatApp = {
   },
 
   // =========================================================================
-  // Role Management
+  // Role & Vendor Account Management
   // =========================================================================
   switchRole(role) {
     if (role !== 'student' && role !== 'vendor') return;
@@ -77,14 +91,44 @@ const SapatApp = {
     this.showToast(`Switched to ${role === 'student' ? 'Student' : 'Canteen Vendor'} view`, 'info');
   },
 
-  switchRoleAndClose(role) {
+  switchRoleAndClose(role, optionalVendorId) {
+    if (optionalVendorId && role === 'vendor') {
+      this.currentVendorId = optionalVendorId;
+      SapatStorage.setCurrentVendorId(optionalVendorId);
+    }
     this.switchRole(role);
     this.closeRoleModal();
   },
 
+  switchVendorAccount(vendorId) {
+    const vendor = SapatStorage.getVendorById(vendorId);
+    if (!vendor) return;
+    this.currentVendorId = vendorId;
+    SapatStorage.setCurrentVendorId(vendorId);
+    this.showToast(`Switched account to ${vendor.name} (${vendor.stallNumber})`, 'success');
+    this.render();
+  },
+
+  selectVendorForStudent(vendorId) {
+    this.studentVendorFilter = vendorId;
+    SapatStorage.setStudentSelectedVendor(vendorId);
+    this.activeCategory = 'all';
+    this.searchQuery = '';
+    const searchInput = document.getElementById('menu-search-input');
+    if (searchInput) searchInput.value = '';
+    this.navigateTo('student-menu');
+    const vendor = SapatStorage.getVendorById(vendorId);
+    if (vendor && vendorId !== 'all') {
+      this.showToast(`Viewing menu for ${vendor.name} (${vendor.stallNumber})`, 'info');
+    }
+  },
+
   openRoleModal() {
     const modal = document.getElementById('modal-role-select');
-    if (modal) modal.classList.add('active');
+    if (modal) {
+      modal.classList.add('active');
+      this.renderRoleModalVendors();
+    }
   },
 
   closeRoleModal() {
@@ -92,21 +136,46 @@ const SapatApp = {
     if (modal) modal.classList.remove('active');
   },
 
+  renderRoleModalVendors() {
+    const container = document.getElementById('modal-vendor-accounts-list');
+    if (!container) return;
+    const vendors = SapatStorage.getVendors();
+    container.innerHTML = vendors.map(v => `
+      <div class="modal-vendor-item ${v.id === this.currentVendorId ? 'active' : ''}" 
+           onclick="SapatApp.switchRoleAndClose('vendor', '${v.id}')">
+        <div class="m-vendor-avatar" style="background: ${v.avatarColor};">${v.avatar}</div>
+        <div class="m-vendor-info">
+          <div class="m-vendor-name">${v.name}</div>
+          <div class="m-vendor-sub">${v.stallNumber} &bull; ${v.category}</div>
+        </div>
+        <span class="m-vendor-pill">${v.id === this.currentVendorId ? 'Active' : 'Select'}</span>
+      </div>
+    `).join('');
+  },
+
   updateRoleUI() {
-    // Header badge
     const badge = document.getElementById('current-role-badge');
     const subtitle = document.getElementById('header-subtitle');
     const cartBtn = document.getElementById('header-cart-btn');
 
     if (badge) {
-      badge.textContent = this.currentRole === 'student' ? '🎓 Student' : '👨‍🍳 Vendor';
-      badge.className = `header-role-badge ${this.currentRole}`;
+      if (this.currentRole === 'student') {
+        badge.textContent = '🎓 Student';
+        badge.className = 'header-role-badge student';
+      } else {
+        const v = SapatStorage.getVendorById(this.currentVendorId);
+        badge.textContent = `👨‍🍳 ${v ? v.stallNumber : 'Vendor'}`;
+        badge.className = 'header-role-badge vendor';
+      }
     }
 
     if (subtitle) {
-      subtitle.textContent = this.currentRole === 'student' 
-        ? 'Exact portions. Zero waste.' 
-        : 'Smart Daily Prep & Orders';
+      if (this.currentRole === 'student') {
+        subtitle.textContent = 'Exact portions. Zero waste.';
+      } else {
+        const v = SapatStorage.getVendorById(this.currentVendorId);
+        subtitle.textContent = v ? `${v.name}` : 'Smart Daily Prep & Orders';
+      }
     }
 
     if (cartBtn) {
@@ -146,9 +215,9 @@ const SapatApp = {
         </button>
       `;
     } else {
-      // Vendor Bottom Navigation
       const orders = SapatStorage.getOrders();
-      const pendingCount = orders.filter(o => o.status === 'Pending').length;
+      const currentVendorOrders = orders.filter(o => o.vendorId === this.currentVendorId);
+      const pendingCount = currentVendorOrders.filter(o => o.status === 'Pending').length;
 
       nav.innerHTML = `
         <button class="nav-item ${this.currentScreen === 'vendor-dashboard' ? 'active' : ''}" onclick="SapatApp.navigateTo('vendor-dashboard')">
@@ -170,7 +239,7 @@ const SapatApp = {
         </button>
         <button class="nav-item ${this.currentScreen === 'vendor-profile' ? 'active' : ''}" onclick="SapatApp.navigateTo('vendor-profile')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-          <span>Canteen</span>
+          <span>Stall</span>
         </button>
       `;
     }
@@ -182,17 +251,14 @@ const SapatApp = {
   navigateTo(screenId) {
     this.currentScreen = screenId;
 
-    // Hide all screens
     const screens = document.querySelectorAll('.screen');
     screens.forEach(s => s.classList.remove('active'));
 
-    // Show targeted screen
     const target = document.getElementById(`screen-${screenId}`);
     if (target) {
       target.classList.add('active');
     }
 
-    // Scroll viewport to top
     const viewport = document.getElementById('screens-viewport');
     if (viewport) viewport.scrollTop = 0;
 
@@ -208,6 +274,7 @@ const SapatApp = {
   // Master Render Function
   // =========================================================================
   render() {
+    const vendors = SapatStorage.getVendors();
     const menu = SapatStorage.getMenu();
     const orders = SapatStorage.getOrders();
     const settings = SapatStorage.getSettings();
@@ -224,12 +291,15 @@ const SapatApp = {
       }
     }
 
+    // Always render Vendor Account Switcher bar if in vendor mode
+    this.renderVendorAccountSwitcher(vendors);
+
     // Render based on current active screen
     if (this.currentRole === 'student') {
       if (this.currentScreen === 'student-home') {
-        this.renderStudentHome(menu, orders);
+        this.renderStudentHome(vendors, menu, orders);
       } else if (this.currentScreen === 'student-menu') {
-        this.renderStudentMenu(menu);
+        this.renderStudentMenu(vendors, menu);
       } else if (this.currentScreen === 'student-cart') {
         this.renderStudentCart(menu);
       } else if (this.currentScreen === 'student-orders') {
@@ -238,22 +308,46 @@ const SapatApp = {
         this.renderStudentProfile(settings);
       }
     } else {
-      // Vendor Views
+      // Vendor Views (Filtered strictly to current active vendor)
+      const currentVendor = SapatStorage.getVendorById(this.currentVendorId);
+      const vendorDishes = menu.filter(d => d.vendorId === this.currentVendorId);
+      const vendorOrders = orders.filter(o => o.vendorId === this.currentVendorId);
+
       if (this.currentScreen === 'vendor-dashboard') {
-        this.renderVendorDashboard(menu, orders);
+        this.renderVendorDashboard(currentVendor, vendorDishes, vendorOrders);
       } else if (this.currentScreen === 'vendor-menu') {
-        this.renderVendorMenu(menu);
+        this.renderVendorMenu(currentVendor, vendorDishes);
       } else if (this.currentScreen === 'vendor-orders') {
-        this.renderVendorOrders(orders);
+        this.renderVendorOrders(currentVendor, vendorOrders);
       } else if (this.currentScreen === 'vendor-prep') {
-        this.renderVendorPrep(menu, orders);
+        this.renderVendorPrep(currentVendor, vendorDishes, vendorOrders);
       } else if (this.currentScreen === 'vendor-profile') {
-        this.renderVendorProfile(settings);
+        this.renderVendorProfile(currentVendor, settings);
       }
     }
   },
 
-  // Fallback image helper
+  renderVendorAccountSwitcher(vendors) {
+    const bars = document.querySelectorAll('.vendor-account-bar');
+    bars.forEach(bar => {
+      bar.innerHTML = `
+        <div class="v-account-selector-wrap">
+          <div class="v-account-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            <span>Demo Stall Account:</span>
+          </div>
+          <select class="v-account-select" onchange="SapatApp.switchVendorAccount(this.value)">
+            ${vendors.map(v => `
+              <option value="${v.id}" ${v.id === this.currentVendorId ? 'selected' : ''}>
+                ${v.stallNumber}: ${v.name}
+              </option>
+            `).join('')}
+          </select>
+        </div>
+      `;
+    });
+  },
+
   getImgFallback() {
     return "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22200%22%20height%3D%22200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23059669%22%20stroke-width%3D%221.5%22%3E%3Cpath%20d%3D%22M18%208h1a4%204%200%200%201%200%208h-1%22%2F%3E%3Cpath%20d%3D%22M2%208h16v9a4%204%200%200%201-4%204H6a4%204%200%200%201-4-4V8z%22%2F%3E%3Cline%20x1%3D%226%22%20y1%3D%221%22%20x2%3D%226%22%20y2%3D%224%22%2F%3E%3Cline%20x1%3D%2210%22%20y1%3D%221%22%20x2%3D%2210%22%20y2%3D%224%22%2F%3E%3Cline%20x1%3D%2214%22%20y1%3D%221%22%20x2%3D%2214%22%20y2%3D%224%22%2F%3E%3C%2Fsvg%3E";
   },
@@ -261,21 +355,22 @@ const SapatApp = {
   // =========================================================================
   // Student Screen 1: Home
   // =========================================================================
-  renderStudentHome(menu, orders) {
+  renderStudentHome(vendors, menu, orders) {
+    const canteensContainer = document.getElementById('explore-canteens-container');
     const featuredContainer = document.getElementById('featured-meals-container');
     const quickContainer = document.getElementById('home-quick-food-container');
     const homeActiveCount = document.getElementById('home-active-orders-count');
     const homePrepRate = document.getElementById('home-prep-rate');
     const homeTotalLeft = document.getElementById('home-total-servings-left');
 
-    // Calculate overall prep rate
+    // Overall canteen metrics
     const totalDailyLimit = menu.reduce((sum, d) => sum + d.dailyLimit, 0);
     const totalReserved = menu.reduce((sum, d) => sum + d.reservedServings, 0);
     const totalRemaining = Math.max(0, totalDailyLimit - totalReserved);
     const percentReserved = totalDailyLimit > 0 ? Math.round((totalReserved / totalDailyLimit) * 100) : 0;
 
     if (homePrepRate) homePrepRate.textContent = `${percentReserved}% Reserved`;
-    if (homeTotalLeft) homeTotalLeft.textContent = `${totalRemaining} portions left today`;
+    if (homeTotalLeft) homeTotalLeft.textContent = `${totalRemaining} portions left across 5 stalls`;
 
     // Active orders count for Maria Santos
     const activeStudentOrders = orders.filter(o => o.studentName === 'Maria Santos' && o.status !== 'Completed' && o.status !== 'Cancelled');
@@ -283,9 +378,45 @@ const SapatApp = {
       homeActiveCount.textContent = `${activeStudentOrders.length} Active`;
     }
 
-    // Render Featured Carousel
+    // 1. Render Explore Canteens Carousel / Cards
+    if (canteensContainer) {
+      canteensContainer.innerHTML = vendors.map(v => {
+        const vendorDishes = menu.filter(d => d.vendorId === v.id && d.isAvailable);
+        const vLimit = vendorDishes.reduce((s, d) => s + d.dailyLimit, 0);
+        const vReserved = vendorDishes.reduce((s, d) => s + d.reservedServings, 0);
+        const vRemaining = Math.max(0, vLimit - vReserved);
+
+        return `
+          <div class="canteen-card" onclick="SapatApp.selectVendorForStudent('${v.id}')">
+            <div class="canteen-card-cover" style="background-image: url('${v.bannerImage}');">
+              <span class="canteen-stall-badge">${v.stallNumber}</span>
+              <span class="canteen-status-pill ${v.isOpen ? 'open' : 'closed'}">
+                ${v.isOpen ? '🟢 Open Now' : '🔴 Closed'}
+              </span>
+            </div>
+            <div class="canteen-card-body">
+              <div class="canteen-header-row">
+                <div class="canteen-avatar" style="background: ${v.avatarColor};">${v.avatar}</div>
+                <div class="canteen-names">
+                  <h4 class="canteen-title">${v.name}</h4>
+                  <span class="canteen-cat">${v.category}</span>
+                </div>
+              </div>
+              <p class="canteen-desc">${v.description}</p>
+              <div class="canteen-footer-row">
+                <span class="canteen-portions-left"><strong>${vRemaining}</strong> portions left</span>
+                <span class="canteen-cta-link">Browse Menu &rarr;</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 2. Render Featured Meals Carousel (with Vendor Identification)
     if (featuredContainer) {
-      const featured = menu.filter(m => m.isAvailable).slice(0, 4);
+      // Pick top featured dishes across vendors
+      const featured = menu.filter(m => m.isAvailable).slice(0, 5);
       featuredContainer.innerHTML = featured.map(dish => {
         const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
         const isSoldOut = remaining <= 0;
@@ -297,8 +428,10 @@ const SapatApp = {
             <div class="featured-img-wrap">
               <img src="${dish.image}" alt="${dish.name}" loading="lazy" onerror="this.onerror=null; this.src=SapatApp.getImgFallback();">
               <span class="stock-tag-pill ${tagClass}">${tagLabel}</span>
+              <span class="featured-stall-tag">${dish.vendorStall || 'Stall'}</span>
             </div>
             <div class="featured-content">
+              <div class="featured-vendor-line">${dish.vendorName}</div>
               <h4>${dish.name}</h4>
               <div class="item-cat">${dish.categoryName}</div>
               <div class="featured-bottom">
@@ -315,25 +448,71 @@ const SapatApp = {
       }).join('');
     }
 
-    // Render Quick Pre-orders list (First 3 dishes)
+    // 3. Render Quick Pre-orders list (First 4 available meals)
     if (quickContainer) {
-      const quickMeals = menu.filter(m => m.isAvailable).slice(0, 3);
+      const quickMeals = menu.filter(m => m.isAvailable).slice(0, 4);
       quickContainer.innerHTML = quickMeals.map(dish => this.generateFoodCardHTML(dish)).join('');
     }
   },
 
   // =========================================================================
-  // Student Screen 2: Menu
+  // Student Screen 2: Menu with Vendor Switching
   // =========================================================================
-  renderStudentMenu(menu) {
+  renderStudentMenu(vendors, menu) {
     const listContainer = document.getElementById('menu-food-list');
+    const vendorSelectorWrap = document.getElementById('menu-canteen-selector-wrap');
     if (!listContainer) return;
 
-    let filtered = menu;
+    // Render Canteen Tabs / Filter Bar
+    if (vendorSelectorWrap) {
+      const activeV = this.studentVendorFilter;
+      vendorSelectorWrap.innerHTML = `
+        <div class="canteen-tabs-bar">
+          <button class="canteen-tab-pill ${activeV === 'all' ? 'active' : ''}" 
+                  onclick="SapatApp.selectVendorForStudent('all')">
+            All Canteens (5)
+          </button>
+          ${vendors.map(v => `
+            <button class="canteen-tab-pill ${activeV === v.id ? 'active' : ''}" 
+                    onclick="SapatApp.selectVendorForStudent('${v.id}')">
+              ${v.stallNumber}: ${v.name}
+            </button>
+          `).join('')}
+        </div>
 
-    // Filter by availability in student view
-    // Note: Vendors can disable a dish entirely; if so, students don't see it
-    filtered = filtered.filter(d => d.isAvailable);
+        ${activeV !== 'all' ? (() => {
+          const v = SapatStorage.getVendorById(activeV);
+          const vDishes = menu.filter(d => d.vendorId === v.id);
+          const vLeft = vDishes.reduce((sum, d) => sum + Math.max(0, d.dailyLimit - d.reservedServings), 0);
+          return `
+            <div class="selected-canteen-header-card">
+              <div class="s-canteen-left">
+                <div class="s-canteen-avatar" style="background: ${v.avatarColor};">${v.avatar}</div>
+                <div>
+                  <div class="s-canteen-stall">${v.stallNumber} &bull; <span style="color:#059669; font-weight:700;">${v.statusText}</span></div>
+                  <h3 class="s-canteen-name">${v.name}</h3>
+                  <p class="s-canteen-hours">🕒 ${v.hours} &bull; <strong>${vLeft} portions</strong> ready to reserve</p>
+                </div>
+              </div>
+              <button class="btn-switch-canteen" onclick="SapatApp.selectVendorForStudent('all')">
+                All Stalls
+              </button>
+            </div>
+          `;
+        })() : `
+          <div class="all-canteens-notice">
+            <span>Showing meals from all 5 school canteen stalls. Tap a stall above to view only its menu.</span>
+          </div>
+        `}
+      `;
+    }
+
+    let filtered = menu.filter(d => d.isAvailable);
+
+    // Filter by selected vendor
+    if (this.studentVendorFilter !== 'all') {
+      filtered = filtered.filter(d => d.vendorId === this.studentVendorFilter);
+    }
 
     // Filter by category
     if (this.activeCategory !== 'all') {
@@ -346,7 +525,9 @@ const SapatApp = {
       filtered = filtered.filter(d => 
         d.name.toLowerCase().includes(q) || 
         d.description.toLowerCase().includes(q) ||
-        d.categoryName.toLowerCase().includes(q)
+        d.categoryName.toLowerCase().includes(q) ||
+        (d.vendorName && d.vendorName.toLowerCase().includes(q)) ||
+        (d.vendorStall && d.vendorStall.toLowerCase().includes(q))
       );
     }
 
@@ -357,7 +538,8 @@ const SapatApp = {
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           </div>
           <h3>No matching meals found</h3>
-          <p>Try searching for other Filipino dishes or switch category filter.</p>
+          <p>Try searching for other dishes or tap 'All Canteens' to browse the other stalls.</p>
+          <button class="btn-primary-action" style="margin-top: 10px;" onclick="SapatApp.selectVendorForStudent('all')">View All Canteens</button>
         </div>
       `;
       return;
@@ -386,10 +568,12 @@ const SapatApp = {
         <div class="food-card-thumb">
           <img src="${dish.image}" alt="${dish.name}" loading="lazy" onerror="this.onerror=null; this.src=SapatApp.getImgFallback();">
           ${isSoldOut ? '<div class="sold-out-overlay">SOLD OUT<br><span style="font-size:9px; font-weight:500;">Limit Reached</span></div>' : ''}
+          <span class="food-stall-pill">${dish.vendorStall || 'Stall'}</span>
         </div>
         
         <div class="food-card-details">
           <div>
+            <div class="food-vendor-sub">${dish.vendorName}</div>
             <div class="food-header-line">
               <h4 class="food-title">${dish.name}</h4>
               <span class="food-price">₱${dish.price}</span>
@@ -402,7 +586,7 @@ const SapatApp = {
             <div class="gauge-labels">
               <span>Daily Prep Quota</span>
               <span class="highlight-servings ${statusTextClass}">
-                ${isSoldOut ? '0 servings left (Max limit hit)' : `${remaining} of ${dish.dailyLimit} servings left`}
+                ${isSoldOut ? '0 servings left (Quota hit)' : `${remaining} of ${dish.dailyLimit} left`}
               </span>
             </div>
             <div class="gauge-bar-track">
@@ -425,7 +609,7 @@ const SapatApp = {
 
   handleSearch(val) {
     this.searchQuery = val;
-    this.renderStudentMenu(SapatStorage.getMenu());
+    this.renderStudentMenu(SapatStorage.getVendors(), SapatStorage.getMenu());
   },
 
   filterCategory(cat, btnEl) {
@@ -433,7 +617,7 @@ const SapatApp = {
     const chips = document.querySelectorAll('#category-filter-chips .chip-btn');
     chips.forEach(c => c.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
-    this.renderStudentMenu(SapatStorage.getMenu());
+    this.renderStudentMenu(SapatStorage.getVendors(), SapatStorage.getMenu());
   },
 
   // =========================================================================
@@ -458,6 +642,12 @@ const SapatApp = {
     document.getElementById('modal-meal-desc').textContent = dish.description;
     document.getElementById('modal-meal-img').src = dish.image;
     document.getElementById('modal-meal-qty').textContent = '1';
+
+    // Vendor badge in modal
+    const vendorBadge = document.getElementById('modal-meal-vendor-badge');
+    if (vendorBadge) {
+      vendorBadge.textContent = `Sold by ${dish.vendorName} (${dish.vendorStall})`;
+    }
 
     const servingsText = document.getElementById('modal-meal-servings-text');
     if (servingsText) {
@@ -496,7 +686,6 @@ const SapatApp = {
     if (!this.selectedMealForModal) return;
     const remaining = Math.max(0, this.selectedMealForModal.dailyLimit - this.selectedMealForModal.reservedServings);
     
-    // Existing qty in cart for this dish
     const existingInCart = this.cart.find(i => i.id === this.selectedMealForModal.id);
     const inCartQty = existingInCart ? existingInCart.quantity : 0;
     const maxCanAdd = remaining - inCartQty;
@@ -527,7 +716,7 @@ const SapatApp = {
   },
 
   // =========================================================================
-  // Cart Logic (Strict Stock Limit Validation)
+  // Cart Logic (Strict Stock Limit Validation & Vendor Association)
   // =========================================================================
   addToCart(dish, qty = 1) {
     const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
@@ -554,11 +743,14 @@ const SapatApp = {
         price: dish.price,
         quantity: qty,
         image: dish.image,
-        dailyLimit: dish.dailyLimit
+        dailyLimit: dish.dailyLimit,
+        vendorId: dish.vendorId,
+        vendorName: dish.vendorName,
+        vendorStall: dish.vendorStall
       });
     }
 
-    this.showToast(`Added ${qty}x ${dish.name} to preorder!`, 'success');
+    this.showToast(`Added ${qty}x ${dish.name} (${dish.vendorStall}) to preorder!`, 'success');
     this.render();
   },
 
@@ -572,7 +764,6 @@ const SapatApp = {
     const newQty = this.cart[cartItemIndex].quantity + delta;
 
     if (newQty <= 0) {
-      // Remove item
       this.cart.splice(cartItemIndex, 1);
       this.showToast('Item removed from cart', 'info');
     } else {
@@ -618,10 +809,11 @@ const SapatApp = {
         <div class="cart-item-row">
           <img class="cart-item-img" src="${item.image}" alt="${item.name}" onerror="this.onerror=null; this.src=SapatApp.getImgFallback();">
           <div class="cart-item-info">
+            <span class="cart-stall-tag">${item.vendorStall}: ${item.vendorName}</span>
             <h5 class="cart-item-title">${item.name}</h5>
             <div class="cart-item-price">₱${item.price} each &bull; <strong>₱${itemSubtotal}</strong></div>
             <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">
-              Kitchen batch limit: ${remaining} available
+              Kitchen batch quota: ${remaining} available
             </div>
           </div>
           <div class="cart-qty-controls">
@@ -647,7 +839,7 @@ const SapatApp = {
 
     const menu = SapatStorage.getMenu();
     
-    // Strict Verification: Ensure none of the items exceed available stock right now
+    // Strict Verification: Ensure none exceed current stock
     for (const item of this.cart) {
       const dish = menu.find(d => d.id === item.id);
       if (!dish) continue;
@@ -658,69 +850,83 @@ const SapatApp = {
       }
     }
 
-    // Selected pickup time
     const selectedSlotEl = document.querySelector('input[name="pickup-slot"]:checked');
     const pickupSlot = selectedSlotEl ? selectedSlotEl.value : '11:30 AM (Lunch Shift 1)';
     const kitchenNote = document.getElementById('checkout-note') ? document.getElementById('checkout-note').value.trim() : '';
 
-    const newOrderId = `SPT-${Math.floor(1000 + Math.random() * 9000)}`;
-    const totalAmount = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const totalServings = this.cart.reduce((sum, item) => sum + item.quantity, 0);
-
     const now = new Date();
     const timeString = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    const newOrder = {
-      id: newOrderId,
-      studentName: 'Maria Santos',
-      studentId: '2024-0891',
-      gradeSection: 'Grade 11 - STEM A',
-      pickupTime: pickupSlot,
-      specialInstructions: kitchenNote,
-      items: this.cart.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity
-      })),
-      totalAmount: totalAmount,
-      totalServings: totalServings,
-      status: 'Pending',
-      createdAt: `Today ${timeString}`,
-      timeline: [
-        { status: 'Preordered', time: timeString, done: true },
-        { status: 'Confirmed', time: '--', done: false },
-        { status: 'Preparing', time: '--', done: false },
-        { status: 'Ready for Pickup', time: '--', done: false },
-        { status: 'Completed', time: '--', done: false }
-      ]
-    };
-
-    // Update menu stock immediately in LocalStorage
+    // Deduct stock for all items
     this.cart.forEach(item => {
       const targetDish = menu.find(d => d.id === item.id);
       if (targetDish) {
         targetDish.reservedServings += item.quantity;
       }
     });
-
-    // Save updated menu
     SapatStorage.saveMenu(menu);
 
-    // Save new order to orders list
-    const orders = SapatStorage.getOrders();
-    orders.unshift(newOrder); // Prepend so it appears at top
-    SapatStorage.saveOrders(orders);
+    // Group items by vendor to create independent orders per stall
+    const itemsByVendor = {};
+    this.cart.forEach(item => {
+      const vId = item.vendorId || 'vendor-lita';
+      if (!itemsByVendor[vId]) itemsByVendor[vId] = [];
+      itemsByVendor[vId].push(item);
+    });
 
-    // Clear cart & clear note
+    const existingOrders = SapatStorage.getOrders();
+    const createdOrderIds = [];
+
+    Object.keys(itemsByVendor).forEach(vId => {
+      const vItems = itemsByVendor[vId];
+      const vendor = SapatStorage.getVendorById(vId);
+      const newOrderId = `SPT-${Math.floor(1000 + Math.random() * 9000)}`;
+      createdOrderIds.push(newOrderId);
+
+      const vTotalAmount = vItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const vTotalServings = vItems.reduce((sum, item) => sum + item.quantity, 0);
+
+      const newOrder = {
+        id: newOrderId,
+        vendorId: vId,
+        vendorName: vendor ? vendor.name : vItems[0].vendorName,
+        vendorStall: vendor ? vendor.stallNumber : vItems[0].vendorStall,
+        studentName: 'Maria Santos',
+        studentId: '2024-0891',
+        gradeSection: 'Grade 11 - STEM A',
+        pickupTime: pickupSlot,
+        specialInstructions: kitchenNote,
+        items: vItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          vendorId: item.vendorId
+        })),
+        totalAmount: vTotalAmount,
+        totalServings: vTotalServings,
+        status: 'Pending',
+        createdAt: `Today ${timeString}`,
+        timeline: [
+          { status: 'Preordered', time: timeString, done: true },
+          { status: 'Confirmed', time: '--', done: false },
+          { status: 'Preparing', time: '--', done: false },
+          { status: 'Ready for Pickup', time: '--', done: false },
+          { status: 'Completed', time: '--', done: false }
+        ]
+      };
+
+      existingOrders.unshift(newOrder);
+    });
+
+    SapatStorage.saveOrders(existingOrders);
+
     this.cart = [];
     if (document.getElementById('checkout-note')) {
       document.getElementById('checkout-note').value = '';
     }
 
-    this.showToast(`Pre-order ${newOrderId} placed successfully!`, 'success');
-
-    // Switch to orders tab
+    this.showToast(`Pre-order placed successfully for ${createdOrderIds.join(', ')}!`, 'success');
     this.navigateTo('student-orders');
   },
 
@@ -738,7 +944,6 @@ const SapatApp = {
     const container = document.getElementById('student-orders-container');
     if (!container) return;
 
-    // Filter for student Maria Santos
     let studentOrders = orders.filter(o => o.studentName === 'Maria Santos');
 
     if (this.ordersTab === 'active') {
@@ -751,11 +956,10 @@ const SapatApp = {
       container.innerHTML = `
         <div class="empty-state-wrap">
           <div class="empty-state-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
           </div>
-          <h3>No ${this.ordersTab} pre-orders</h3>
-          <p>Pre-order your lunch or recess snack to guarantee a hot, freshly prepared meal.</p>
-          <button class="btn-primary-action" onclick="SapatApp.navigateTo('student-menu')">Browse Menu</button>
+          <h3>No ${this.ordersTab === 'active' ? 'active' : 'past'} pre-orders</h3>
+          <p>${this.ordersTab === 'active' ? 'Reserve your lunch or snack from our 5 canteen stalls!' : 'Your completed and claimed meals will be recorded here.'}</p>
         </div>
       `;
       return;
@@ -763,37 +967,40 @@ const SapatApp = {
 
     container.innerHTML = studentOrders.map(order => {
       const itemsText = order.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
-      
-      // Determine stepper progress
+
       const steps = [
-        { key: 'Preordered', label: 'Ordered' },
-        { key: 'Confirmed', label: 'Confirmed' },
-        { key: 'Preparing', label: 'Cooking' },
-        { key: 'Ready for Pickup', label: 'Ready' },
-        { key: 'Completed', label: 'Claimed' }
+        { label: 'Ordered', key: 'Preordered' },
+        { label: 'Confirmed', key: 'Confirmed' },
+        { label: 'Cooking', key: 'Preparing' },
+        { label: 'Ready', key: 'Ready for Pickup' },
+        { label: 'Claimed', key: 'Completed' }
       ];
 
-      const currentStepIndex = order.status === 'Cancelled' ? -1 : 
-        (order.status === 'Pending' ? 0 :
-        (order.status === 'Confirmed' ? 1 :
-        (order.status === 'Preparing' ? 2 :
-        (order.status === 'Ready for Pickup' ? 3 : 4))));
+      const statusIndexMap = {
+        'Pending': 0,
+        'Confirmed': 1,
+        'Preparing': 2,
+        'Ready for Pickup': 3,
+        'Completed': 4,
+        'Cancelled': -1
+      };
+
+      const currentIdx = statusIndexMap[order.status] ?? 0;
 
       const stepperHTML = order.status === 'Cancelled' ? `
-        <div style="background:#fee2e2; color:#dc2626; border-radius:8px; padding:8px 12px; font-size:11.5px; font-weight:700; margin:10px 0; text-align:center;">
-          Reservation Cancelled &bull; Servings Returned to Kitchen Quota
+        <div class="cancelled-banner">
+          ⚠️ This pre-order was cancelled and portions refunded to the kitchen.
         </div>
       ` : `
-        <div class="order-stepper">
+        <div class="order-progress-stepper">
           ${steps.map((st, idx) => {
-            let nodeClass = '';
-            if (idx < currentStepIndex) nodeClass = 'done';
-            else if (idx === currentStepIndex) nodeClass = 'current done';
-            
+            let cls = '';
+            if (idx < currentIdx) cls = 'completed';
+            else if (idx === currentIdx) cls = 'active';
             return `
-              <div class="step-node ${nodeClass}">
-                <div class="step-circle">${idx <= currentStepIndex ? '✓' : idx + 1}</div>
-                <span class="step-label">${st.label}</span>
+              <div class="step-point ${cls}">
+                <div class="step-dot">${idx < currentIdx ? '✓' : idx + 1}</div>
+                <div class="step-label">${st.label}</div>
               </div>
             `;
           }).join('')}
@@ -804,8 +1011,9 @@ const SapatApp = {
         <div class="order-card">
           <div class="order-card-header">
             <div>
+              <div class="order-vendor-title">🏪 ${order.vendorStall || 'Stall'}: <strong>${order.vendorName || 'Canteen'}</strong></div>
               <span class="order-id-badge">Order #${order.id}</span>
-              <div style="font-size: 11px; color: var(--text-muted);">${order.createdAt}</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${order.createdAt}</div>
             </div>
             <span class="order-status-pill status-${order.status.toLowerCase().replace(/\s+/g, '-')}">
               ${order.status}
@@ -852,6 +1060,11 @@ const SapatApp = {
     document.getElementById('pass-student-name').textContent = order.studentName;
     document.getElementById('pass-pickup-slot').textContent = order.pickupTime;
 
+    const passStallInfo = document.getElementById('pass-stall-info');
+    if (passStallInfo) {
+      passStallInfo.textContent = `Present at ${order.vendorStall || 'Stall Window'} (${order.vendorName || 'Canteen Counter'}) to claim.`;
+    }
+
     const modal = document.getElementById('modal-pickup-pass');
     if (modal) modal.classList.add('active');
   },
@@ -862,7 +1075,7 @@ const SapatApp = {
   },
 
   cancelStudentOrder(orderId) {
-    if (!confirm(`Are you sure you want to cancel order #${orderId}? This will release your reserved servings back to the canteen immediately.`)) {
+    if (!confirm(`Cancel pre-order #${orderId}? This releases your reserved servings back to the stall immediately.`)) {
       return;
     }
 
@@ -870,7 +1083,7 @@ const SapatApp = {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
-    // Release reserved servings back to menu items!
+    // Release reserved servings back to menu items
     const menu = SapatStorage.getMenu();
     order.items.forEach(item => {
       const dish = menu.find(d => d.id === item.id);
@@ -881,11 +1094,10 @@ const SapatApp = {
 
     order.status = 'Cancelled';
     
-    // Save to LocalStorage
     SapatStorage.saveMenu(menu);
     SapatStorage.saveOrders(orders);
 
-    this.showToast(`Order #${orderId} cancelled. Servings returned to menu.`, 'info');
+    this.showToast(`Order #${orderId} cancelled. Servings returned to ${order.vendorStall}.`, 'info');
     this.render();
   },
 
@@ -897,19 +1109,27 @@ const SapatApp = {
     const countEl = document.getElementById('profile-preorders-count');
     const wasteEl = document.getElementById('profile-waste-saved');
 
-    if (countEl) countEl.textContent = prof.preordersCount || 14;
-    if (wasteEl) wasteEl.textContent = `${prof.wasteSavedKg || 4.8} kg`;
+    if (countEl) countEl.textContent = prof.preordersCount || 16;
+    if (wasteEl) wasteEl.textContent = `${prof.wasteSavedKg || 5.4} kg`;
   },
 
   // =========================================================================
-  // Vendor Screen 1: Dashboard
+  // Vendor Screen 1: Dashboard (Isolated Per Vendor)
   // =========================================================================
-  renderVendorDashboard(menu, orders) {
-    const totalOrdersCount = orders.filter(o => o.status !== 'Cancelled').length;
-    const totalDailyLimit = menu.reduce((sum, d) => sum + d.dailyLimit, 0);
-    const totalReserved = menu.reduce((sum, d) => sum + d.reservedServings, 0);
+  renderVendorDashboard(currentVendor, vendorDishes, vendorOrders) {
+    // Vendor Header titles
+    const vTitle = document.getElementById('vendor-dash-title');
+    const vStall = document.getElementById('vendor-dash-stall');
+    const vSub = document.getElementById('vendor-dash-sub');
+    if (vTitle) vTitle.textContent = currentVendor.name;
+    if (vStall) vStall.textContent = `${currentVendor.stallNumber} &bull; ${currentVendor.category}`;
+    if (vSub) vSub.textContent = `Today's Kitchen Production Target & Orders (${currentVendor.hours})`;
+
+    const totalOrdersCount = vendorOrders.filter(o => o.status !== 'Cancelled').length;
+    const totalDailyLimit = vendorDishes.reduce((sum, d) => sum + d.dailyLimit, 0);
+    const totalReserved = vendorDishes.reduce((sum, d) => sum + d.reservedServings, 0);
     const totalRemaining = Math.max(0, totalDailyLimit - totalReserved);
-    const totalProjectedSales = orders
+    const totalProjectedSales = vendorOrders
       .filter(o => o.status !== 'Cancelled')
       .reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -920,15 +1140,31 @@ const SapatApp = {
     document.getElementById('vendor-kpi-remaining').textContent = totalRemaining;
     document.getElementById('vendor-kpi-sales').textContent = `₱${totalProjectedSales.toLocaleString()}`;
 
-    // Urgent Preparation Status Items (Items > 75% reserved or sold out)
+    // Smart Prep Recommendation per Vendor
+    const smartPrepText = document.getElementById('vendor-smart-prep-text');
+    if (smartPrepText) {
+      if (currentVendor.id === 'vendor-lita') {
+        smartPrepText.innerHTML = `High demand detected for <strong>Chicken Adobo (45 servings)</strong> and <strong>Pork Sinigang (35 servings)</strong>. Keep current batch limit to avoid overcooking.`;
+      } else if (currentVendor.id === 'vendor-ben') {
+        smartPrepText.innerHTML = `Morning rush peaks for <strong>Tapsilog (40 portions)</strong> and <strong>Longsilog (35 portions)</strong>. 12 portions remain available before cutoff.`;
+      } else if (currentVendor.id === 'vendor-cora') {
+        smartPrepText.innerHTML = `Steady midday demand for <strong>Pork Giniling (35 servings)</strong> and <strong>Ginisang Monggo (40 servings)</strong>. Preparation limits are on target.`;
+      } else if (currentVendor.id === 'vendor-green') {
+        smartPrepText.innerHTML = `Healthy bowls show rapid reservations for <strong>Chicken Teriyaki</strong> and <strong>Tuna Rice Bowls</strong>. Batch capacity safe at 57% reserved.`;
+      } else {
+        smartPrepText.innerHTML = `Snack peaks at 9:45 AM & 3:00 PM for <strong>Turon (50 servings)</strong> and <strong>Pancit Bihon (45 servings)</strong>. Fry fresh in 25-minute batches.`;
+      }
+    }
+
+    // Urgent Preparation Status Items for THIS vendor only
     const urgentContainer = document.getElementById('vendor-dashboard-urgent-dishes');
     if (urgentContainer) {
-      const urgentDishes = menu.filter(d => (d.reservedServings / d.dailyLimit) >= 0.70 || d.reservedServings >= d.dailyLimit);
+      const urgentDishes = vendorDishes.filter(d => (d.reservedServings / d.dailyLimit) >= 0.70 || d.reservedServings >= d.dailyLimit);
       
       if (urgentDishes.length === 0) {
         urgentContainer.innerHTML = `
           <div style="background: white; border-radius: 12px; padding: 14px; text-align: center; color: var(--text-secondary); font-size: 12px; border: 1px solid var(--border-light);">
-            ✅ All dishes are operating within safe preparation limits. No sold-out spikes yet.
+            ✅ All ${currentVendor.name} dishes are operating within safe preparation limits. No sold-out spikes yet.
           </div>
         `;
       } else {
@@ -963,13 +1199,28 @@ const SapatApp = {
   },
 
   // =========================================================================
-  // Vendor Screen 2: Manage Menu
+  // Vendor Screen 2: Manage Menu (Isolated per Vendor)
   // =========================================================================
-  renderVendorMenu(menu) {
+  renderVendorMenu(currentVendor, vendorDishes) {
     const container = document.getElementById('vendor-menu-container');
+    const headerTitle = document.getElementById('vendor-menu-header-title');
+    if (headerTitle) {
+      headerTitle.textContent = `${currentVendor.name} — Menu & Limits`;
+    }
+
     if (!container) return;
 
-    container.innerHTML = menu.map(dish => {
+    if (vendorDishes.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state-wrap">
+          <h3>No dishes in this stall</h3>
+          <p>Tap + Add Dish to add a new food item with its preparation ceiling.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = vendorDishes.map(dish => {
       const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
       return `
         <div class="vendor-menu-card">
@@ -1007,7 +1258,8 @@ const SapatApp = {
   },
 
   openAddDishModal() {
-    document.getElementById('dish-editor-title').textContent = 'Add New Dish';
+    const vendor = SapatStorage.getVendorById(this.currentVendorId);
+    document.getElementById('dish-editor-title').textContent = `Add Dish to ${vendor ? vendor.name : 'Stall'}`;
     document.getElementById('edit-dish-id').value = '';
     document.getElementById('edit-dish-name').value = '';
     document.getElementById('edit-dish-category').value = 'rice-meals';
@@ -1028,7 +1280,7 @@ const SapatApp = {
     const dish = menu.find(d => d.id === dishId);
     if (!dish) return;
 
-    document.getElementById('dish-editor-title').textContent = 'Edit Dish & Limits';
+    document.getElementById('dish-editor-title').textContent = `Edit Dish: ${dish.name}`;
     document.getElementById('edit-dish-id').value = dish.id;
     document.getElementById('edit-dish-name').value = dish.name;
     document.getElementById('edit-dish-category').value = dish.category;
@@ -1074,9 +1326,9 @@ const SapatApp = {
     };
 
     const menu = SapatStorage.getMenu();
+    const currentVendor = SapatStorage.getVendorById(this.currentVendorId);
 
     if (dishId) {
-      // Edit existing
       const dish = menu.find(d => d.id === dishId);
       if (dish) {
         dish.name = name;
@@ -1091,9 +1343,11 @@ const SapatApp = {
       }
       this.showToast('Dish and preparation limits updated!', 'success');
     } else {
-      // Create new
       const newDish = {
-        id: `dish-${Date.now()}`,
+        id: `dish-${this.currentVendorId}-${Date.now()}`,
+        vendorId: this.currentVendorId,
+        vendorName: currentVendor ? currentVendor.name : "Canteen Stall",
+        vendorStall: currentVendor ? currentVendor.stallNumber : "Stall",
         name,
         category,
         categoryName: catNames[category] || 'Special',
@@ -1107,7 +1361,7 @@ const SapatApp = {
         tags: ['New Dish']
       };
       menu.push(newDish);
-      this.showToast('New dish added to canteen menu!', 'success');
+      this.showToast(`New dish added to ${currentVendor ? currentVendor.name : 'stall'}!`, 'success');
     }
 
     SapatStorage.saveMenu(menu);
@@ -1115,21 +1369,26 @@ const SapatApp = {
   },
 
   // =========================================================================
-  // Vendor Screen 3: Manage Orders
+  // Vendor Screen 3: Manage Orders (Isolated per Vendor)
   // =========================================================================
   filterVendorOrders(filterKey, btnEl) {
     this.vendorOrdersFilter = filterKey;
     const tabs = document.querySelectorAll('#screen-vendor-orders .order-filter-tab');
     tabs.forEach(t => t.classList.remove('active'));
     if (btnEl) btnEl.classList.add('active');
-    this.renderVendorOrders(SapatStorage.getOrders());
+    this.render();
   },
 
-  renderVendorOrders(orders) {
+  renderVendorOrders(currentVendor, vendorOrders) {
     const container = document.getElementById('vendor-orders-container');
+    const headerTitle = document.getElementById('vendor-orders-header-title');
+    if (headerTitle) {
+      headerTitle.textContent = `${currentVendor.name} — Orders`;
+    }
+
     if (!container) return;
 
-    let filtered = orders;
+    let filtered = vendorOrders;
     if (this.vendorOrdersFilter !== 'all') {
       filtered = filtered.filter(o => o.status === this.vendorOrdersFilter);
     }
@@ -1141,7 +1400,7 @@ const SapatApp = {
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
           </div>
           <h3>No orders in this stage</h3>
-          <p>Orders placed by students will appear here with live preparation controls.</p>
+          <p>Incoming pre-orders for ${currentVendor.name} will appear here with live preparation controls.</p>
         </div>
       `;
       return;
@@ -1150,7 +1409,6 @@ const SapatApp = {
     container.innerHTML = filtered.map(order => {
       const itemsList = order.items.map(i => `&bull; <strong>${i.quantity}x</strong> ${i.name}`).join('<br>');
       
-      // Action buttons depending on state
       let actionsHTML = '';
       if (order.status === 'Pending') {
         actionsHTML = `
@@ -1227,7 +1485,6 @@ const SapatApp = {
 
     order.status = nextStatus;
     
-    // Update timeline step
     if (order.timeline) {
       const step = order.timeline.find(s => s.status === nextStatus);
       if (step) {
@@ -1248,7 +1505,7 @@ const SapatApp = {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
-    // Release reserved servings back to menu items!
+    // Release reserved servings back to this vendor's menu items
     const menu = SapatStorage.getMenu();
     order.items.forEach(item => {
       const dish = menu.find(d => d.id === item.id);
@@ -1267,11 +1524,16 @@ const SapatApp = {
   // =========================================================================
   // Vendor Screen 4: Preparation Management (Matrix & Limits)
   // =========================================================================
-  renderVendorPrep(menu, orders) {
+  renderVendorPrep(currentVendor, vendorDishes, vendorOrders) {
     const matrixContainer = document.getElementById('vendor-prep-matrix-container');
+    const headerTitle = document.getElementById('vendor-prep-header-title');
+    if (headerTitle) {
+      headerTitle.textContent = `${currentVendor.name} — Prep Matrix`;
+    }
+
     if (!matrixContainer) return;
 
-    matrixContainer.innerHTML = menu.map(dish => {
+    matrixContainer.innerHTML = vendorDishes.map(dish => {
       const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
       const isSoldOut = remaining <= 0;
       const percentReserved = Math.min(100, Math.round((dish.reservedServings / dish.dailyLimit) * 100));
@@ -1351,24 +1613,48 @@ const SapatApp = {
 
     dish.dailyLimit = newLimit;
     SapatStorage.saveMenu(menu);
-    this.showToast(`Daily preparation limit for ${dish.name} updated to ${newLimit} portions.`, 'success');
+    this.showToast(`Daily limit for ${dish.name} set to ${newLimit} portions.`, 'success');
   },
 
   // =========================================================================
-  // Vendor Screen 5: Profile
+  // Vendor Screen 5: Profile (Reflects Active Vendor Stall)
   // =========================================================================
-  renderVendorProfile(settings) {
-    // Already populated by template, static stats can be updated if needed
+  renderVendorProfile(currentVendor, settings) {
+    const vName = document.getElementById('vendor-profile-name');
+    const vSub = document.getElementById('vendor-profile-sub');
+    const vAvatar = document.getElementById('vendor-profile-avatar');
+    const vEfficiency = document.getElementById('vendor-stat-efficiency');
+    const vWaste = document.getElementById('vendor-stat-waste');
+    const vRules = document.getElementById('vendor-profile-rules');
+
+    if (vName) vName.textContent = currentVendor.name;
+    if (vSub) vSub.textContent = `${currentVendor.stallNumber} &bull; Main Canteen Hall`;
+    if (vAvatar) {
+      vAvatar.textContent = currentVendor.avatar;
+      vAvatar.style.background = currentVendor.avatarColor;
+    }
+    if (vEfficiency) vEfficiency.textContent = currentVendor.efficiency || '95%';
+    if (vWaste) vWaste.textContent = currentVendor.wasteSaved || '12.4 kg';
+
+    if (vRules) {
+      vRules.innerHTML = `
+        <strong>Operating Hours:</strong> ${currentVendor.hours}<br>
+        <strong>Prep Cutoff:</strong> 30 minutes before slot<br>
+        <strong>Express Pickup Lane:</strong> ${currentVendor.expressWindow || 'Counter Window'}
+      `;
+    }
   },
 
   // =========================================================================
   // Reset Prototype Data
   // =========================================================================
   resetDemoData() {
-    if (!confirm('Reset Sapat prototype to factory seed data? This will restore original daily limits and mock orders.')) return;
+    if (!confirm('Reset Sapat prototype to factory seed data? This will restore original limits and 5-vendor mock data.')) return;
     this.cart = [];
     SapatStorage.resetData();
-    this.showToast('Prototype data reset to initial seed state!', 'success');
+    this.currentVendorId = 'vendor-lita';
+    this.studentVendorFilter = 'all';
+    this.showToast('Prototype data reset to initial 5-vendor seed state!', 'success');
     this.render();
   },
 

@@ -2,7 +2,7 @@
 
 > **"Sapat"** *(Tagalog)*: Sufficient, just enough — walang labis, walang kulang.
 
-Sapat is a mobile-first web prototype designed to eliminate food waste in school canteens through **controlled daily preparation** and **advance student pre-orders**.
+Sapat is a mobile-first web prototype designed to eliminate food waste in school canteens through **controlled daily preparation** and **advance student pre-orders** across multiple independent canteen stalls.
 
 ---
 
@@ -13,30 +13,55 @@ Sapat is a mobile-first web prototype designed to eliminate food waste in school
 
 ---
 
+## 🏪 5 Selectable Canteen Vendors
+
+Each vendor has their own dedicated menu, preparation quotas, and incoming student orders:
+
+1. **Ate Lita's Kitchen (Stall #3)** — *Lutong Bahay & Homestyle Rice Meals*
+   - Chicken Adobo – ₱65
+   - Pork Sinigang sa Sampalok – ₱70
+   - Crispy Lumpiang Shanghai – ₱45
+2. **Kuya Ben's Silog Meals (Stall #1)** — *All-Day Silog & Breakfast*
+   - Tapsilog – ₱85
+   - Hotsilog – ₱60
+   - Longsilog – ₱75
+3. **Nanay Cora's Lutong Bahay (Stall #2)** — *Traditional Ulam & Healthy Veggies*
+   - Pork Giniling – ₱60
+   - Ginisang Monggo – ₱45
+   - Fried Fish Meal – ₱70
+4. **Green Bowl Express (Stall #4)** — *Healthy & Rice Bowls*
+   - Chicken Teriyaki Rice – ₱85
+   - Tofu Veggie Bowl – ₱65
+   - Tuna Rice Bowl – ₱75
+5. **Merienda ni Aling Tess (Stall #5)** — *Snacks & Merienda*
+   - Pancit Bihon – ₱40
+   - Turon – ₱20
+   - Cheese Lumpia – ₱35
+
+---
+
 ## 📱 Role Demonstration Features
 
-The prototype features a **top switcher bar** and **modal selector** allowing real-time switching between roles:
-
 ### 🎓 1. Student Experience
-- **Home**: Welcome greeting, live kitchen status badge, today's meal reservation rate, featured meals carousel, and quick pre-order links.
-- **Menu**: Category filters (*Kanin at Ulam*, *Meryenda*, *Gulay & Healthy*, *Inumin*), real-time search, visual servings gauge showing portion limits, and instant add-to-cart.
-- **Meal Details**: Modal view with ingredients, prep notes, stock status, and quantity stepper.
-- **Cart & Checkout**: Strict remaining stock validation, pickup time slot selection (*9:45 AM Recess*, *11:30 AM Lunch 1*, *12:15 PM Lunch 2*, *3:00 PM Snack*), kitchen notes, and instant pre-order confirmation.
-- **My Orders**: Real-time 5-stage order tracker (*Ordered → Confirmed → Cooking → Ready → Claimed*), pickup pass QR simulation, and cancellation (which immediately refunds reserved portions back to the canteen).
+- **Explore Canteens**: Visually attractive cards for all 5 stalls displaying stall number, food specialty, open status, and remaining portions available. Tapping any stall card instantly filters the menu to ONLY that vendor.
+- **Menu with Canteen Switcher**: Easily switch between "All Canteens" or browse specific stalls with one-tap tab pills. Real-time daily portion gauges show exact remaining kitchen quotas.
+- **Featured Meals with Vendor Identification**: Top dishes displayed with their corresponding stall badges.
+- **Cart & Multi-Vendor Checkout**: Grouped by stall with strict kitchen batch quota validation.
+- **My Orders**: Real-time 5-stage order tracker displaying stall name and pickup window, pickup pass QR with counter window details, and cancellation with instant portion refunds.
 - **Profile**: Student info, personal food waste saved metrics, and Sapat philosophy.
 
 ### 👨‍🍳 2. Canteen Vendor Experience (Mobile-Optimized for Kitchen Staff)
-- **Dashboard**: Live KPIs (*Total Orders, Target Prep Limit, Reserved Servings, Projected Sales*), urgent low-stock alerts, and smart demand forecasts.
-- **Manage Menu**: Toggle item availability ON/OFF (immediately hides/shows in student app), add new dishes, and configure prices & preparation ceilings.
-- **Manage Orders**: Incoming student preorders feed with one-touch kitchen workflow buttons (*Confirm Preorder → Mark Preparing → Ready for Pickup → Completed* or *Decline* with instant stock restoration).
-- **Preparation Management**: The core feature of Sapat — Kitchen Prep Matrix showing daily limits, reserved portions, simulated historical demand targets, and quick batch quota adjustment buttons (`-5`, `+5`, `+10`).
-- **Vendor Profile**: Canteen information, operating schedule, kitchen preparation accuracy rate, and reset demo data.
+- **Demo Vendor Account Switcher**: Easily switch between all 5 vendor accounts from any vendor tab or through the Role Modal.
+- **Isolated Vendor Dashboard**: Live KPIs (*Total Orders, Target Prep Limit, Reserved Servings, Projected Sales*), urgent stock alerts, and personalized simulated demand forecasts strictly for the active vendor.
+- **Manage Menu**: Toggle item availability ON/OFF (hides/shows in student app), add new dishes, and configure daily preparation ceilings for this stall.
+- **Manage Orders**: Incoming preorders feed filtered strictly to this stall with one-touch kitchen workflow buttons (*Confirm Preorder → Mark Preparing → Ready for Pickup → Completed* or *Decline* with instant stock restoration).
+- **Preparation Management**: The core feature of Sapat — Kitchen Prep Matrix showing daily limits, reserved portions, simulated demand targets, and quick batch quota adjustment buttons (`-5`, `+5`, `+10`).
+- **Vendor Profile**: Stall operating schedule, pickup counter information, and kitchen accuracy metrics.
 
 ---
 
 ## 🔒 Core Logic & Rules
-- **No Over-Ordering**: Students cannot order beyond the remaining portion quota.
+- **No Over-Ordering**: Students cannot order beyond a dish's remaining portion quota.
 - **Sold Out Safeguard**: When a dish hits its daily preparation limit, it instantly locks and displays `SOLD OUT` with disabled action buttons.
-- **Instant Stock Sync**: Pre-orders and cancellations immediately update the shared LocalStorage state across both student and vendor interfaces.
+- **Strict Vendor Isolation**: Changes made by one vendor (menu edits, quota adjustments, order cancellations) never affect another vendor's inventory.
 - **Zero-Waste Focus**: Focuses strictly on advance demand control and controlled daily cooking targets.
-

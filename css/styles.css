@@ -1880,6 +1880,460 @@ input:checked + .slider:before {
 }
 
 /* ==========================================================================
+   Multi-Vendor Canteen Styles (5 Selectable Vendors)
+   ========================================================================== */
+
+/* Explore Canteens Horizontal Scroll */
+.canteen-scroll-container {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin: 0 -16px 20px;
+  padding: 0 16px 8px;
+  scroll-snap-type: x mandatory;
+}
+
+.canteen-scroll-container::-webkit-scrollbar {
+  height: 0px;
+}
+
+.canteen-card {
+  flex: 0 0 240px;
+  scroll-snap-align: start;
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+}
+
+.canteen-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.canteen-card-cover {
+  width: 100%;
+  height: 85px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  background-color: #cbd5e1;
+}
+
+.canteen-stall-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.canteen-status-pill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(4px);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  color: #065f46;
+}
+
+.canteen-card-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.canteen-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.canteen-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.canteen-names {
+  flex: 1;
+  overflow: hidden;
+}
+
+.canteen-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.canteen-cat {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  display: block;
+}
+
+.canteen-desc {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 4px 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.canteen-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 11px;
+}
+
+.canteen-portions-left {
+  color: var(--primary-dark);
+}
+
+.canteen-cta-link {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Featured Meals Stall & Vendor tags */
+.featured-stall-tag {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+
+.featured-vendor-line {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Food Cards Stall Pill & Vendor subtext */
+.food-stall-pill {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  z-index: 2;
+}
+
+.food-vendor-sub {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent-amber);
+  margin-bottom: 2px;
+}
+
+/* Student Menu Canteen Tabs Bar */
+.canteen-tabs-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.canteen-tabs-bar::-webkit-scrollbar {
+  height: 0px;
+}
+
+.canteen-tab-pill {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-light);
+  background: white;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.canteen-tab-pill.active {
+  background: var(--primary-dark);
+  color: white;
+  border-color: var(--primary-dark);
+  box-shadow: 0 2px 6px rgba(4, 120, 87, 0.25);
+}
+
+/* Selected Canteen Header in Menu */
+.selected-canteen-header-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.s-canteen-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.s-canteen-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.s-canteen-stall {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.s-canteen-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.s-canteen-hours {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.btn-switch-canteen {
+  padding: 5px 10px;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.all-canteens-notice {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+/* Vendor Account Switcher Bar (In Vendor Mode) */
+.vendor-account-bar {
+  margin-bottom: 14px;
+}
+
+.v-account-selector-wrap {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.v-account-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #854d0e;
+  white-space: nowrap;
+}
+
+.v-account-select {
+  flex: 1;
+  max-width: 200px;
+  background: white;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #713f12;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Modal Vendor Accounts List */
+.modal-vendor-accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modal-vendor-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modal-vendor-item:hover, .modal-vendor-item.active {
+  border-color: var(--primary);
+  background: #f0fdf4;
+}
+
+.m-vendor-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.m-vendor-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.m-vendor-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-vendor-sub {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+}
+
+.m-vendor-pill {
+  padding: 3px 8px;
+  background: #f1f5f9;
+  border-radius: var(--radius-full);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.modal-vendor-item.active .m-vendor-pill {
+  background: var(--primary);
+  color: white;
+}
+
+/* Modal Vendor Badge */
+.modal-vendor-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+/* Order & Cart Stall Tags */
+.cart-stall-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-amber);
+  margin-bottom: 2px;
+}
+
+.order-vendor-title {
+  font-size: 12px;
+  color: var(--primary-dark);
+  margin-bottom: 3px;
+}
+
+.badge-pill-green {
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+/* ==========================================================================
    Responsive Adaptations
    ========================================================================== */
 @media (max-width: 500px) {
@@ -1893,6 +2347,13 @@ input:checked + .slider:before {
     border-radius: 0;
     border: none;
     box-shadow: none;
+  }
+  .canteen-card {
+    flex: 0 0 215px;
+  }
+  .v-account-select {
+    max-width: 165px;
+    font-size: 11px;
   }
 }
 

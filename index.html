@@ -83,9 +83,21 @@
         <div class="kitchen-live-banner">
           <div class="kitchen-pulse-dot"></div>
           <div class="kitchen-live-text">
-            <h4>Ate Lita's Kitchen is preparing lunch orders</h4>
-            <p>Cutoff for Lunch Shift 1 (11:30 AM) is 11:00 AM</p>
+            <h4>Canteen Kitchens are preparing today's pre-orders</h4>
+            <p>Order cutoff is 30 minutes before each pickup window</p>
           </div>
+        </div>
+
+        <!-- Explore Canteens Section -->
+        <div class="section-header" style="margin-top: 20px;">
+          <div>
+            <h3>🏪 Explore Canteens</h3>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">Choose a stall to browse independent menus & live portions</p>
+          </div>
+          <span class="badge-pill-green">5 Stalls Open</span>
+        </div>
+        <div class="canteen-scroll-container" id="explore-canteens-container">
+          <!-- Populated by JS -->
         </div>
 
         <!-- Quick Actions -->
@@ -135,6 +147,9 @@
       <!-- STUDENT SCREEN 2: MENU                     -->
       <!-- ========================================== -->
       <section class="screen" id="screen-student-menu">
+        <!-- Canteen Stall Selector & Current Canteen Info -->
+        <div id="menu-canteen-selector-wrap" style="margin-bottom: 12px;"></div>
+
         <div class="search-bar-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input type="text" class="search-input" id="menu-search-input" placeholder="Search dishes (e.g. Adobo, Sinigang, Turon)..." oninput="SapatApp.handleSearch(this.value)">
@@ -334,11 +349,14 @@
       <!-- VENDOR SCREEN 1: DASHBOARD                 -->
       <!-- ========================================== -->
       <section class="screen" id="screen-vendor-dashboard">
+        <!-- Switchable Vendor Account Bar -->
+        <div class="vendor-account-bar"></div>
+
         <!-- Vendor Canteen Header -->
         <div style="margin-bottom: 16px;">
-          <span style="font-size: 11px; font-weight: 700; color: var(--accent-amber); text-transform: uppercase; letter-spacing: 0.5px;">Kitchen Overview &bull; Stall #3</span>
-          <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary);">Ate Lita's Kitchen</h2>
-          <p style="font-size: 12px; color: var(--text-secondary);">Today's Smart Meal Production Target</p>
+          <span style="font-size: 11px; font-weight: 700; color: var(--accent-amber); text-transform: uppercase; letter-spacing: 0.5px;" id="vendor-dash-stall">Stall #3 &bull; Lutong Bahay</span>
+          <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary);" id="vendor-dash-title">Ate Lita's Kitchen</h2>
+          <p style="font-size: 12px; color: var(--text-secondary);" id="vendor-dash-sub">Today's Smart Meal Production Target</p>
         </div>
 
         <!-- 4 Core KPIs -->
@@ -379,7 +397,7 @@
           </div>
           <div class="smart-prep-content">
             <p id="vendor-smart-prep-text">
-              Historical Mondays show high demand for <strong>Chicken Adobo (45 servings)</strong> and <strong>Pork Sinigang (35 servings)</strong>. Keep current batch limit to avoid overcooking.
+              Historical analysis guides daily cooking limits to eliminate leftovers.
             </p>
           </div>
         </div>
@@ -399,9 +417,11 @@
       <!-- VENDOR SCREEN 2: MANAGE MENU               -->
       <!-- ========================================== -->
       <section class="screen" id="screen-vendor-menu">
+        <div class="vendor-account-bar"></div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
           <div>
-            <h3 style="font-size: 16px; font-weight: 800;">Manage Menu & Limits</h3>
+            <h3 style="font-size: 16px; font-weight: 800;" id="vendor-menu-header-title">Manage Menu & Limits</h3>
             <p style="font-size: 11.5px; color: var(--text-secondary);">Set daily cooking quotas per dish</p>
           </div>
           <button class="btn-primary-action" style="width: auto; height: 36px; padding: 0 14px; font-size: 12px;" onclick="SapatApp.openAddDishModal()">
@@ -419,8 +439,10 @@
       <!-- VENDOR SCREEN 3: MANAGE ORDERS             -->
       <!-- ========================================== -->
       <section class="screen" id="screen-vendor-orders">
+        <div class="vendor-account-bar"></div>
+
         <div style="margin-bottom: 14px;">
-          <h3 style="font-size: 16px; font-weight: 800;">Incoming Student Preorders</h3>
+          <h3 style="font-size: 16px; font-weight: 800;" id="vendor-orders-header-title">Incoming Student Preorders</h3>
           <p style="font-size: 11.5px; color: var(--text-secondary);">Update order status as kitchen progresses</p>
         </div>
 
@@ -441,8 +463,10 @@
       <!-- VENDOR SCREEN 4: PREPARATION MANAGEMENT    -->
       <!-- ========================================== -->
       <section class="screen" id="screen-vendor-prep">
+        <div class="vendor-account-bar"></div>
+
         <div style="margin-bottom: 14px;">
-          <h3 style="font-size: 17px; font-weight: 800;">Preparation Management</h3>
+          <h3 style="font-size: 17px; font-weight: 800;" id="vendor-prep-header-title">Preparation Management</h3>
           <p style="font-size: 12px; color: var(--text-secondary);">
             Control batch cooking targets against pre-orders to ensure <strong>Zero Overproduction</strong>.
           </p>
@@ -472,18 +496,20 @@
       <!-- VENDOR SCREEN 5: VENDOR PROFILE            -->
       <!-- ========================================== -->
       <section class="screen" id="screen-vendor-profile">
+        <div class="vendor-account-bar"></div>
+
         <div class="profile-card">
-          <div class="profile-avatar" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">AL</div>
-          <h3 class="profile-name">Ate Lita's Healthy Canteen</h3>
-          <p class="profile-sub">Stall #3 &bull; Main Canteen Hall</p>
+          <div class="profile-avatar" id="vendor-profile-avatar" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">AL</div>
+          <h3 class="profile-name" id="vendor-profile-name">Ate Lita's Kitchen</h3>
+          <p class="profile-sub" id="vendor-profile-sub">Stall #3 &bull; Main Canteen Hall</p>
 
           <div class="profile-stats-grid">
             <div class="p-stat-box">
-              <div class="p-stat-val" id="vendor-stat-efficiency">94%</div>
+              <div class="p-stat-val" id="vendor-stat-efficiency">96%</div>
               <div class="p-stat-lbl">Kitchen Prep Accuracy</div>
             </div>
             <div class="p-stat-box">
-              <div class="p-stat-val">14.2 kg</div>
+              <div class="p-stat-val" id="vendor-stat-waste">14.8 kg</div>
               <div class="p-stat-lbl">Waste Prevented This Wk</div>
             </div>
           </div>
@@ -494,7 +520,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             Canteen Operating Rules
           </h4>
-          <p>
+          <p id="vendor-profile-rules">
             <strong>Operating Hours:</strong> 7:00 AM – 4:30 PM<br>
             <strong>Prep Cutoff:</strong> 30 minutes before slot<br>
             <strong>Express Pickup Lane:</strong> Counter Window 2
@@ -558,14 +584,22 @@
       </div>
 
       <!-- Option 2: Canteen Vendor -->
-      <div class="action-tile" style="padding: 16px; border: 2px solid var(--accent-light);" onclick="SapatApp.switchRoleAndClose('vendor')">
+      <div class="action-tile" style="padding: 16px; border: 2px solid var(--accent-light);">
         <div class="action-tile-icon amber" style="width: 48px; height: 48px;">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"></path><line x1="6" y1="17" x2="18" y2="17"></line></svg>
         </div>
         <div class="action-tile-text">
           <h4 style="font-size: 15px;">Canteen Vendor Experience</h4>
-          <p>Manage daily limits, smart prep targets, and incoming pre-orders.</p>
+          <p>Manage daily limits, smart prep targets, and incoming pre-orders per stall.</p>
         </div>
+      </div>
+
+      <!-- Quick Canteen Stall Switcher in Modal -->
+      <div style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: 4px;">
+        Or select a specific Canteen Stall:
+      </div>
+      <div id="modal-vendor-accounts-list" class="modal-vendor-accounts-list">
+        <!-- Populated by JS -->
       </div>
     </div>
   </div>
@@ -576,7 +610,10 @@
   <div class="bottom-sheet" style="max-height: 92%;">
     <div class="sheet-handle"></div>
     <div class="modal-header-row">
-      <h3 id="modal-meal-title">Dish Details</h3>
+      <div>
+        <div id="modal-meal-vendor-badge" class="modal-vendor-badge"></div>
+        <h3 id="modal-meal-title">Dish Details</h3>
+      </div>
       <button class="close-modal-btn" onclick="SapatApp.closeMealModal()">&times;</button>
     </div>
 
@@ -720,8 +757,8 @@
       <p id="pass-pickup-slot" style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">11:30 AM (Lunch Shift 1)</p>
     </div>
 
-    <p style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 16px;">
-      Present this pass at Stall #3 Express Window to claim your reserved meal without waiting in line.
+    <p id="pass-stall-info" style="font-size: 12px; font-weight: 600; color: var(--primary-dark); margin-bottom: 16px; line-height: 1.4;">
+      Present this pass at the stall express counter to claim your meal.
     </p>
 
     <button class="btn-primary-action" onclick="SapatApp.closePickupPass()">Done</button>
