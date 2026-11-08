@@ -36,7 +36,7 @@
 
     <!-- App Header -->
     <header class="app-header">
-      <div class="app-brand" onclick="SapatApp.navigateToHome()">
+      <div class="app-brand" style="cursor: pointer;">
         <img class="app-logo-badge" src="assets/sapat-icon.png" alt="Sapat Logo">
         <div class="brand-text-wrap">
           <h1>Sapat</h1>
@@ -45,519 +45,24 @@
       </div>
       
       <div class="header-actions">
-        <span class="header-role-badge" id="current-role-badge" onclick="SapatApp.openRoleModal()" style="cursor: pointer;" title="Tap to switch role">Student</span>
+        <span class="header-role-badge student" id="current-role-badge" style="cursor: pointer;" title="Tap to switch role">Student</span>
         
         <!-- Cart button for student view -->
-        <button class="icon-btn" id="header-cart-btn" onclick="SapatApp.navigateTo('student-cart')" title="View Cart">
+        <button class="icon-btn" id="header-cart-btn" title="View Cart">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
           <span class="cart-counter-badge" id="cart-counter-badge" style="display: none;">0</span>
         </button>
 
         <!-- Quick Switcher Role Modal button -->
-        <button class="icon-btn" onclick="SapatApp.openRoleModal()" title="Switch Role / Info">
+        <button class="icon-btn" id="header-role-btn" title="Switch Role / Info">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
         </button>
       </div>
     </header>
 
-    <!-- Main Screens Viewport -->
+    <!-- Main Screens Viewport: Mounted dynamically by router.js -->
     <main class="screens-viewport" id="screens-viewport">
-
-      <!-- ========================================== -->
-      <!-- STUDENT SCREEN 1: HOME                     -->
-      <!-- ========================================== -->
-      <section class="screen active" id="screen-student-home">
-        <div class="welcome-hero">
-          <div class="hero-sub">Magandang araw</div>
-          <h2>Maria Santos</h2>
-          <p>Pre-order canteen meals early to help our cooks prepare exact daily portions.</p>
-          <div class="hero-stats-row">
-            <div class="hero-stat-item">
-              <span class="stat-label">Stall Preparation</span>
-              <span class="stat-value" id="home-prep-rate">72% Reserved</span>
-            </div>
-            <div class="hero-stat-item">
-              <span class="stat-label">Daily Waste Saved</span>
-              <span class="stat-value">4.8 kg</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Kitchen Live Preparation Banner -->
-        <div class="kitchen-live-banner">
-          <div class="kitchen-pulse-dot"></div>
-          <div class="kitchen-live-text">
-            <h4>Canteen Kitchens are preparing today's pre-orders</h4>
-            <p>Order cutoff is 30 minutes before each pickup window</p>
-          </div>
-        </div>
-
-        <!-- Explore Canteens Section -->
-        <div class="section-header" style="margin-top: 18px;">
-          <div>
-            <h3>Explore Canteens</h3>
-            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">Browse independent menus and live portion quotas</p>
-          </div>
-          <span class="badge-pill-green">5 Stalls Open</span>
-        </div>
-        <div class="canteen-scroll-container" id="explore-canteens-container">
-          <!-- Populated by JS -->
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="quick-action-grid">
-          <div class="action-tile" onclick="SapatApp.navigateTo('student-menu')">
-            <div class="action-tile-icon green">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-            </div>
-            <div class="action-tile-text">
-              <h4>Browse Menu</h4>
-              <p>Reserve meals</p>
-            </div>
-          </div>
-
-          <div class="action-tile" onclick="SapatApp.navigateTo('student-orders')">
-            <div class="action-tile-icon amber">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            </div>
-            <div class="action-tile-text">
-              <h4>My Orders</h4>
-              <p id="home-active-orders-count">1 Active</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Featured Meals Carousel -->
-        <div class="section-header">
-          <h3>Featured Meals</h3>
-          <button class="see-all-btn" onclick="SapatApp.navigateTo('student-menu')">See all</button>
-        </div>
-        <div class="featured-scroll-container" id="featured-meals-container">
-          <!-- Populated by JS -->
-        </div>
-
-        <!-- Today's Available Servings Overview -->
-        <div class="section-header">
-          <h3>Quick Pre-orders</h3>
-          <span style="font-size: 11px; color: var(--text-secondary);" id="home-total-servings-left">--</span>
-        </div>
-        <div class="food-list-grid" id="home-quick-food-container">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-
-      <!-- ========================================== -->
-      <!-- STUDENT SCREEN 2: MENU                     -->
-      <!-- ========================================== -->
-      <section class="screen" id="screen-student-menu">
-        <!-- Canteen Stall Selector & Current Canteen Info -->
-        <div id="menu-canteen-selector-wrap" style="margin-bottom: 12px;"></div>
-
-        <div class="search-bar-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" class="search-input" id="menu-search-input" placeholder="Search dishes (e.g. Adobo, Sinigang, Turon)..." oninput="SapatApp.handleSearch(this.value)">
-        </div>
-
-        <!-- Category Filters -->
-        <div class="category-filter-chips" id="category-filter-chips">
-          <button class="chip-btn active" data-cat="all" onclick="SapatApp.filterCategory('all', this)">Lahat</button>
-          <button class="chip-btn" data-cat="rice-meals" onclick="SapatApp.filterCategory('rice-meals', this)">Kanin at Ulam</button>
-          <button class="chip-btn" data-cat="merienda" onclick="SapatApp.filterCategory('merienda', this)">Meryenda</button>
-          <button class="chip-btn" data-cat="veggies" onclick="SapatApp.filterCategory('veggies', this)">Gulay & Healthy</button>
-          <button class="chip-btn" data-cat="drinks" onclick="SapatApp.filterCategory('drinks', this)">Inumin</button>
-        </div>
-
-        <!-- Preparation Limit Explainer Note -->
-        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-          <p style="font-size: 11px; color: #065f46; line-height: 1.35;">
-            <strong>Controlled Daily Batches:</strong> Quantities update in real time based on pre-orders. When a dish hits its limit, it becomes SOLD OUT to avoid excess cooking.
-          </p>
-        </div>
-
-        <!-- Food List -->
-        <div class="food-list-grid" id="menu-food-list">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-
-      <!-- ========================================== -->
-      <!-- STUDENT SCREEN 3: CART & CHECKOUT          -->
-      <!-- ========================================== -->
-      <section class="screen" id="screen-student-cart">
-        <div class="cart-screen-wrap" id="cart-content-wrap">
-          <!-- Items List Card -->
-          <div class="cart-items-card">
-            <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Your Reserved Meals</h4>
-            <div id="cart-items-list">
-              <!-- Cart rows populated by JS -->
-            </div>
-          </div>
-
-          <!-- Pickup Time Slot Selection -->
-          <div class="checkout-section-card">
-            <h4>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              Select Pickup Time
-            </h4>
-            <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px;">The canteen prepares fresh batches aligned with these slots:</p>
-            <div class="pickup-slots-grid">
-              <label class="slot-radio-option">
-                <input type="radio" name="pickup-slot" value="9:45 AM (Morning Recess)" checked>
-                <div class="slot-radio-label">
-                  <span class="slot-time">9:45 AM</span>
-                  <span class="slot-name">Morning Recess</span>
-                </div>
-              </label>
-
-              <label class="slot-radio-option">
-                <input type="radio" name="pickup-slot" value="11:30 AM (Lunch Shift 1)">
-                <div class="slot-radio-label">
-                  <span class="slot-time">11:30 AM</span>
-                  <span class="slot-name">Lunch Shift 1</span>
-                </div>
-              </label>
-
-              <label class="slot-radio-option">
-                <input type="radio" name="pickup-slot" value="12:15 PM (Lunch Shift 2)">
-                <div class="slot-radio-label">
-                  <span class="slot-time">12:15 PM</span>
-                  <span class="slot-name">Lunch Shift 2</span>
-                </div>
-              </label>
-
-              <label class="slot-radio-option">
-                <input type="radio" name="pickup-slot" value="3:00 PM (Afternoon Snack)">
-                <div class="slot-radio-label">
-                  <span class="slot-time">3:00 PM</span>
-                  <span class="slot-name">Afternoon Snack</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Special Note -->
-          <div class="checkout-section-card">
-            <h4>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-              Kitchen Note (Optional)
-            </h4>
-            <textarea class="checkout-textarea" id="checkout-note" placeholder="e.g. Extra sauce, no chili, separate soup..."></textarea>
-          </div>
-
-          <!-- Summary & Confirm -->
-          <div class="bill-summary-card">
-            <div class="bill-line">
-              <span>Total Servings</span>
-              <span id="bill-total-servings" style="font-weight: 700;">0</span>
-            </div>
-            <div class="bill-line">
-              <span>Subtotal</span>
-              <span id="bill-subtotal" style="font-weight: 700;">₱0</span>
-            </div>
-            <div class="bill-line">
-              <span>Guaranteed Kitchen Reservation</span>
-              <span style="color: var(--primary); font-weight: 700;">FREE</span>
-            </div>
-            <div class="bill-line total">
-              <span>Total to Pay at Stall</span>
-              <span id="bill-grand-total">₱0</span>
-            </div>
-            
-            <button class="btn-primary-action" id="btn-confirm-preorder" style="margin-top: 16px;" onclick="SapatApp.confirmPreorder()">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              Confirm Pre-order
-            </button>
-          </div>
-        </div>
-
-        <!-- Empty Cart Display -->
-        <div id="cart-empty-view" class="empty-state-wrap" style="display: none;">
-          <div class="empty-state-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-          </div>
-          <h3>Your cart is empty</h3>
-          <p>Choose your lunch or snack from our controlled daily menu to reserve your serving.</p>
-          <button class="btn-primary-action" onclick="SapatApp.navigateTo('student-menu')">Browse Today's Menu</button>
-        </div>
-      </section>
-
-
-      <!-- ========================================== -->
-      <!-- STUDENT SCREEN 4: MY ORDERS                -->
-      <!-- ========================================== -->
-      <section class="screen" id="screen-student-orders">
-        <div class="orders-filter-bar">
-          <button class="order-filter-tab active" id="filter-orders-active" onclick="SapatApp.filterOrdersTab('active')">Active Pre-orders</button>
-          <button class="order-filter-tab" id="filter-orders-history" onclick="SapatApp.filterOrdersTab('history')">Order History</button>
-        </div>
-
-        <div class="orders-list" id="student-orders-container">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-
-      <!-- ========================================== -->
-      <!-- STUDENT SCREEN 5: PROFILE                  -->
-      <!-- ========================================== -->
-      <section class="screen" id="screen-student-profile">
-        <div class="profile-card">
-          <div class="profile-avatar">MS</div>
-          <h3 class="profile-name">Maria Santos</h3>
-          <p class="profile-sub">Grade 11 - STEM A &bull; ID #2024-0891</p>
-          
-          <div class="profile-stats-grid">
-            <div class="p-stat-box">
-              <div class="p-stat-val" id="profile-preorders-count">14</div>
-              <div class="p-stat-lbl">Preorders Made</div>
-            </div>
-            <div class="p-stat-box">
-              <div class="p-stat-val" id="profile-waste-saved">4.8 kg</div>
-              <div class="p-stat-lbl">Food Waste Avoided</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-box-card">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Ano ang Sapat?
-          </h4>
-          <p>
-            Sa wikang Filipino, ang <strong>"Sapat"</strong> ay nangangahulugang walang labis, walang kulang. Sa pamamagitan ng pag-pre-order, nalalaman ng canteen ang eksaktong dami ng ilulutong pagkain — kaya laging sariwa, walang mahabang pila, at walang natatapon.
-          </p>
-        </div>
-
-        <div class="info-box-card">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            Pre-order Guidelines
-          </h4>
-          <p>
-            &bull; Cut-off time is 30 minutes before your selected pickup slot.<br>
-            &bull; Ready meals can be claimed quickly at Stall #3 express lane.<br>
-            &bull; Cancellations release servings back to your fellow students instantly.
-          </p>
-        </div>
-
-        <button class="btn-secondary-action" style="width: 100%; height: 40px; margin-top: 10px;" onclick="SapatApp.openRoleModal()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-          Switch Role / Canteen
-        </button>
-
-        <button class="btn-secondary-action" style="width: 100%; height: 40px; margin-top: 10px;" onclick="SapatApp.resetDemoData()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-          Reset Demo Data
-        </button>
-      </section>
-
-
-      <!-- ========================================== -->
-      <!-- VENDOR SCREEN 1: DASHBOARD                 -->
-      <!-- ========================================== -->
-      <section class="screen" id="screen-vendor-dashboard">
-        <!-- Switchable Vendor Account Bar -->
-        <div class="vendor-account-bar"></div>
-
-        <!-- Vendor Canteen Header -->
-        <div style="margin-bottom: 16px;">
-          <span style="font-size: 11px; font-weight: 700; color: var(--accent-amber); text-transform: uppercase; letter-spacing: 0.5px;" id="vendor-dash-stall">Stall #3 &bull; Lutong Bahay</span>
-          <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary);" id="vendor-dash-title">Ate Lita's Kitchen</h2>
-          <p style="font-size: 12px; color: var(--text-secondary);" id="vendor-dash-sub">Today's Smart Meal Production Target</p>
-        </div>
-
-        <!-- 4 Core KPIs -->
-        <div class="vendor-kpi-grid">
-          <div class="vendor-kpi-card">
-            <span class="kpi-title">Incoming Preorders</span>
-            <span class="kpi-value" id="vendor-kpi-orders">0</span>
-            <span class="kpi-subtext" id="vendor-kpi-orders-sub">Active today</span>
-          </div>
-
-          <div class="vendor-kpi-card">
-            <span class="kpi-title">Reserved Servings</span>
-            <span class="kpi-value" id="vendor-kpi-reserved">0</span>
-            <span class="kpi-subtext" id="vendor-kpi-reserved-sub">of 0 limit</span>
-          </div>
-
-          <div class="vendor-kpi-card">
-            <span class="kpi-title">Remaining to Reserve</span>
-            <span class="kpi-value" id="vendor-kpi-remaining">0</span>
-            <span class="kpi-subtext alert" id="vendor-kpi-remaining-sub">Available</span>
-          </div>
-
-          <div class="vendor-kpi-card">
-            <span class="kpi-title">Projected Sales</span>
-            <span class="kpi-value" id="vendor-kpi-sales">₱0</span>
-            <span class="kpi-subtext">Preordered total</span>
-          </div>
-        </div>
-
-        <!-- Smart Prep AI Demand Insight -->
-        <div class="smart-prep-widget">
-          <div class="smart-prep-header">
-            <div class="smart-prep-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
-              Smart Prep Recommendation
-            </div>
-            <span class="smart-prep-badge">Simulated Demand</span>
-          </div>
-          <div class="smart-prep-content">
-            <p id="vendor-smart-prep-text">
-              Historical analysis guides daily cooking limits to eliminate leftovers.
-            </p>
-          </div>
-        </div>
-
-        <!-- Quick Access: Urgent Preparation Alert -->
-        <div class="section-header">
-          <h3>Kitchen Preparation Status</h3>
-          <button class="see-all-btn" onclick="SapatApp.navigateTo('vendor-prep')">Manage All</button>
-        </div>
-        <div class="food-list-grid" id="vendor-dashboard-urgent-dishes">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-
-      <!-- ========================================== -->
-      <!-- VENDOR SCREEN 2: MANAGE MENU               -->
-      <!-- ========================================== -->
-      <section class="screen" id="screen-vendor-menu">
-        <div class="vendor-account-bar"></div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <div>
-            <h3 style="font-size: 16px; font-weight: 800;" id="vendor-menu-header-title">Manage Menu & Limits</h3>
-            <p style="font-size: 11.5px; color: var(--text-secondary);">Set daily cooking quotas per dish</p>
-          </div>
-          <button class="btn-primary-action" style="width: auto; height: 36px; padding: 0 14px; font-size: 12px;" onclick="SapatApp.openAddDishModal()">
-            + Add Dish
-          </button>
-        </div>
-
-        <div id="vendor-menu-container">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-
-      <!-- ========================================== -->
-      <!-- VENDOR SCREEN 3: MANAGE ORDERS             -->
-      <!-- ========================================== -->
-      <section class="screen" id="screen-vendor-orders">
-        <div class="vendor-account-bar"></div>
-
-        <div style="margin-bottom: 14px;">
-          <h3 style="font-size: 16px; font-weight: 800;" id="vendor-orders-header-title">Incoming Student Preorders</h3>
-          <p style="font-size: 11.5px; color: var(--text-secondary);">Update order status as kitchen progresses</p>
-        </div>
-
-        <div class="orders-filter-bar">
-          <button class="order-filter-tab active" data-vfilter="all" onclick="SapatApp.filterVendorOrders('all', this)">All</button>
-          <button class="order-filter-tab" data-vfilter="Pending" onclick="SapatApp.filterVendorOrders('Pending', this)">Pending</button>
-          <button class="order-filter-tab" data-vfilter="Preparing" onclick="SapatApp.filterVendorOrders('Preparing', this)">Preparing</button>
-          <button class="order-filter-tab" data-vfilter="Ready for Pickup" onclick="SapatApp.filterVendorOrders('Ready for Pickup', this)">Ready</button>
-        </div>
-
-        <div class="orders-list" id="vendor-orders-container">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-
-      <!-- ========================================== -->
-      <!-- VENDOR SCREEN 4: PREPARATION MANAGEMENT    -->
-      <!-- ========================================== -->
-      <section class="screen" id="screen-vendor-prep">
-        <div class="vendor-account-bar"></div>
-
-        <div style="margin-bottom: 14px;">
-          <h3 style="font-size: 17px; font-weight: 800;" id="vendor-prep-header-title">Preparation Management</h3>
-          <p style="font-size: 12px; color: var(--text-secondary);">
-            Control batch cooking targets against pre-orders to ensure <strong>Zero Overproduction</strong>.
-          </p>
-        </div>
-
-        <!-- Kitchen Prep Sheet Explainer -->
-        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
-          <div style="display: flex; gap: 8px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-            <div>
-              <h5 style="font-size: 12.5px; font-weight: 700; color: #1e40af;">Kitchen Target Rule</h5>
-              <p style="font-size: 11px; color: #1e3a8a; line-height: 1.4; margin-top: 2px;">
-                Cook only up to the <strong>Daily Prep Limit</strong>. Once pre-orders reach this limit, the system automatically displays <strong>SOLD OUT</strong> to students.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Matrix of all dishes -->
-        <div id="vendor-prep-matrix-container">
-          <!-- Populated by JS -->
-        </div>
-      </section>
-
-
-      <!-- ========================================== -->
-      <!-- VENDOR SCREEN 5: VENDOR PROFILE            -->
-      <!-- ========================================== -->
-      <section class="screen" id="screen-vendor-profile">
-        <div class="vendor-account-bar"></div>
-
-        <div class="profile-card">
-          <div class="profile-avatar" id="vendor-profile-avatar" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">AL</div>
-          <h3 class="profile-name" id="vendor-profile-name">Ate Lita's Kitchen</h3>
-          <p class="profile-sub" id="vendor-profile-sub">Stall #3 &bull; Main Canteen Hall</p>
-
-          <div class="profile-stats-grid">
-            <div class="p-stat-box">
-              <div class="p-stat-val" id="vendor-stat-efficiency">96%</div>
-              <div class="p-stat-lbl">Kitchen Prep Accuracy</div>
-            </div>
-            <div class="p-stat-box">
-              <div class="p-stat-val" id="vendor-stat-waste">14.8 kg</div>
-              <div class="p-stat-lbl">Waste Prevented This Wk</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-box-card">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            Canteen Operating Rules
-          </h4>
-          <p id="vendor-profile-rules">
-            <strong>Operating Hours:</strong> 7:00 AM – 4:30 PM<br>
-            <strong>Prep Cutoff:</strong> 30 minutes before slot<br>
-            <strong>Express Pickup Lane:</strong> Counter Window 2
-          </p>
-        </div>
-
-        <div class="info-box-card">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Sapat Principle for Canteens
-          </h4>
-          <p>
-            By locking in student pre-orders before mass cooking, school canteens eliminate the guess-work of food preparation, saving raw ingredient costs and preventing food spoilage.
-          </p>
-        </div>
-
-        <button class="btn-secondary-action" style="width: 100%; height: 40px; margin-top: 10px;" onclick="SapatApp.openRoleModal()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-          Switch Role / Canteen
-        </button>
-
-        <button class="btn-secondary-action" style="width: 100%; height: 40px; margin-top: 10px;" onclick="SapatApp.resetDemoData()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-          Reset Demo Data
-        </button>
-      </section>
-
+      <!-- SPA Views Mount Here -->
     </main>
 
     <!-- Bottom Navigation Bar (Dynamic for Role) -->
@@ -580,7 +85,7 @@
     <div class="sheet-handle"></div>
     <div class="modal-header-row">
       <h3>Select Demo Role</h3>
-      <button class="close-modal-btn" onclick="SapatApp.closeRoleModal()">&times;</button>
+      <button class="close-modal-btn">&times;</button>
     </div>
     
     <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 18px;">
@@ -589,7 +94,7 @@
 
     <div style="display: flex; flex-direction: column; gap: 12px;">
       <!-- Option 1: Student -->
-      <div class="action-tile" style="padding: 16px; border: 2px solid var(--primary-light);" onclick="SapatApp.switchRoleAndClose('student')">
+      <div class="action-tile" style="padding: 16px; border: 2px solid var(--primary-light); cursor: pointer;" data-action="switch-role-student">
         <div class="action-tile-icon green" style="width: 48px; height: 48px;">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
         </div>
@@ -600,7 +105,7 @@
       </div>
 
       <!-- Option 2: Canteen Vendor -->
-      <div class="action-tile" style="padding: 16px; border: 2px solid var(--accent-light);" onclick="SapatApp.switchRoleAndClose('vendor')">
+      <div class="action-tile" style="padding: 16px; border: 2px solid var(--accent-light); cursor: pointer;" data-action="switch-role-vendor-main">
         <div class="action-tile-icon amber" style="width: 48px; height: 48px;">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"></path><line x1="6" y1="17" x2="18" y2="17"></line></svg>
         </div>
@@ -630,25 +135,25 @@
         <div id="modal-meal-vendor-badge" class="modal-vendor-badge"></div>
         <h3 id="modal-meal-title">Dish Details</h3>
       </div>
-      <button class="close-modal-btn" onclick="SapatApp.closeMealModal()">&times;</button>
+      <button class="close-modal-btn">&times;</button>
     </div>
 
     <div style="width: 100%; height: 180px; border-radius: 14px; overflow: hidden; margin-bottom: 14px; background: #e2e8f0;">
-      <img id="modal-meal-img" src="" alt="Dish" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src=SapatApp.getImgFallback();">
+      <img id="modal-meal-img" src="" alt="Dish" style="width: 100%; height: 100%; object-fit: cover;">
     </div>
 
     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
       <span id="modal-meal-cat" style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;"></span>
-      <span id="modal-meal-price" style="font-size: 20px; font-weight: 800; color: var(--primary-dark);">₱0</span>
+      <span id="modal-meal-price" style="font-size: 20px; font-weight: 800; color: var(--primary);">₱0</span>
     </div>
 
     <p id="modal-meal-desc" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;"></p>
 
     <!-- Prep Limit Status in Modal -->
-    <div style="background: var(--secondary-cream); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+    <div style="background: var(--surface-muted); border-radius: 12px; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border-subtle);">
       <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 6px;">
         <span>Kitchen Preparation Limit</span>
-        <span id="modal-meal-servings-text" style="color: var(--primary-dark);">12 of 45 left</span>
+        <span id="modal-meal-servings-text" style="color: var(--primary);">12 of 45 left</span>
       </div>
       <div class="gauge-bar-track" style="height: 6px;">
         <div class="gauge-bar-fill" id="modal-meal-gauge-fill" style="width: 60%;"></div>
@@ -657,30 +162,30 @@
     </div>
 
     <!-- Quantity & Add to Cart -->
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-top: 8px; border-top: 1px solid #f1f5f9;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
       <div class="cart-qty-controls">
-        <button class="qty-btn" onclick="SapatApp.modalAdjustQty(-1)">-</button>
+        <button class="qty-btn" data-action="modal-qty-minus">-</button>
         <span class="qty-display" id="modal-meal-qty" style="font-size: 16px; min-width: 24px;">1</span>
-        <button class="qty-btn" onclick="SapatApp.modalAdjustQty(1)">+</button>
+        <button class="qty-btn" data-action="modal-qty-plus">+</button>
       </div>
 
-      <button class="btn-primary-action" id="modal-btn-add" style="flex: 1;" onclick="SapatApp.modalConfirmAddToCart()">
+      <button class="btn-primary-action" id="modal-btn-add" style="flex: 1;">
         Add to Preorder
       </button>
     </div>
   </div>
 </div>
 
-<!-- 3. Add / Edit Dish Modal (Vendor) -->
+<!-- 3. Vendor Dish Editor Modal -->
 <div class="modal-overlay" id="modal-dish-editor">
-  <div class="bottom-sheet" style="max-height: 92%;">
+  <div class="bottom-sheet" style="max-height: 94%;">
     <div class="sheet-handle"></div>
     <div class="modal-header-row">
-      <h3 id="dish-editor-title">Add New Dish</h3>
-      <button class="close-modal-btn" onclick="SapatApp.closeDishEditorModal()">&times;</button>
+      <h3 id="dish-editor-title">Dish Setup & Limits</h3>
+      <button class="close-modal-btn">&times;</button>
     </div>
 
-    <form id="dish-editor-form" onsubmit="SapatApp.handleSaveDish(event)">
+    <form id="dish-editor-form">
       <input type="hidden" id="edit-dish-id" value="">
 
       <div class="form-group">
@@ -717,7 +222,7 @@
 
       <div class="form-group">
         <label class="form-label">Image Selection</label>
-        <select class="form-select" id="edit-dish-img-preset" onchange="SapatApp.handlePresetImgSelect(this.value)">
+        <select class="form-select" id="edit-dish-img-preset">
           <option value="custom">Custom Image URL</option>
           <option value="https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=600&q=80">Chicken Adobo</option>
           <option value="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80">Pork Sinigang</option>
@@ -755,15 +260,15 @@
     <div class="sheet-handle"></div>
     <div class="modal-header-row">
       <h3 style="width: 100%; text-align: center;">Canteen Pickup Pass</h3>
-      <button class="close-modal-btn" onclick="SapatApp.closePickupPass()">&times;</button>
+      <button class="close-modal-btn">&times;</button>
     </div>
 
-    <div style="background: var(--secondary-cream); border-radius: 16px; padding: 20px; border: 2px dashed #cbd5e1; margin-bottom: 16px;">
+    <div style="background: var(--surface-muted); border-radius: 16px; padding: 20px; border: 1.5px dashed var(--border-subtle); margin-bottom: 16px;">
       <span style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Preorder Code</span>
-      <h2 id="pass-order-id" style="font-size: 26px; font-weight: 800; color: var(--primary-dark); margin: 6px 0 12px;">#SPT-9021</h2>
+      <h2 id="pass-order-id" style="font-size: 26px; font-weight: 800; color: var(--primary); margin: 6px 0 12px;">#SPT-9021</h2>
       
       <!-- Simulated QR code -->
-      <div style="width: 130px; height: 130px; margin: 0 auto 12px; background: white; border: 1px solid #cbd5e1; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 8px;">
+      <div style="width: 130px; height: 130px; margin: 0 auto 12px; background: white; border: 1px solid var(--border-subtle); border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 8px;">
         <svg viewBox="0 0 24 24" width="100" height="100" fill="currentColor">
           <path d="M2 2h8v8H2zm2 2v4h4V4zm-2 10h8v8H2zm2 2v4h4v-4zm10-14h8v8h-8zm2 2v4h4V4zm-1 9h2v2h-2zm4 0h3v5h-3zm-4 4h2v5h-2zm4 2h3v3h-3zm-7-2h2v2h-2zm0 3h2v2h-2z"/>
         </svg>
@@ -773,11 +278,11 @@
       <p id="pass-pickup-slot" style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">11:30 AM (Lunch Shift 1)</p>
     </div>
 
-    <p id="pass-stall-info" style="font-size: 12px; font-weight: 600; color: var(--primary-dark); margin-bottom: 16px; line-height: 1.4;">
+    <p id="pass-stall-info" style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 16px; line-height: 1.4;">
       Present this pass at the stall express counter to claim your meal.
     </p>
 
-    <button class="btn-primary-action" onclick="SapatApp.closePickupPass()">Done</button>
+    <button class="btn-primary-action" data-action="close-pickup-pass">Done</button>
   </div>
 </div>
 
@@ -787,8 +292,7 @@
   <span id="toast-message">Notification message</span>
 </div>
 
-<!-- Application Scripts -->
-<script src="js/data.js"></script>
-<script src="js/app.js"></script>
+<!-- Application Entry Point: ES Module -->
+<script type="module" src="./js/app.js"></script>
 </body>
 </html>
