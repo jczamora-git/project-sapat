@@ -62,20 +62,29 @@ export const studentCartPage = {
         </div>
 
         <!-- Pickup Slot Selection -->
-        <div class="info-box-card" style="margin-top: 14px;">
-          <h4 style="margin-bottom: 8px;">Select Pickup Window</h4>
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; cursor: pointer;">
-              <input type="radio" name="pickup-slot" value="11:30 AM (Lunch Shift 1)" checked>
-              <span>11:30 AM &bull; Lunch Shift 1</span>
+        <div class="pickup-slots-section" style="margin-top: 14px;">
+          <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 8px;">Select Pickup Window</h4>
+          <div class="pickup-options-grid" style="display: flex; flex-direction: column; gap: 8px;">
+            <label class="pickup-card">
+              <input type="radio" name="pickup-slot" value="11:30 AM (Lunch Shift 1)" checked style="accent-color: var(--primary);">
+              <div class="pickup-info">
+                <span class="pickup-time">11:30 AM</span>
+                <span class="pickup-tag">Lunch Shift 1</span>
+              </div>
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; cursor: pointer;">
-              <input type="radio" name="pickup-slot" value="12:15 PM (Lunch Shift 2)">
-              <span>12:15 PM &bull; Lunch Shift 2</span>
+            <label class="pickup-card">
+              <input type="radio" name="pickup-slot" value="12:15 PM (Lunch Shift 2)" style="accent-color: var(--primary);">
+              <div class="pickup-info">
+                <span class="pickup-time">12:15 PM</span>
+                <span class="pickup-tag">Lunch Shift 2</span>
+              </div>
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; cursor: pointer;">
-              <input type="radio" name="pickup-slot" value="2:45 PM (Afternoon Recess)">
-              <span>2:45 PM &bull; Afternoon Recess</span>
+            <label class="pickup-card">
+              <input type="radio" name="pickup-slot" value="2:45 PM (Afternoon Recess)" style="accent-color: var(--primary);">
+              <div class="pickup-info">
+                <span class="pickup-time">2:45 PM</span>
+                <span class="pickup-tag">Afternoon Recess</span>
+              </div>
             </label>
           </div>
         </div>

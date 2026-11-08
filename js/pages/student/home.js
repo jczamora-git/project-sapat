@@ -23,17 +23,20 @@ export const studentHomePage = {
     container.innerHTML = `
       <section class="screen active" id="screen-student-home">
         <div class="welcome-hero">
-          <div class="hero-sub">Magandang araw</div>
-          <h2>Maria Santos</h2>
-          <p>Pre-order canteen meals early to help our cooks prepare exact daily portions.</p>
+          <div class="hero-top-badge">
+            <span class="live-pill"><span class="pulse-dot"></span> Advance Meal Pre-order</span>
+            <span class="hero-date">Main Campus Canteen</span>
+          </div>
+          <h2>Good morning, Maria</h2>
+          <p>Reserve freshly cooked meals ahead of time to guarantee your portion and eliminate lunch queue waiting.</p>
           <div class="hero-stats-row">
             <div class="hero-stat-item">
-              <span class="stat-label">Stall Preparation</span>
+              <span class="stat-label">Campus Kitchen Prep</span>
               <span class="stat-value">${reservedRate}% Reserved</span>
             </div>
             <div class="hero-stat-item">
-              <span class="stat-label">Daily Waste Saved</span>
-              <span class="stat-value">4.8 kg</span>
+              <span class="stat-label">Daily Waste Prevented</span>
+              <span class="stat-value">4.8 kg Saved</span>
             </div>
           </div>
         </div>
@@ -48,7 +51,7 @@ export const studentHomePage = {
         </div>
 
         <!-- Explore Canteens Section -->
-        <div class="section-header" style="margin-top: 18px;">
+        <div class="section-header" style="margin-top: 20px;">
           <div>
             <h3>Explore Canteens</h3>
             <p style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">Browse independent menus and live portion quotas</p>
@@ -67,7 +70,7 @@ export const studentHomePage = {
             </div>
             <div class="action-tile-text">
               <h4>Browse Menu</h4>
-              <p>Reserve meal</p>
+              <p>Reserve meals</p>
             </div>
           </div>
           <div class="action-tile" data-route="#/student/orders">
@@ -82,18 +85,24 @@ export const studentHomePage = {
         </div>
 
         <!-- Featured Meals -->
-        <div class="section-header">
-          <h3>Featured Meals Today</h3>
+        <div class="section-header" style="margin-top: 22px;">
+          <div>
+            <h3>Featured Meals Today</h3>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">Chef specials & student favorites</p>
+          </div>
           <button class="see-all-btn" data-route="#/student/menu">See all</button>
         </div>
-        <div class="featured-scroll-container">
-          ${featuredDishes.map(d => renderFeaturedMealCard(d)).join('')}
+        <div class="featured-meals-grid">
+          ${featuredDishes.slice(0, 4).map(d => renderFeaturedMealCard(d)).join('')}
         </div>
 
         <!-- Quick Pre-orders -->
-        <div class="section-header" style="margin-top: 24px;">
-          <h3>Quick Pre-orders</h3>
-          <span style="font-size: 11px; color: var(--text-secondary);">${totalDailyLimit - totalReserved} portions left today</span>
+        <div class="section-header" style="margin-top: 22px;">
+          <div>
+            <h3>Quick Pre-orders</h3>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">Fast pickup during lunch shifts</p>
+          </div>
+          <span style="font-size: 11px; font-weight: 600; color: var(--primary);">${totalDailyLimit - totalReserved} portions left</span>
         </div>
         <div class="food-cards-list">
           ${quickMeals.map(d => renderStudentFoodCard(d)).join('')}

@@ -7,22 +7,20 @@ export function renderCanteenCard(v, menu) {
   return `
     <div class="canteen-card" data-action="select-vendor" data-vendor-id="${v.id}">
       <div class="canteen-card-cover" style="background-image: url('${v.bannerImage}');">
+        <div class="canteen-cover-overlay"></div>
         <span class="canteen-stall-badge">${v.stallNumber}</span>
         <span class="canteen-status-pill ${v.isOpen ? 'open' : 'closed'}">
           <span class="status-indicator ${v.isOpen ? 'online' : 'offline'}"></span> ${v.isOpen ? 'Open Now' : 'Closed'}
         </span>
+        <div class="canteen-cover-caption">
+          <h4 class="canteen-cover-name">${v.name}</h4>
+          <span class="canteen-cover-category">${v.category}</span>
+        </div>
       </div>
       <div class="canteen-card-body">
-        <div class="canteen-header-row">
-          <div class="canteen-avatar" style="background: ${v.avatarColor};">${v.avatar}</div>
-          <div class="canteen-names">
-            <h4 class="canteen-title">${v.name}</h4>
-            <span class="canteen-cat">${v.category}</span>
-          </div>
-        </div>
         <p class="canteen-desc">${v.description}</p>
         <div class="canteen-footer-row">
-          <span class="canteen-portions-left"><strong>${vRemaining}</strong> portions left</span>
+          <span class="canteen-portions-left"><span class="quota-dot"></span><strong>${vRemaining}</strong> portions available</span>
           <span class="canteen-cta-link">Browse Menu &rarr;</span>
         </div>
       </div>

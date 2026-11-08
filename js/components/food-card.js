@@ -21,17 +21,14 @@ export function renderStudentFoodCard(dish) {
     <div class="food-card ${isSoldOut ? 'sold-out' : ''}" data-action="open-meal" data-dish-id="${dish.id}">
       <div class="food-card-thumb">
         <img src="${dish.image}" alt="${dish.name}" loading="lazy" onerror="this.onerror=null; this.src='${getImgFallback()}';">
-        ${isSoldOut ? '<div class="sold-out-overlay">SOLD OUT<br><span style="font-size:9px; font-weight:500;">Limit Reached</span></div>' : ''}
+        ${isSoldOut ? '<div class="sold-out-overlay"><span>SOLD OUT</span><span style="font-size:8px; font-weight:500;">Limit Reached</span></div>' : ''}
         <span class="food-stall-pill">${dish.vendorStall || 'Stall'}</span>
       </div>
       
       <div class="food-card-details">
         <div>
           <div class="food-vendor-sub">${dish.vendorName}</div>
-          <div class="food-header-line">
-            <h4 class="food-title">${dish.name}</h4>
-            <span class="food-price">₱${dish.price}</span>
-          </div>
+          <h4 class="food-title">${dish.name}</h4>
           <p class="food-desc">${dish.description}</p>
         </div>
 
@@ -39,7 +36,7 @@ export function renderStudentFoodCard(dish) {
           <div class="gauge-labels">
             <span>Daily Prep Quota</span>
             <span class="highlight-servings ${statusTextClass}">
-              ${isSoldOut ? '0 servings left (Quota hit)' : `${remaining} of ${dish.dailyLimit} left`}
+              ${isSoldOut ? '0 left (Limit hit)' : `${remaining} of ${dish.dailyLimit} left`}
             </span>
           </div>
           <div class="gauge-bar-track">
@@ -48,7 +45,7 @@ export function renderStudentFoodCard(dish) {
         </div>
 
         <div class="food-card-actions">
-          <span class="food-tag-pill">${dish.categoryName || 'Ulam'}</span>
+          <span class="food-price">₱${dish.price}</span>
           <button class="btn-add-cart" 
             ${isSoldOut ? 'disabled' : ''} 
             data-action="quick-add" 
@@ -68,7 +65,7 @@ export function renderFeaturedMealCard(dish) {
   const tagLabel = isSoldOut ? 'SOLD OUT' : `${remaining} left`;
 
   return `
-    <div class="featured-card" data-action="open-meal" data-dish-id="${dish.id}">
+    <div class="featured-card ${isSoldOut ? 'sold-out' : ''}" data-action="open-meal" data-dish-id="${dish.id}">
       <div class="featured-img-wrap">
         <img src="${dish.image}" alt="${dish.name}" loading="lazy" onerror="this.onerror=null; this.src='${getImgFallback()}';">
         <span class="stock-tag-pill ${tagClass}">${tagLabel}</span>
@@ -76,15 +73,14 @@ export function renderFeaturedMealCard(dish) {
       </div>
       <div class="featured-content">
         <div class="featured-vendor-line">${dish.vendorName}</div>
-        <h4>${dish.name}</h4>
-        <div class="item-cat">${dish.categoryName || 'Ulam'}</div>
+        <h4 class="featured-title">${dish.name}</h4>
         <div class="featured-bottom">
           <span class="featured-price">₱${dish.price}</span>
           <button class="btn-mini-add" 
             ${isSoldOut ? 'disabled' : ''} 
             data-action="quick-add" 
             data-dish-id="${dish.id}">
-            ${isSoldOut ? 'Sold Out' : '+ Add'}
+            ${isSoldOut ? 'Sold Out' : '+ Reserve'}
           </button>
         </div>
       </div>
