@@ -582,6 +582,16 @@ class SapatStorage {
     return vendors.find(v => v.id === vendorId) || vendors[0];
   }
 
+  static toggleVendorStatus(vendorId, isOpen) {
+    const vendors = this.getVendors();
+    const vendor = vendors.find(v => v.id === vendorId);
+    if (!vendor) return false;
+    vendor.isOpen = isOpen;
+    vendor.statusText = isOpen ? 'Open Now' : 'Closed';
+    this.saveVendors(vendors);
+    return true;
+  }
+
   static getCurrentVendorId() {
     return localStorage.getItem(SAPAT_STORAGE_KEY_CURRENT_VENDOR) || 'vendor-lita';
   }

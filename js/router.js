@@ -14,6 +14,12 @@ import { vendorOrdersPage } from './pages/vendor/orders.js';
 import { vendorPrepPage } from './pages/vendor/prep.js';
 import { vendorProfilePage } from './pages/vendor/profile.js';
 
+import { adminDashboardPage } from './pages/admin/dashboard.js';
+import { adminCanteensPage } from './pages/admin/canteens.js';
+import { adminMenuPage } from './pages/admin/menu.js';
+import { adminAnalyticsPage } from './pages/admin/analytics.js';
+import { adminSettingsPage } from './pages/admin/settings.js';
+
 class AppRouter {
   constructor() {
     this.container = null;
@@ -29,6 +35,12 @@ class AppRouter {
       '#/vendor/orders': vendorOrdersPage,
       '#/vendor/prep': vendorPrepPage,
       '#/vendor/profile': vendorProfilePage,
+
+      '#/admin/dashboard': adminDashboardPage,
+      '#/admin/canteens': adminCanteensPage,
+      '#/admin/menu': adminMenuPage,
+      '#/admin/analytics': adminAnalyticsPage,
+      '#/admin/settings': adminSettingsPage,
     };
 
     this.currentPath = '';
@@ -45,8 +57,9 @@ class AppRouter {
     // Listen for storage / role updates
     state.subscribe((event) => {
       if (event === 'role-changed') {
-        const homeRoute = state.role === 'student' ? '#/student/home' : '#/vendor/dashboard';
-        if (!this.getCurrentRoute().startsWith(state.role === 'student' ? '#/student' : '#/vendor')) {
+        const homeRoute = state.role === 'student' ? '#/student/home' : (state.role === 'admin' ? '#/admin/dashboard' : '#/vendor/dashboard');
+        const rolePrefix = `#/` + state.role;
+        if (!this.getCurrentRoute().startsWith(rolePrefix)) {
           this.navigate(homeRoute);
         } else {
           this.handleRoute();
@@ -74,7 +87,7 @@ class AppRouter {
   }
 
   navigateHome() {
-    const target = state.role === 'student' ? '#/student/home' : '#/vendor/dashboard';
+    const target = state.role === 'student' ? '#/student/home' : (state.role === 'admin' ? '#/admin/dashboard' : '#/vendor/dashboard');
     this.navigate(target);
   }
 
@@ -82,8 +95,8 @@ class AppRouter {
     let hash = window.location.hash.trim();
 
     // Default / Empty route handling
-    if (!hash || hash === '#' || hash === '#/' || hash === '#/student' || hash === '#/vendor') {
-      const defaultRoute = state.role === 'student' ? '#/student/home' : '#/vendor/dashboard';
+    if (!hash || hash === '#' || hash === '#/' || hash === '#/student' || hash === '#/vendor' || hash === '#/admin') {
+      const defaultRoute = state.role === 'student' ? '#/student/home' : (state.role === 'admin' ? '#/admin/dashboard' : '#/vendor/dashboard');
       if (hash !== defaultRoute) {
         window.location.replace(defaultRoute);
         return;
@@ -96,6 +109,8 @@ class AppRouter {
       state.setRole('student');
     } else if (hash.startsWith('#/vendor') && state.role !== 'vendor') {
       state.setRole('vendor');
+    } else if (hash.startsWith('#/admin') && state.role !== 'admin') {
+      state.setRole('admin');
     }
 
     this.currentPath = hash;

@@ -33,6 +33,15 @@ export function initModals() {
         return;
       }
 
+      const adminTile = e.target.closest('[data-action="switch-role-admin"]');
+      if (adminTile) {
+        state.setRole('admin');
+        closeRoleModal();
+        router.navigate('#/admin/dashboard');
+        showToast('Switched to Campus Administrator portal', 'success');
+        return;
+      }
+
       const specificVendorItem = e.target.closest('[data-action="switch-role-vendor"]');
       if (specificVendorItem) {
         const vendorId = specificVendorItem.getAttribute('data-vendor-id');

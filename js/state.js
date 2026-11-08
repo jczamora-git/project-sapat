@@ -35,7 +35,7 @@ class AppState {
   }
 
   setRole(newRole) {
-    if (newRole !== 'student' && newRole !== 'vendor') return;
+    if (newRole !== 'student' && newRole !== 'vendor' && newRole !== 'admin') return;
     this.role = newRole;
     SapatStorage.saveRole(newRole);
     this.notify('role-changed', newRole);

@@ -20,8 +20,14 @@ export function renderCanteenCard(v, menu) {
       <div class="canteen-card-body">
         <p class="canteen-desc">${v.description}</p>
         <div class="canteen-footer-row">
-          <span class="canteen-portions-left"><span class="quota-dot"></span><strong>${vRemaining}</strong> portions available</span>
-          <span class="canteen-cta-link">Browse Menu &rarr;</span>
+          <span class="canteen-portions-left">
+            <span class="quota-dot"></span>
+            <strong>${vRemaining}</strong> portions left
+          </span>
+          <span class="canteen-cta-link">
+            <span>Browse</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </span>
         </div>
       </div>
     </div>

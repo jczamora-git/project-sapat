@@ -115,6 +115,17 @@
         </div>
       </div>
 
+      <!-- Option 3: Campus Administrator -->
+      <div class="action-tile" style="padding: 16px; border: 2px solid #E0F2FE; cursor: pointer;" data-action="switch-role-admin">
+        <div class="action-tile-icon blue" style="width: 48px; height: 48px; background: #E0F2FE; color: #0284C7;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        </div>
+        <div class="action-tile-text">
+          <h4 style="font-size: 15px;">Campus Administrator Portal</h4>
+          <p>Multi-stall oversight, AI demand forecasting, food waste analytics & catalog control.</p>
+        </div>
+      </div>
+
       <!-- Quick Canteen Stall Switcher in Modal -->
       <div style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-top: 4px;">
         Or select a specific Canteen Stall:
@@ -128,63 +139,84 @@
 
 <!-- 2. Meal Details Modal -->
 <div class="modal-overlay" id="modal-meal-details">
-  <div class="bottom-sheet" style="max-height: 92%;">
+  <div class="bottom-sheet modal-meal-sheet">
     <div class="sheet-handle"></div>
-    <div class="modal-header-row">
-      <div>
-        <div id="modal-meal-vendor-badge" class="modal-vendor-badge"></div>
-        <h3 id="modal-meal-title">Dish Details</h3>
-      </div>
-      <button class="close-modal-btn">&times;</button>
+    
+    <div class="modal-header-row" style="margin-bottom: 8px;">
+      <span class="modal-sheet-kicker">Dish Information</span>
+      <button class="close-modal-btn" aria-label="Close modal">&times;</button>
     </div>
 
-    <div style="width: 100%; height: 180px; border-radius: 14px; overflow: hidden; margin-bottom: 14px; background: #e2e8f0;">
-      <img id="modal-meal-img" src="" alt="Dish" style="width: 100%; height: 100%; object-fit: cover;">
+    <!-- Hero Food Media (Delivery App Style) -->
+    <div class="modal-meal-media">
+      <img id="modal-meal-img" src="" alt="Dish" loading="lazy">
+      <div class="modal-media-heart" title="Save to favorites">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
-      <span id="modal-meal-cat" style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;"></span>
-      <span id="modal-meal-price" style="font-size: 20px; font-weight: 800; color: var(--primary);">₱0</span>
+    <!-- Title & Rating Header -->
+    <div class="modal-title-rating-row">
+      <h3 id="modal-meal-title" class="modal-dish-title">Dish Details</h3>
+      <div class="modal-rating-pill">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="#FF8A24" stroke="#FF8A24" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span>4.8</span>
+        <small>(Campus Fav)</small>
+      </div>
     </div>
 
-    <p id="modal-meal-desc" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;"></p>
-
-    <!-- Prep Limit Status in Modal -->
-    <div style="background: var(--surface-muted); border-radius: 12px; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border-subtle);">
-      <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 6px;">
-        <span>Kitchen Preparation Limit</span>
-        <span id="modal-meal-servings-text" style="color: var(--primary);">12 of 45 left</span>
-      </div>
-      <div class="gauge-bar-track" style="height: 6px;">
-        <div class="gauge-bar-fill" id="modal-meal-gauge-fill" style="width: 60%;"></div>
-      </div>
-      <div id="modal-meal-prep-note" style="font-size: 11px; color: var(--text-muted); margin-top: 6px;"></div>
-    </div>
-
-    <!-- Quantity & Add to Preorder Bottom Area -->
-    <div class="modal-order-action-bar">
-      <div class="modal-stepper-wrap">
-        <span class="modal-stepper-label">Quantity</span>
-        <div class="modal-qty-stepper">
-          <button class="modal-stepper-btn" id="modal-qty-minus-btn" data-action="modal-qty-minus" aria-label="Decrease quantity">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          </button>
-          <span class="modal-stepper-value" id="modal-meal-qty">1</span>
-          <button class="modal-stepper-btn" id="modal-qty-plus-btn" data-action="modal-qty-plus" aria-label="Increase quantity">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="modal-cta-col">
-        <div class="modal-subtotal-meta">
-          <span class="modal-subtotal-label">Subtotal</span>
-          <span class="modal-subtotal-price" id="modal-meal-subtotal">₱0</span>
-        </div>
-        <button class="btn-primary-action modal-confirm-add-btn" id="modal-btn-add">
-          Add to Preorder
+    <!-- Price & Quantity Stepper Row -->
+    <div class="modal-price-stepper-row">
+      <span id="modal-meal-price" class="modal-dish-price">₱0</span>
+      
+      <div class="modal-qty-stepper">
+        <button class="modal-stepper-btn minus" id="modal-qty-minus-btn" data-action="modal-qty-minus" aria-label="Decrease quantity">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+        <span class="modal-stepper-value" id="modal-meal-qty">1</span>
+        <button class="modal-stepper-btn plus" id="modal-qty-plus-btn" data-action="modal-qty-plus" aria-label="Increase quantity">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
       </div>
+    </div>
+
+    <!-- Meta Chips Row (Stall, Shift, Category) -->
+    <div class="modal-meta-chips-row">
+      <span class="meta-chip stall" id="modal-meal-vendor-badge">Stall</span>
+      <span class="meta-chip cat" id="modal-meal-cat">Kanin at Ulam</span>
+      <span class="meta-chip prep">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>Daily Batch</span>
+      </span>
+    </div>
+
+    <!-- Dish Description -->
+    <p id="modal-meal-desc" class="modal-dish-desc"></p>
+
+    <!-- Prep Quota Status & Gauge -->
+    <div class="modal-prep-metrics-card">
+      <div class="prep-metrics-header">
+        <div class="prep-metrics-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span>Daily Kitchen Limit</span>
+        </div>
+        <span id="modal-meal-servings-text" class="prep-metrics-count">12 of 45 left</span>
+      </div>
+      <div class="gauge-bar-track">
+        <div class="gauge-bar-fill" id="modal-meal-gauge-fill" style="width: 60%;"></div>
+      </div>
+      <div id="modal-meal-prep-note" class="modal-prep-note"></div>
+    </div>
+
+    <!-- Action CTA Footer -->
+    <div class="modal-order-action-bar">
+      <div class="modal-subtotal-meta">
+        <span class="modal-subtotal-label">Subtotal</span>
+        <span class="modal-subtotal-price" id="modal-meal-subtotal">₱0</span>
+      </div>
+      <button class="btn-primary-action modal-confirm-add-btn" id="modal-btn-add">
+        Add to Preorder
+      </button>
     </div>
   </div>
 </div>

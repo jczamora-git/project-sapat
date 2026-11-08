@@ -20,24 +20,42 @@ export const studentHomePage = {
     container.innerHTML = `
       <section class="screen active" id="screen-student-home">
         
-        <!-- B. Welcome Section (Editorial, No Boxed Hero Card) -->
+        <!-- Welcome Header -->
         <div class="home-welcome-section">
           <div class="home-campus-tag">
-            <span class="live-pulse-dot"></span>
-            <span>Main Campus Canteen &bull; Lunch Shift Pre-orders</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span>Main Campus Canteen &bull; Express Pre-orders</span>
           </div>
           <h2 class="home-greeting-heading">Good morning, Maria</h2>
           <p class="home-greeting-sub">Reserve freshly cooked meals ahead of time to lock in your portion and skip canteen lines.</p>
         </div>
 
-        <!-- C. Search Input (Navigates to Menu) -->
+        <!-- Search Bar (Quick Jump to Catalog) -->
         <div class="home-search-wrap" data-route="#/student/menu">
           <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input type="text" class="home-search-input" id="home-search-input" placeholder="Search dishes, stalls, or ulam..." autocomplete="off">
+          <button class="home-search-cta" data-route="#/student/menu" title="Open Filter & Menu">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          </button>
         </div>
 
-        <!-- D. Explore Canteens (Horizontal Scroll) -->
-        <div class="section-row-header">
+        <!-- Modern Pre-order Hero Banner (Food App Style) -->
+        <div class="home-feature-banner" data-route="#/student/menu">
+          <div class="feature-banner-content">
+            <span class="feature-badge">Zero-Wait Express</span>
+            <h3 class="feature-title">Fresh Canteen Meals, Zero Lunch Queue</h3>
+            <p class="feature-sub">Meals cooked fresh to student portion targets. Pick up in seconds.</p>
+            <div class="feature-cta-row">
+              <span class="feature-link-btn">Pre-order Now &rarr;</span>
+            </div>
+          </div>
+          <div class="feature-banner-img">
+            <img src="https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=360&q=80" alt="Delicious Canteen Dish" loading="lazy">
+          </div>
+        </div>
+
+        <!-- Explore Canteens (Horizontal Carousel) -->
+        <div class="section-row-header" style="margin-top: 20px;">
           <div>
             <h3 class="section-heading">Explore Canteens</h3>
             <span class="section-subtext">5 independent food stalls with live portion quotas</span>
@@ -48,8 +66,8 @@ export const studentHomePage = {
           ${vendors.map(v => renderCanteenCard(v, menu)).join('')}
         </div>
 
-        <!-- F. Available Meals Today (Modern 2-Column Food Grid) -->
-        <div class="section-row-header" style="margin-top: 24px;">
+        <!-- Available Meals Today (Modern 2-Column Food Grid) -->
+        <div class="section-row-header" style="margin-top: 22px;">
           <div>
             <h3 class="section-heading">Available Meals Today</h3>
             <span class="section-subtext">Chef specials and student favorites ready to reserve</span>
@@ -60,7 +78,7 @@ export const studentHomePage = {
           ${availableDishes.slice(0, 6).map(d => renderFeaturedMealCard(d)).join('')}
         </div>
 
-        <!-- G. Impact Summary (Compact & Unobtrusive) -->
+        <!-- Sustainability & Waste Prevention Impact Strip -->
         <div class="home-impact-strip">
           <div class="impact-stat-item">
             <span class="impact-stat-value">4.8 kg</span>
@@ -92,8 +110,8 @@ export const studentHomePage = {
           }
         }
       });
-      searchInput.addEventListener('click', () => {
-        // focus input
+      searchInput.addEventListener('click', (e) => {
+        e.stopPropagation();
       });
     }
 
@@ -104,17 +122,6 @@ export const studentHomePage = {
         const route = routeEl.getAttribute('data-route');
         if (route) {
           router.navigate(route);
-          return;
-        }
-      }
-
-      // Category chip filter -> navigate to menu
-      const catBtn = e.target.closest('[data-action="filter-home-category"]');
-      if (catBtn) {
-        const catId = catBtn.getAttribute('data-cat-id');
-        if (catId) {
-          state.setSelectedCategory(catId);
-          router.navigate('#/student/menu');
           return;
         }
       }

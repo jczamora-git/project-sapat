@@ -2,11 +2,13 @@ import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
 import { showToast } from '../../components/toast.js';
+import { getImgFallback } from '../../components/food-card.js';
 
 export const studentCartPage = {
   render(container) {
     const items = state.cart;
     const subtotal = state.getCartTotal();
+    const count = state.getCartCount();
 
     if (items.length === 0) {
       container.innerHTML = `
@@ -21,7 +23,7 @@ export const studentCartPage = {
             </div>
             <h3>Your tray is empty</h3>
             <p>Browse today's canteen dishes and reserve your portions early before daily kitchen quotas are reached.</p>
-            <button class="btn-primary-action" style="margin-top: 14px; width: auto; padding: 0 20px;" data-route="#/student/menu">
+            <button class="btn-primary-action" style="margin-top: 14px; width: auto; padding: 0 22px;" data-route="#/student/menu">
               Browse Canteen Menu
             </button>
           </div>
@@ -38,55 +40,80 @@ export const studentCartPage = {
         <div class="page-title-wrap" style="display: flex; justify-content: space-between; align-items: flex-end;">
           <div>
             <h2 class="page-main-heading">Pre-order Tray</h2>
-            <p class="page-main-sub">${state.getCartCount()} meal portion(s) selected</p>
+            <p class="page-main-sub">${count} portion${count === 1 ? '' : 's'} selected for reservation</p>
           </div>
           <button class="btn-clear-tray" data-action="clear-cart">Clear All</button>
         </div>
 
-        <!-- Items in Tray -->
+        <!-- Items in Tray (With Food Photography Thumbnails) -->
         <div class="cart-feed-list">
           ${items.map(item => `
-            <div class="cart-item-row">
-              <div class="cart-item-info">
+            <div class="cart-item-card">
+              <div class="cart-item-thumb">
+                <img src="${item.image || ''}" alt="${item.name}" loading="lazy" onerror="this.onerror=null; this.src='${getImgFallback()}';">
+              </div>
+              
+              <div class="cart-item-details">
                 <span class="cart-item-stall">${item.vendorStall || 'Stall'} &bull; ${item.vendorName || 'Canteen'}</span>
                 <h4 class="cart-item-name">${item.name}</h4>
-                <div class="cart-item-price-unit">
-                  <strong>₱${item.price * item.quantity}</strong>
-                  <span>(₱${item.price} each)</span>
+                <div class="cart-item-pricing">
+                  <span class="cart-item-subtotal">₱${item.price * item.quantity}</span>
+                  <span class="cart-item-unitprice">₱${item.price} each</span>
                 </div>
               </div>
+
               <div class="cart-stepper-control">
-                <button class="qty-btn minus" data-action="cart-minus" data-dish-id="${item.id}">−</button>
-                <span class="qty-number">${item.quantity}</span>
-                <button class="qty-btn plus" data-action="cart-plus" data-dish-id="${item.id}">+</button>
+                <button class="cart-step-btn minus" data-action="cart-minus" data-dish-id="${item.id}" aria-label="Decrease quantity">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+                <span class="cart-step-num">${item.quantity}</span>
+                <button class="cart-step-btn plus" data-action="cart-plus" data-dish-id="${item.id}" aria-label="Increase quantity">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
               </div>
             </div>
           `).join('')}
         </div>
 
-        <!-- Pickup Window Selection (Selectable Cards) -->
+        <!-- Pickup Window Selection (Food App Style) -->
         <div class="checkout-block-card">
-          <h4 class="block-card-title">Select Pickup Window</h4>
+          <div class="block-card-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <h4 class="block-card-title">Select Pickup Window</h4>
+          </div>
+          <p class="block-card-desc">Canteen kitchens prepare portions in batches matched to your chosen pickup shift.</p>
+          
           <div class="pickup-options-stack">
             <label class="pickup-select-card">
               <input type="radio" name="pickup-slot" value="11:30 AM (Lunch Shift 1)" checked>
               <div class="pickup-select-content">
-                <span class="pickup-select-time">11:30 AM</span>
-                <span class="pickup-select-shift">Lunch Shift 1</span>
+                <div>
+                  <span class="pickup-select-time">11:30 AM</span>
+                  <span class="pickup-select-shift">Lunch Shift 1</span>
+                </div>
+                <span class="pickup-select-badge">Optimal Freshness</span>
               </div>
             </label>
+
             <label class="pickup-select-card">
               <input type="radio" name="pickup-slot" value="12:15 PM (Lunch Shift 2)">
               <div class="pickup-select-content">
-                <span class="pickup-select-time">12:15 PM</span>
-                <span class="pickup-select-shift">Lunch Shift 2</span>
+                <div>
+                  <span class="pickup-select-time">12:15 PM</span>
+                  <span class="pickup-select-shift">Lunch Shift 2</span>
+                </div>
+                <span class="pickup-select-badge secondary">Peak Shift</span>
               </div>
             </label>
+
             <label class="pickup-select-card">
               <input type="radio" name="pickup-slot" value="2:45 PM (Afternoon Recess)">
               <div class="pickup-select-content">
-                <span class="pickup-select-time">2:45 PM</span>
-                <span class="pickup-select-shift">Afternoon Recess</span>
+                <div>
+                  <span class="pickup-select-time">2:45 PM</span>
+                  <span class="pickup-select-shift">Afternoon Recess</span>
+                </div>
+                <span class="pickup-select-badge secondary">Warm Snacks</span>
               </div>
             </label>
           </div>
@@ -94,14 +121,17 @@ export const studentCartPage = {
 
         <!-- Dietary Instruction / Kitchen Note -->
         <div class="checkout-block-card">
-          <label class="block-card-title" for="cart-kitchen-note">Special Instructions (Optional)</label>
-          <input type="text" class="cart-note-input" id="cart-kitchen-note" placeholder="e.g. Less gravy, separate chili sauce..." maxlength="100">
+          <div class="block-card-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            <label class="block-card-title" for="cart-kitchen-note" style="margin: 0;">Special Kitchen Note (Optional)</label>
+          </div>
+          <input type="text" class="cart-note-input" id="cart-kitchen-note" placeholder="e.g. Less gravy, separate chili sauce, no onion..." maxlength="100">
         </div>
 
         <!-- Bill Breakdown Summary -->
         <div class="cart-breakdown-card">
           <div class="bill-row">
-            <span>Subtotal (${state.getCartCount()} portions)</span>
+            <span>Subtotal (${count} portion${count === 1 ? '' : 's'})</span>
             <span class="bill-val">₱${subtotal}</span>
           </div>
           <div class="bill-row">
@@ -112,15 +142,16 @@ export const studentCartPage = {
           <div class="bill-total-row">
             <div>
               <strong>Total to Pay at Stall</strong>
-              <small>Upon pickup presentation</small>
+              <small>Cash / e-Wallet upon claiming at stall window</small>
             </div>
             <span class="bill-total-price">₱${subtotal}</span>
           </div>
         </div>
 
-        <!-- Checkout Action Button -->
+        <!-- Sticky-Ready Checkout Action Button -->
         <button class="btn-checkout-primary" id="btn-confirm-checkout" data-action="confirm-checkout">
-          Confirm & Reserve Pre-order (₱${subtotal})
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>Confirm & Lock Pre-order (₱${subtotal})</span>
         </button>
 
       </section>
@@ -158,8 +189,10 @@ export const studentCartPage = {
         const dishId = plusBtn.getAttribute('data-dish-id');
         const dish = SapatStorage.getDishById(dishId);
         if (dish) {
-          state.addToCart(dish, 1);
-          this.render(container);
+          const success = state.addToCart(dish, 1);
+          if (success) {
+            this.render(container);
+          }
         }
         return;
       }
@@ -167,7 +200,7 @@ export const studentCartPage = {
       const minusBtn = e.target.closest('[data-action="cart-minus"]');
       if (minusBtn) {
         const dishId = minusBtn.getAttribute('data-dish-id');
-        state.removeFromCart(dishId, 1);
+        state.updateCartQty(dishId, -1);
         this.render(container);
         return;
       }
@@ -183,13 +216,65 @@ export const studentCartPage = {
         const selectedSlot = container.querySelector('input[name="pickup-slot"]:checked')?.value || '11:30 AM (Lunch Shift 1)';
         const note = container.querySelector('#cart-kitchen-note')?.value.trim() || '';
 
-        const newOrder = state.createOrderFromCart(selectedSlot, note);
-        if (newOrder) {
-          showToast(`Pre-order #${newOrder.id} reserved successfully!`, 'success');
-          router.navigate('#/student/orders');
-        } else {
-          showToast('Failed to place pre-order. Please try again.', 'error');
+        // Generate orders grouped by vendor
+        const currentOrders = SapatStorage.getOrders();
+        const menu = SapatStorage.getMenu();
+
+        // Group cart items by vendorId
+        const vendorGroups = {};
+        for (const item of state.cart) {
+          if (!vendorGroups[item.vendorId]) {
+            vendorGroups[item.vendorId] = [];
+          }
+          vendorGroups[item.vendorId].push(item);
         }
+
+        const createdOrders = [];
+        for (const [vendorId, vItems] of Object.entries(vendorGroups)) {
+          const vTotal = vItems.reduce((s, i) => s + (i.price * i.quantity), 0);
+          const vServings = vItems.reduce((s, i) => s + i.quantity, 0);
+          const vendor = SapatStorage.getVendorById(vendorId);
+
+          const orderId = 'SPT-' + Math.floor(1000 + Math.random() * 9000);
+          const newOrder = {
+            id: orderId,
+            studentName: 'Maria Santos',
+            gradeSection: 'Grade 11 - STEM A',
+            vendorId,
+            vendorName: vendor ? vendor.name : 'Canteen Stall',
+            vendorStall: vendor ? vendor.stallNumber : 'Stall',
+            items: vItems.map(i => ({
+              id: i.id,
+              name: i.name,
+              price: i.price,
+              quantity: i.quantity
+            })),
+            totalAmount: vTotal,
+            totalServings: vServings,
+            pickupTime: selectedSlot,
+            specialInstructions: note,
+            status: 'Pending',
+            createdAt: new Date().toISOString()
+          };
+
+          // Deduct portions from inventory
+          for (const item of vItems) {
+            const dish = menu.find(d => d.id === item.id);
+            if (dish) {
+              dish.reservedServings = (dish.reservedServings || 0) + item.quantity;
+            }
+          }
+
+          createdOrders.push(newOrder);
+          currentOrders.unshift(newOrder);
+        }
+
+        SapatStorage.saveMenu(menu);
+        SapatStorage.saveOrders(currentOrders);
+        state.clearCart();
+
+        showToast(`Pre-order #${createdOrders[0].id} placed successfully!`, 'success');
+        router.navigate('#/student/orders');
       }
     });
   }
