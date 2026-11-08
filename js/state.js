@@ -8,6 +8,8 @@ class AppState {
     this.cart = [];
     this.selectedCategory = 'all';
     this.searchQuery = '';
+    this.menuSortBy = 'recommended';
+    this.menuInStockOnly = false;
     this.ordersTab = 'active';
     this.vendorMenuTab = 'all';
     this.vendorPrepTab = 'all';
@@ -49,6 +51,26 @@ class AppState {
     this.studentVendorFilter = vendorId;
     SapatStorage.setStudentSelectedVendor(vendorId);
     this.notify('student-vendor-filter-changed', vendorId);
+  }
+
+  setSearchQuery(q) {
+    this.searchQuery = q || '';
+    this.notify('search-changed', this.searchQuery);
+  }
+
+  setSelectedCategory(catId) {
+    this.selectedCategory = catId || 'all';
+    this.notify('category-changed', this.selectedCategory);
+  }
+
+  setMenuSortBy(sort) {
+    this.menuSortBy = sort || 'recommended';
+    this.notify('menu-sort-changed', this.menuSortBy);
+  }
+
+  setMenuInStockOnly(stockOnly) {
+    this.menuInStockOnly = !!stockOnly;
+    this.notify('menu-filter-changed', this.menuInStockOnly);
   }
 
   getCartCount() {
@@ -100,6 +122,8 @@ class AppState {
     this.cart = [];
     this.selectedCategory = 'all';
     this.searchQuery = '';
+    this.menuSortBy = 'recommended';
+    this.menuInStockOnly = false;
     this.ordersTab = 'active';
     this.vendorMenuTab = 'all';
     this.vendorPrepTab = 'all';

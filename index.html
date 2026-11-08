@@ -286,6 +286,81 @@
   </div>
 </div>
 
+<!-- 5. Menu Filter & Sort Bottom Sheet Modal -->
+<div class="modal-overlay" id="modal-menu-filters">
+  <div class="bottom-sheet" style="max-height: 90%;">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row">
+      <div>
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0;">Filter & Sort Menu</h3>
+        <span style="font-size: 11px; color: var(--text-secondary);">Refine dishes by stall, category, and price</span>
+      </div>
+      <button class="close-modal-btn" data-action="close-menu-filters">&times;</button>
+    </div>
+
+    <div class="filter-modal-body">
+      <!-- Sort By -->
+      <div class="filter-group">
+        <label class="filter-group-title">Sort By</label>
+        <div class="filter-sort-grid">
+          <label class="filter-sort-card">
+            <input type="radio" name="modalMenuSort" value="recommended" checked>
+            <div class="sort-card-content">
+              <span class="sort-card-name">Recommended</span>
+              <span class="sort-card-sub">In-stock & popular first</span>
+            </div>
+          </label>
+          <label class="filter-sort-card">
+            <input type="radio" name="modalMenuSort" value="price-asc">
+            <div class="sort-card-content">
+              <span class="sort-card-name">Price: Low to High</span>
+              <span class="sort-card-sub">Budget student meals</span>
+            </div>
+          </label>
+          <label class="filter-sort-card">
+            <input type="radio" name="modalMenuSort" value="price-desc">
+            <div class="sort-card-content">
+              <span class="sort-card-name">Price: High to Low</span>
+              <span class="sort-card-sub">Hearty combo specials</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Availability -->
+      <div class="filter-group">
+        <label class="filter-group-title">Availability</label>
+        <label class="filter-toggle-row">
+          <span>In Stock Only (Hide Sold Out items)</span>
+          <input type="checkbox" id="modal-filter-instock">
+        </label>
+      </div>
+
+      <!-- Canteen Stall -->
+      <div class="filter-group">
+        <label class="filter-group-title">Canteen Stall</label>
+        <div class="filter-chips-grid" id="modal-filter-vendor-chips">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Food Category -->
+      <div class="filter-group">
+        <label class="filter-group-title">Food Category</label>
+        <div class="filter-chips-grid" id="modal-filter-cat-chips">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="filter-modal-actions">
+      <button class="btn-filter-reset" id="modal-filter-btn-reset">Reset</button>
+      <button class="btn-primary-action" id="modal-filter-btn-apply" style="flex: 1;">Apply Filters</button>
+    </div>
+  </div>
+</div>
+
 <!-- Dynamic Toast Notification Container -->
 <div class="sapat-toast" id="sapat-toast">
   <span id="toast-icon"></span>

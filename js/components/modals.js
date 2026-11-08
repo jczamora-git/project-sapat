@@ -101,6 +101,66 @@ export function initModals() {
       if (e.target === passModal) closePickupPass();
     });
   }
+
+  // Modal 5: Menu Filters & Sort
+  const filterModal = document.getElementById('modal-menu-filters');
+  if (filterModal) {
+    const closeBtn = filterModal.querySelector('.close-modal-btn');
+    if (closeBtn) closeBtn.addEventListener('click', closeMenuFilterModal);
+
+    const resetBtn = document.getElementById('modal-filter-btn-reset');
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      state.menuSortBy = 'recommended';
+      state.menuInStockOnly = false;
+      state.studentVendorFilter = 'all';
+      state.selectedCategory = 'all';
+      populateFilterModal();
+      showToast('Filters reset to default', 'info');
+      state.notify('menu-filter-changed', null);
+      closeMenuFilterModal();
+    });
+
+    const applyBtn = document.getElementById('modal-filter-btn-apply');
+    if (applyBtn) applyBtn.addEventListener('click', () => {
+      const selectedSort = filterModal.querySelector('input[name="modalMenuSort"]:checked');
+      if (selectedSort) state.setMenuSortBy(selectedSort.value);
+
+      const inStockEl = document.getElementById('modal-filter-instock');
+      if (inStockEl) state.setMenuInStockOnly(inStockEl.checked);
+
+      const activeVendorChip = filterModal.querySelector('#modal-filter-vendor-chips .filter-chip.active');
+      if (activeVendorChip) {
+        state.setStudentVendorFilter(activeVendorChip.getAttribute('data-vendor-id') || 'all');
+      }
+
+      const activeCatChip = filterModal.querySelector('#modal-filter-cat-chips .filter-chip.active');
+      if (activeCatChip) {
+        state.setSelectedCategory(activeCatChip.getAttribute('data-cat-id') || 'all');
+      }
+
+      showToast('Filters applied', 'success');
+      state.notify('menu-filter-changed', null);
+      closeMenuFilterModal();
+    });
+
+    filterModal.addEventListener('click', (e) => {
+      if (e.target === filterModal) closeMenuFilterModal();
+
+      const vChip = e.target.closest('#modal-filter-vendor-chips .filter-chip');
+      if (vChip) {
+        filterModal.querySelectorAll('#modal-filter-vendor-chips .filter-chip').forEach(c => c.classList.remove('active'));
+        vChip.classList.add('active');
+        return;
+      }
+
+      const cChip = e.target.closest('#modal-filter-cat-chips .filter-chip');
+      if (cChip) {
+        filterModal.querySelectorAll('#modal-filter-cat-chips .filter-chip').forEach(c => c.classList.remove('active'));
+        cChip.classList.add('active');
+        return;
+      }
+    });
+  }
 }
 
 // ==========================================
@@ -394,5 +454,67 @@ export function openPickupPass(orderId) {
 export function closePickupPass() {
   const modal = document.getElementById('modal-pickup-pass');
   if (modal) modal.classList.remove('active');
+}
+
+// ==========================================
+// Menu Filter Modal Methods
+// ==========================================
+export function openMenuFilterModal() {
+  const modal = document.getElementById('modal-menu-filters');
+  if (!modal) return;
+  populateFilterModal();
+  modal.classList.add('active');
+}
+
+export function closeMenuFilterModal() {
+  const modal = document.getElementById('modal-menu-filters');
+  if (modal) modal.classList.remove('active');
+}
+
+function populateFilterModal() {
+  const modal = document.getElementById('modal-menu-filters');
+  if (!modal) return;
+
+  // Set sort radio
+  const sortRadio = modal.querySelector(`input[name="modalMenuSort"][value="${state.menuSortBy || 'recommended'}"]`);
+  if (sortRadio) sortRadio.checked = true;
+
+  // Set in-stock toggle
+  const inStockCheckbox = document.getElementById('modal-filter-instock');
+  if (inStockCheckbox) inStockCheckbox.checked = !!state.menuInStockOnly;
+
+  // Vendors
+  const vendors = SapatStorage.getVendors();
+  const vContainer = document.getElementById('modal-filter-vendor-chips');
+  if (vContainer) {
+    vContainer.innerHTML = `
+      <button type="button" class="filter-chip ${state.studentVendorFilter === 'all' ? 'active' : ''}" data-vendor-id="all">
+        All Stalls (5)
+      </button>
+      ${vendors.map(v => `
+        <button type="button" class="filter-chip ${state.studentVendorFilter === v.id ? 'active' : ''}" data-vendor-id="${v.id}">
+          ${v.stallNumber}: ${v.name}
+        </button>
+      `).join('')}
+    `;
+  }
+
+  // Categories
+  const categories = [
+    { id: 'all', label: 'All Dishes' },
+    { id: 'rice-meals', label: 'Rice Meals' },
+    { id: 'merienda', label: 'Merienda' },
+    { id: 'veggies', label: 'Healthy Bowls' },
+    { id: 'snacks', label: 'Snacks' },
+    { id: 'drinks', label: 'Drinks' }
+  ];
+  const cContainer = document.getElementById('modal-filter-cat-chips');
+  if (cContainer) {
+    cContainer.innerHTML = categories.map(cat => `
+      <button type="button" class="filter-chip ${state.selectedCategory === cat.id ? 'active' : ''}" data-cat-id="${cat.id}">
+        ${cat.label}
+      </button>
+    `).join('');
+  }
 }
 

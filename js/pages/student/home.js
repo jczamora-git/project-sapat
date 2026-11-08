@@ -17,15 +17,6 @@ export const studentHomePage = {
 
     const availableDishes = menu.filter(m => m.isAvailable);
 
-    // Food categories for horizontal category selector
-    const categories = [
-      { id: 'all', label: 'All Dishes' },
-      { id: 'rice-meals', label: 'Rice Meals' },
-      { id: 'merienda', label: 'Merienda' },
-      { id: 'veggies', label: 'Healthy Bowls' },
-      { id: 'drinks', label: 'Beverages' }
-    ];
-
     container.innerHTML = `
       <section class="screen active" id="screen-student-home">
         
@@ -39,22 +30,13 @@ export const studentHomePage = {
           <p class="home-greeting-sub">Reserve freshly cooked meals ahead of time to lock in your portion and skip canteen lines.</p>
         </div>
 
-        <!-- C. Search Input -->
-        <div class="home-search-wrap">
+        <!-- C. Search Input (Navigates to Menu) -->
+        <div class="home-search-wrap" data-route="#/student/menu">
           <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input type="text" class="home-search-input" id="home-search-input" placeholder="Search dishes, stalls, or ulam..." autocomplete="off">
         </div>
 
-        <!-- D. Food Categories Filter Strip -->
-        <div class="home-categories-strip">
-          ${categories.map(cat => `
-            <button class="home-cat-pill ${cat.id === 'all' ? 'active' : ''}" data-action="filter-home-category" data-cat-id="${cat.id}">
-              ${cat.label}
-            </button>
-          `).join('')}
-        </div>
-
-        <!-- E. Explore Canteens (Horizontal Scroll) -->
+        <!-- D. Explore Canteens (Horizontal Scroll) -->
         <div class="section-row-header">
           <div>
             <h3 class="section-heading">Explore Canteens</h3>
