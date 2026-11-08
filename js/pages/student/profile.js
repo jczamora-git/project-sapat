@@ -82,7 +82,7 @@ export const studentProfilePage = {
         <div class="profile-actions-stack">
           <button class="btn-profile-secondary" data-action="open-role-modal">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-            Switch to Canteen Vendor Mode
+            Switch Role (Vendor / Admin Portal)
           </button>
           
           <button class="btn-profile-danger" data-action="reset-app-data">
