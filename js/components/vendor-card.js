@@ -33,7 +33,7 @@ export function renderVendorAccountBar(currentVendorId, vendors) {
     <div class="v-account-selector-wrap">
       <div class="v-account-label">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-        <span>Demo Stall Account:</span>
+        <span>Stall Management Account:</span>
       </div>
       <select class="v-account-select" data-action="switch-vendor-account">
         ${vendors.map(v => `
@@ -60,4 +60,3 @@ export function renderModalVendorItem(v, isActive) {
     </div>
   `;
 }
-

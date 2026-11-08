@@ -1,70 +1,95 @@
 import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
+import { router } from '../../router.js';
 import { openRoleModal } from '../../components/modals.js';
 import { showToast } from '../../components/toast.js';
 
 export const studentProfilePage = {
   render(container) {
-    const settings = SapatStorage.getSettings();
-    const studentProf = settings.studentProfile || {
-      name: 'Maria Santos',
-      id: '2024-0891',
-      grade: 'Grade 11 - STEM A',
-      preordersCount: 16,
-      wasteSavedKg: 5.4
-    };
+    const orders = SapatStorage.getOrders();
+    const completedOrders = orders.filter(o => o.status === 'Completed').length;
 
     container.innerHTML = `
       <section class="screen active" id="screen-student-profile">
-        <div class="profile-card">
-          <div class="profile-avatar">MS</div>
-          <h3 class="profile-name">${studentProf.name}</h3>
-          <p class="profile-sub">${studentProf.grade} &bull; ID #${studentProf.id}</p>
+        
+        <!-- Minimal Profile Header -->
+        <div class="profile-minimal-header">
+          <div class="profile-avatar-circle">MS</div>
+          <h2 class="profile-display-name">Maria Santos</h2>
+          <span class="profile-role-sub">Student &bull; ID #2024-08192</span>
+          <span class="profile-campus-pill">Main Campus &bull; BS Information Technology</span>
+        </div>
 
-          <div class="profile-stats-grid">
-            <div class="p-stat-box">
-              <div class="p-stat-val">${studentProf.preordersCount}</div>
-              <div class="p-stat-lbl">Pre-orders Placed</div>
+        <!-- Student Metrics -->
+        <div class="profile-stats-duo">
+          <div class="profile-duo-card">
+            <span class="duo-number">${completedOrders}</span>
+            <span class="duo-label">Meals Pre-ordered</span>
+          </div>
+          <div class="profile-duo-card">
+            <span class="duo-number">4.8 kg</span>
+            <span class="duo-label">Kitchen Waste Prevented</span>
+          </div>
+        </div>
+
+        <!-- Section: Guidelines -->
+        <div class="profile-info-group">
+          <h4 class="profile-group-heading">Pre-ordering Guidelines</h4>
+          <div class="profile-list-card">
+            <div class="profile-list-row">
+              <div class="list-row-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <div class="list-row-content">
+                <strong>Cutoff Time</strong>
+                <p>Pre-orders lock 30 minutes before your selected lunch shift so cooks can prepare exact portions.</p>
+              </div>
             </div>
-            <div class="p-stat-box">
-              <div class="p-stat-val">${studentProf.wasteSavedKg} kg</div>
-              <div class="p-stat-lbl">Food Waste Avoided</div>
+            
+            <div class="profile-list-row">
+              <div class="list-row-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
+              </div>
+              <div class="list-row-content">
+                <strong>Express Pickup Pass</strong>
+                <p>Present your digital QR Pickup Pass at your stall's express counter to claim your hot meal without lining up.</p>
+              </div>
+            </div>
+
+            <div class="profile-list-row">
+              <div class="list-row-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+              </div>
+              <div class="list-row-content">
+                <strong>Instant Portion Return</strong>
+                <p>Cancellations release meal portions back to fellow students immediately.</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="info-box-card">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            Pre-order Guidelines & Cut-off
-          </h4>
-          <p>
-            &bull; Pre-orders ensure canteens prepare accurate servings and reduce leftover spoilage.<br>
-            &bull; Cut-off time is 30 minutes before your selected pickup slot.<br>
-            &bull; Ready meals can be claimed quickly at the designated stall express lane.<br>
-            &bull; Cancellations release servings back to your fellow students instantly.
-          </p>
+        <!-- Section: Principle -->
+        <div class="profile-info-group">
+          <h4 class="profile-group-heading">About Sapat System</h4>
+          <div class="profile-list-card" style="padding: 12px 14px;">
+            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+              <strong>Sapat</strong> bridges school canteens and hungry students through exact-portion pre-ordering. Cooks produce what is guaranteed to be eaten, eliminating school kitchen food waste.
+            </p>
+          </div>
         </div>
 
-        <div class="info-box-card">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            About Sapat System
-          </h4>
-          <p>
-            Sapat bridges school canteens and hungry students through exact-portion pre-ordering. Cooks produce what is guaranteed to be eaten, preventing school kitchen waste.
-          </p>
+        <!-- Role Switcher & Actions -->
+        <div class="profile-actions-stack">
+          <button class="btn-profile-secondary" data-action="open-role-modal">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+            Switch to Canteen Vendor Mode
+          </button>
+          
+          <button class="btn-profile-danger" data-action="reset-app-data">
+            Reset Demo Prototype Data
+          </button>
         </div>
 
-        <button class="btn-secondary-action" style="width: 100%; height: 40px; margin-top: 10px;" data-action="open-role-modal">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-          Switch Role / Canteen
-        </button>
-
-        <button class="btn-secondary-action" style="width: 100%; height: 40px; margin-top: 10px;" data-action="reset-demo-data">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-          Reset Demo Data
-        </button>
       </section>
     `;
 
@@ -79,15 +104,15 @@ export const studentProfilePage = {
         return;
       }
 
-      const resetBtn = e.target.closest('[data-action="reset-demo-data"]');
+      const resetBtn = e.target.closest('[data-action="reset-app-data"]');
       if (resetBtn) {
         if (!confirm('Reset Sapat prototype to factory seed data? This will restore original limits and 5-vendor mock data.')) return;
-        state.resetAll();
-        showToast('Prototype data reset to initial 5-vendor seed state!', 'success');
-        this.render(container);
-        return;
+        SapatStorage.resetToDefaults();
+        state.clearCart();
+        state.notify('data-reset');
+        showToast('Sapat prototype reset to initial mock data.', 'info');
+        router.navigate('#/student/home');
       }
     });
   }
 };
-

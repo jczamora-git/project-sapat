@@ -14,19 +14,21 @@ export const vendorOrdersPage = {
 
     container.innerHTML = `
       <section class="screen active" id="screen-vendor-orders">
+        
+        <!-- Stall Account Selector Bar -->
         <div class="vendor-account-bar">
           ${renderVendorAccountBar(state.currentVendorId, vendors)}
         </div>
 
-        <div class="page-header">
-          <h3>${currentVendor.stallNumber} Incoming Pre-orders</h3>
-          <p>${activeCount} active pre-order(s) requiring kitchen preparation</p>
+        <div class="page-title-wrap">
+          <h2 class="page-main-heading">${currentVendor.stallNumber} Pre-orders</h2>
+          <p class="page-main-sub">${activeCount} active pre-order(s) requiring kitchen preparation</p>
         </div>
 
-        <!-- Orders List -->
-        <div class="vendor-orders-list-wrap" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Orders Stack -->
+        <div class="v-orders-feed-stack">
           ${vendorOrders.length === 0 ? `
-            <div class="empty-state-wrap" style="padding: 35px 16px;">
+            <div class="empty-state-wrap">
               <div class="empty-state-icon">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
               </div>
@@ -40,7 +42,7 @@ export const vendorOrdersPage = {
             if (order.status === 'Pending') {
               actionsHTML = `
                 <button class="btn-primary-action" style="flex: 2; height: 38px; font-size: 12px;" data-action="update-order-status" data-order-id="${order.id}" data-status="Confirmed">
-                  Confirm Preorder
+                  Confirm Pre-order
                 </button>
                 <button class="btn-danger-outline" style="flex: 1;" data-action="vendor-decline-order" data-order-id="${order.id}">
                   Decline
@@ -60,45 +62,48 @@ export const vendorOrdersPage = {
               `;
             } else if (order.status === 'Ready for Pickup') {
               actionsHTML = `
-                <button class="btn-primary-action" style="flex: 1; height: 38px; font-size: 12px; background: #1e293b;" data-action="update-order-status" data-order-id="${order.id}" data-status="Completed">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Complete & Handover
+                <button class="btn-primary-action" style="flex: 1; height: 38px; font-size: 12px;" data-action="update-order-status" data-order-id="${order.id}" data-status="Completed">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Handover & Complete
                 </button>
               `;
             } else if (order.status === 'Completed') {
-              actionsHTML = `<div style="font-size: 11.5px; color: var(--primary); font-weight: 600; width: 100%; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Order Claimed and Paid</div>`;
+              actionsHTML = `<div class="v-order-claimed-msg"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Order Claimed and Paid</div>`;
             } else if (order.status === 'Cancelled') {
-              actionsHTML = `<div style="font-size: 11.5px; color: var(--status-cancelled); font-weight: 700; width: 100%; text-align: center;">Cancelled &bull; Servings Restored</div>`;
+              actionsHTML = `<div class="v-order-cancelled-msg">Cancelled &bull; Portions Restored</div>`;
             }
 
             return `
-              <div class="order-card">
-                <div class="order-card-header">
-                  <div>
-                    <span class="order-id-badge">#${order.id} &bull; ${order.studentName}</span>
-                    <div style="font-size: 11px; color: var(--text-secondary);">${order.gradeSection} &bull; ${order.pickupTime}</div>
+              <div class="modern-order-card">
+                <div class="modern-order-head">
+                  <div class="head-left-info">
+                    <strong class="order-vendor-title">#${order.id} &bull; ${order.studentName}</strong>
+                    <span class="order-number-ref">${order.gradeSection} &bull; ${order.pickupTime}</span>
                   </div>
-                  <span class="order-status-pill status-${order.status.toLowerCase().replace(/\s+/g, '-')}">
+                  <span class="order-status-badge status-${order.status.toLowerCase().replace(/\s+/g, '-')}">
                     ${order.status}
                   </span>
                 </div>
 
-                <div class="order-items-snippet" style="margin: 8px 0;">
-                  <strong>Reserved:</strong> ${itemsText}
-                  ${order.specialInstructions ? `<br><em>Note: "${order.specialInstructions}"</em>` : ''}
+                <div class="order-dishes-summary">
+                  <span class="dishes-summary-label">Dishes:</span>
+                  <p class="dishes-summary-text">${itemsText}</p>
+                  ${order.specialInstructions ? `<div class="dishes-kitchen-note">Note: "${order.specialInstructions}"</div>` : ''}
                 </div>
 
-                <div class="order-meta-footer">
-                  <span>${order.totalServings} serving(s) reserved</span>
-                  <span class="order-total-price">₱${order.totalAmount}</span>
-                </div>
-
-                <div class="order-actions-row" style="margin-top: 10px;">
-                  ${actionsHTML}
+                <div class="order-bottom-bar">
+                  <div class="order-cost-info">
+                    <span class="cost-portions">${order.totalServings} portion(s)</span>
+                    <strong class="cost-total">₱${order.totalAmount}</strong>
+                  </div>
+                  <div class="order-action-buttons" style="flex: 1.5; justify-content: flex-end;">
+                    ${actionsHTML}
+                  </div>
                 </div>
               </div>
             `;
           }).join('')}
         </div>
+
       </section>
     `;
 
@@ -141,34 +146,14 @@ export const vendorOrdersPage = {
       if (declineBtn) {
         const orderId = declineBtn.getAttribute('data-order-id');
         if (orderId) {
-          this.handleDeclineOrder(orderId, container);
+          if (!confirm(`Decline pre-order #${orderId}? Reserved servings will be returned to the kitchen.`)) return;
+          const success = SapatStorage.cancelOrder(orderId);
+          if (success) {
+            showToast(`Order #${orderId} declined.`, 'info');
+            this.render(container);
+          }
         }
-        return;
       }
     });
-  },
-
-  handleDeclineOrder(orderId, container) {
-    if (!confirm(`Decline order #${orderId}? This will cancel the reservation and return portions back to kitchen limits.`)) return;
-
-    const orders = SapatStorage.getOrders();
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
-
-    // Release portions
-    const menu = SapatStorage.getMenu();
-    order.items.forEach(item => {
-      const dish = menu.find(d => d.id === item.id);
-      if (dish) {
-        dish.reservedServings = Math.max(0, dish.reservedServings - item.quantity);
-      }
-    });
-    SapatStorage.saveMenu(menu);
-
-    order.status = 'Cancelled';
-    SapatStorage.saveOrders(orders);
-    showToast(`Order #${orderId} was declined. Servings restored.`, 'info');
-    this.render(container);
   }
 };
-

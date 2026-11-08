@@ -2,7 +2,7 @@ import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
 import { renderCanteenCard } from '../../components/vendor-card.js';
-import { renderFeaturedMealCard, renderStudentFoodCard } from '../../components/food-card.js';
+import { renderFeaturedMealCard } from '../../components/food-card.js';
 import { openMealModal } from '../../components/modals.js';
 import { showToast } from '../../components/toast.js';
 
@@ -10,103 +10,87 @@ export const studentHomePage = {
   render(container) {
     const vendors = SapatStorage.getVendors();
     const menu = SapatStorage.getMenu();
-    const orders = SapatStorage.getOrders();
 
-    const activeOrders = orders.filter(o => o.status !== 'Cancelled' && o.status !== 'Completed');
     const totalDailyLimit = menu.reduce((s, d) => s + (d.isAvailable ? d.dailyLimit : 0), 0);
     const totalReserved = menu.reduce((s, d) => s + (d.isAvailable ? d.reservedServings : 0), 0);
     const reservedRate = totalDailyLimit > 0 ? Math.round((totalReserved / totalDailyLimit) * 100) : 68;
 
-    const featuredDishes = menu.filter(m => m.isAvailable).slice(0, 5);
-    const quickMeals = menu.filter(m => m.isAvailable).slice(0, 4);
+    const availableDishes = menu.filter(m => m.isAvailable);
+
+    // Food categories for horizontal category selector
+    const categories = [
+      { id: 'all', label: 'All Dishes' },
+      { id: 'rice-meals', label: 'Rice Meals' },
+      { id: 'merienda', label: 'Merienda' },
+      { id: 'veggies', label: 'Healthy Bowls' },
+      { id: 'drinks', label: 'Beverages' }
+    ];
 
     container.innerHTML = `
       <section class="screen active" id="screen-student-home">
-        <div class="welcome-hero">
-          <div class="hero-top-badge">
-            <span class="live-pill"><span class="pulse-dot"></span> Advance Meal Pre-order</span>
-            <span class="hero-date">Main Campus Canteen</span>
+        
+        <!-- B. Welcome Section (Editorial, No Boxed Hero Card) -->
+        <div class="home-welcome-section">
+          <div class="home-campus-tag">
+            <span class="live-pulse-dot"></span>
+            <span>Main Campus Canteen &bull; Lunch Shift Pre-orders</span>
           </div>
-          <h2>Good morning, Maria</h2>
-          <p>Reserve freshly cooked meals ahead of time to guarantee your portion and eliminate lunch queue waiting.</p>
-          <div class="hero-stats-row">
-            <div class="hero-stat-item">
-              <span class="stat-label">Campus Kitchen Prep</span>
-              <span class="stat-value">${reservedRate}% Reserved</span>
-            </div>
-            <div class="hero-stat-item">
-              <span class="stat-label">Daily Waste Prevented</span>
-              <span class="stat-value">4.8 kg Saved</span>
-            </div>
-          </div>
+          <h2 class="home-greeting-heading">Good morning, Maria</h2>
+          <p class="home-greeting-sub">Reserve freshly cooked meals ahead of time to lock in your portion and skip canteen lines.</p>
         </div>
 
-        <!-- Kitchen Live Preparation Banner -->
-        <div class="kitchen-live-banner">
-          <div class="kitchen-pulse-dot"></div>
-          <div class="kitchen-live-text">
-            <h4>Canteen Kitchens are preparing today's pre-orders</h4>
-            <p>Order cutoff is 30 minutes before each pickup window</p>
-          </div>
+        <!-- C. Search Input -->
+        <div class="home-search-wrap">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" class="home-search-input" id="home-search-input" placeholder="Search dishes, stalls, or ulam..." autocomplete="off">
         </div>
 
-        <!-- Explore Canteens Section -->
-        <div class="section-header" style="margin-top: 20px;">
+        <!-- D. Food Categories Filter Strip -->
+        <div class="home-categories-strip">
+          ${categories.map(cat => `
+            <button class="home-cat-pill ${cat.id === 'all' ? 'active' : ''}" data-action="filter-home-category" data-cat-id="${cat.id}">
+              ${cat.label}
+            </button>
+          `).join('')}
+        </div>
+
+        <!-- E. Explore Canteens (Horizontal Scroll) -->
+        <div class="section-row-header">
           <div>
-            <h3>Explore Canteens</h3>
-            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">Browse independent menus and live portion quotas</p>
+            <h3 class="section-heading">Explore Canteens</h3>
+            <span class="section-subtext">5 independent food stalls with live portion quotas</span>
           </div>
-          <span class="badge-pill-green">5 Stalls Open</span>
+          <span class="section-badge-counter">5 Open</span>
         </div>
         <div class="canteen-scroll-container" id="explore-canteens-container">
           ${vendors.map(v => renderCanteenCard(v, menu)).join('')}
         </div>
 
-        <!-- Quick Actions -->
-        <div class="quick-action-grid">
-          <div class="action-tile" data-route="#/student/menu">
-            <div class="action-tile-icon green">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-            </div>
-            <div class="action-tile-text">
-              <h4>Browse Menu</h4>
-              <p>Reserve meals</p>
-            </div>
+        <!-- F. Available Meals Today (Modern 2-Column Food Grid) -->
+        <div class="section-row-header" style="margin-top: 24px;">
+          <div>
+            <h3 class="section-heading">Available Meals Today</h3>
+            <span class="section-subtext">Chef specials and student favorites ready to reserve</span>
           </div>
-          <div class="action-tile" data-route="#/student/orders">
-            <div class="action-tile-icon amber">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-            </div>
-            <div class="action-tile-text">
-              <h4>My Orders</h4>
-              <p>${activeOrders.length} Active</p>
-            </div>
+          <button class="section-see-all-btn" data-route="#/student/menu">See all (${availableDishes.length})</button>
+        </div>
+        <div class="meals-grid-2col" id="home-meals-grid">
+          ${availableDishes.slice(0, 6).map(d => renderFeaturedMealCard(d)).join('')}
+        </div>
+
+        <!-- G. Impact Summary (Compact & Unobtrusive) -->
+        <div class="home-impact-strip">
+          <div class="impact-stat-item">
+            <span class="impact-stat-value">4.8 kg</span>
+            <span class="impact-stat-label">Daily Food Waste Prevented</span>
+          </div>
+          <div class="impact-stat-divider"></div>
+          <div class="impact-stat-item">
+            <span class="impact-stat-value">${reservedRate}%</span>
+            <span class="impact-stat-label">Campus Kitchens Reserved</span>
           </div>
         </div>
 
-        <!-- Featured Meals -->
-        <div class="section-header" style="margin-top: 22px;">
-          <div>
-            <h3>Featured Meals Today</h3>
-            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">Chef specials & student favorites</p>
-          </div>
-          <button class="see-all-btn" data-route="#/student/menu">See all</button>
-        </div>
-        <div class="featured-meals-grid">
-          ${featuredDishes.slice(0, 4).map(d => renderFeaturedMealCard(d)).join('')}
-        </div>
-
-        <!-- Quick Pre-orders -->
-        <div class="section-header" style="margin-top: 22px;">
-          <div>
-            <h3>Quick Pre-orders</h3>
-            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">Fast pickup during lunch shifts</p>
-          </div>
-          <span style="font-size: 11px; font-weight: 600; color: var(--primary);">${totalDailyLimit - totalReserved} portions left</span>
-        </div>
-        <div class="food-cards-list">
-          ${quickMeals.map(d => renderStudentFoodCard(d)).join('')}
-        </div>
       </section>
     `;
 
@@ -114,8 +98,25 @@ export const studentHomePage = {
   },
 
   attachEvents(container) {
+    // 1. Search navigation
+    const searchInput = container.querySelector('#home-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const q = searchInput.value.trim();
+          if (q) {
+            state.setSearchQuery(q);
+            router.navigate('#/student/menu');
+          }
+        }
+      });
+      searchInput.addEventListener('click', () => {
+        // focus input
+      });
+    }
+
     container.addEventListener('click', (e) => {
-      // 1. Navigation buttons or action tiles
+      // Direct navigation
       const routeEl = e.target.closest('[data-route]');
       if (routeEl) {
         const route = routeEl.getAttribute('data-route');
@@ -125,7 +126,18 @@ export const studentHomePage = {
         }
       }
 
-      // 2. Select vendor from Explore Canteens
+      // Category chip filter -> navigate to menu
+      const catBtn = e.target.closest('[data-action="filter-home-category"]');
+      if (catBtn) {
+        const catId = catBtn.getAttribute('data-cat-id');
+        if (catId) {
+          state.setSelectedCategory(catId);
+          router.navigate('#/student/menu');
+          return;
+        }
+      }
+
+      // Vendor card selection -> filter vendor and navigate
       const vendorEl = e.target.closest('[data-action="select-vendor"]');
       if (vendorEl) {
         const vendorId = vendorEl.getAttribute('data-vendor-id');
@@ -133,39 +145,35 @@ export const studentHomePage = {
           state.setStudentVendorFilter(vendorId);
           router.navigate('#/student/menu');
           const v = SapatStorage.getVendorById(vendorId);
-          if (v) showToast(`Viewing menu for ${v.name} (${v.stallNumber})`, 'info');
+          if (v) showToast(`Viewing ${v.name} (${v.stallNumber})`, 'info');
+          return;
         }
-        return;
       }
 
-      // 3. Quick add button
+      // Quick add to cart
       const quickAddBtn = e.target.closest('[data-action="quick-add"]');
       if (quickAddBtn) {
         e.stopPropagation();
         const dishId = quickAddBtn.getAttribute('data-dish-id');
-        const dish = SapatStorage.getMenu().find(d => d.id === dishId);
+        const dish = SapatStorage.getDishById(dishId);
         if (dish) {
-          const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
-          const inCart = (state.cart.find(i => i.id === dish.id)?.quantity || 0);
-          if (inCart >= remaining) {
-            showToast(`Cannot add more! Only ${remaining} portions left today.`, 'error');
-            return;
+          const success = state.addToCart(dish, 1);
+          if (success) {
+            showToast(`Added 1x ${dish.name} to tray`, 'success');
           }
-          state.addToCart(dish, 1);
-          showToast(`Added ${dish.name} to tray!`, 'success');
         }
         return;
       }
 
-      // 4. Open Meal Modal
-      const mealCard = e.target.closest('[data-action="open-meal"]');
-      if (mealCard) {
-        const dishId = mealCard.getAttribute('data-dish-id');
+      // Open meal details modal
+      const mealEl = e.target.closest('[data-action="open-meal"]');
+      if (mealEl) {
+        const dishId = mealEl.getAttribute('data-dish-id');
         if (dishId) {
           openMealModal(dishId);
+          return;
         }
       }
     });
   }
 };
-

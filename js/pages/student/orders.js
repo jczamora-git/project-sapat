@@ -32,33 +32,35 @@ export const studentOrdersPage = {
 
     container.innerHTML = `
       <section class="screen active" id="screen-student-orders">
-        <div class="page-header">
-          <h3>My Canteen Orders</h3>
-          <p>Live status & pickup pass for today's reservations</p>
+        
+        <!-- Page Title & Header -->
+        <div class="page-title-wrap">
+          <h2 class="page-main-heading">My Orders</h2>
+          <p class="page-main-sub">Live tracking & pickup pass for today's pre-orders</p>
         </div>
 
-        <!-- Segmented Tab -->
-        <div class="segmented-control" style="margin-bottom: 14px;">
-          <button class="segment-btn ${activeTab === 'active' ? 'active' : ''}" data-action="filter-orders-tab" data-tab="active">
+        <!-- Custom Styled Segmented Control (Active / History) -->
+        <div class="segmented-pill-control" role="tablist">
+          <button class="seg-pill-btn ${activeTab === 'active' ? 'active' : ''}" data-action="filter-orders-tab" data-tab="active">
             Active (${activeOrders.length})
           </button>
-          <button class="segment-btn ${activeTab === 'history' ? 'active' : ''}" data-action="filter-orders-tab" data-tab="history">
+          <button class="seg-pill-btn ${activeTab === 'history' ? 'active' : ''}" data-action="filter-orders-tab" data-tab="history">
             History (${historyOrders.length})
           </button>
         </div>
 
-        <!-- Orders List -->
-        <div class="orders-list-wrap" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Orders Feed -->
+        <div class="orders-feed-wrap">
           ${displayedOrders.length === 0 ? `
-            <div class="empty-state-wrap" style="padding: 35px 16px;">
+            <div class="empty-state-wrap">
               <div class="empty-state-icon">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
               </div>
-              <h3>${activeTab === 'active' ? 'No active pre-orders' : 'No order history yet'}</h3>
-              <p>${activeTab === 'active' ? 'Reserve meals ahead to skip the canteen queue and secure your lunch.' : 'Past completed pre-orders will appear here.'}</p>
+              <h3>${activeTab === 'active' ? 'No active pre-orders' : 'No past orders yet'}</h3>
+              <p>${activeTab === 'active' ? 'Reserve lunch dishes ahead to secure your meal before daily cooking limits hit.' : 'Your completed and claimed pre-orders will be recorded here.'}</p>
               ${activeTab === 'active' ? `
-                <button class="btn-primary-action" style="margin-top: 10px;" data-route="#/student/menu">
-                  Browse Menu & Order
+                <button class="btn-primary-action" style="margin-top: 12px; width: auto; padding: 0 20px;" data-route="#/student/menu">
+                  Browse Canteen Menu
                 </button>
               ` : ''}
             </div>
@@ -67,78 +69,96 @@ export const studentOrdersPage = {
             const progressPercent = currentIdx >= 0 ? Math.min(100, Math.max(0, (currentIdx / (steps.length - 1)) * 100)) : 0;
             const itemsText = order.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
 
-            const stepperHTML = order.status === 'Cancelled' ? `
-              <div class="cancelled-banner">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                <span>This pre-order was cancelled and portions refunded to the kitchen.</span>
+            const isCancelled = order.status === 'Cancelled';
+            const isReady = order.status === 'Ready for Pickup';
+
+            const trackerHTML = isCancelled ? `
+              <div class="order-cancelled-notice">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span>This pre-order was cancelled. Reserved portions were returned to the kitchen.</span>
               </div>
             ` : `
-              <div class="order-progress-stepper">
-                <div class="stepper-progress-fill" style="width: calc(${progressPercent}% * 0.86);"></div>
-                ${steps.map((st, idx) => {
-                  let cls = '';
-                  if (idx < currentIdx) cls = 'completed';
-                  else if (idx === currentIdx) cls = 'active';
-                  const dotContent = idx < currentIdx 
-                    ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>' 
-                    : (idx + 1);
-                  return `
-                    <div class="step-point ${cls}">
-                      <div class="step-dot">${dotContent}</div>
-                      <div class="step-label">${st.label}</div>
-                    </div>
-                  `;
-                }).join('')}
+              <div class="stepper-horizontal-card">
+                <div class="stepper-track-line">
+                  <div class="stepper-fill-line" style="width: ${progressPercent}%;"></div>
+                </div>
+                <div class="stepper-points-row">
+                  ${steps.map((st, idx) => {
+                    let stClass = '';
+                    if (idx < currentIdx) stClass = 'completed';
+                    else if (idx === currentIdx) stClass = 'active';
+
+                    const dotContent = idx < currentIdx 
+                      ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+                      : (idx + 1);
+
+                    return `
+                      <div class="stepper-point-item ${stClass}">
+                        <div class="stepper-dot-circle">${dotContent}</div>
+                        <span class="stepper-point-label">${st.label}</span>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
               </div>
             `;
 
             return `
-              <div class="order-card">
-                <div class="order-card-header">
-                  <div>
-                    <div class="order-vendor-title">
-                      <span class="order-stall-tag">${order.vendorStall || 'Stall'}</span>
-                      <strong>${order.vendorName || 'Canteen'}</strong>
+              <div class="modern-order-card">
+                <!-- Card Header -->
+                <div class="modern-order-head">
+                  <div class="head-left-info">
+                    <div class="vendor-stall-line">
+                      <span class="order-stall-badge">${order.vendorStall || 'Stall'}</span>
+                      <strong class="order-vendor-title">${order.vendorName || 'Canteen'}</strong>
                     </div>
-                    <span class="order-id-badge">Order #${order.id}</span>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${order.createdAt}</div>
+                    <span class="order-number-ref">Order #${order.id} &bull; ${order.createdAt}</span>
                   </div>
-                  <span class="order-status-pill status-${order.status.toLowerCase().replace(/\s+/g, '-')}">
+                  <span class="order-status-badge status-${order.status.toLowerCase().replace(/\s+/g, '-')}">
                     ${order.status}
                   </span>
                 </div>
 
-                <div style="font-size: 12px; margin-bottom: 6px;">
-                  <strong>Pickup Window:</strong> ${order.pickupTime}
+                <!-- Pickup Time Banner -->
+                <div class="order-pickup-strip ${isReady ? 'ready-highlight' : ''}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <span><strong>Pickup Window:</strong> ${order.pickupTime}</span>
                 </div>
 
-                ${stepperHTML}
+                <!-- Progress Tracker -->
+                ${trackerHTML}
 
-                <div class="order-items-snippet">
-                  <strong>Dishes:</strong> ${itemsText}
-                  ${order.specialInstructions ? `<br><em>Note: "${order.specialInstructions}"</em>` : ''}
+                <!-- Dishes Details -->
+                <div class="order-dishes-summary">
+                  <span class="dishes-summary-label">Dishes:</span>
+                  <p class="dishes-summary-text">${itemsText}</p>
+                  ${order.specialInstructions ? `<div class="dishes-kitchen-note">Note: "${order.specialInstructions}"</div>` : ''}
                 </div>
 
-                <div class="order-meta-footer">
-                  <span>${order.totalServings} serving(s) reserved</span>
-                  <span class="order-total-price">₱${order.totalAmount}</span>
-                </div>
-
-                <div class="order-actions-row">
-                  <button class="btn-secondary-action" data-action="open-pickup-pass" data-order-id="${order.id}">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="7" y1="8" x2="7" y2="8.01"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="13" y2="16"></line></svg>
-                    View Pickup Pass
-                  </button>
-                  ${(order.status === 'Pending' || order.status === 'Confirmed') ? `
-                    <button class="btn-danger-outline" data-action="cancel-order" data-order-id="${order.id}">
-                      Cancel
+                <!-- Footer Summary & Actions -->
+                <div class="order-bottom-bar">
+                  <div class="order-cost-info">
+                    <span class="cost-portions">${order.totalServings} portion(s) reserved</span>
+                    <strong class="cost-total">₱${order.totalAmount}</strong>
+                  </div>
+                  
+                  <div class="order-action-buttons">
+                    <button class="btn-pickup-pass" data-action="open-pickup-pass" data-order-id="${order.id}">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="7" y1="8" x2="7" y2="8.01"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="13" y2="16"></line></svg>
+                      Pickup Pass
                     </button>
-                  ` : ''}
+                    ${(order.status === 'Pending' || order.status === 'Confirmed') ? `
+                      <button class="btn-cancel-preorder" data-action="cancel-order" data-order-id="${order.id}">
+                        Cancel
+                      </button>
+                    ` : ''}
+                  </div>
                 </div>
               </div>
             `;
           }).join('')}
         </div>
+
       </section>
     `;
 
@@ -157,15 +177,15 @@ export const studentOrdersPage = {
         }
       }
 
-      // 2. Filter Tab
+      // 2. Tab Filter
       const tabBtn = e.target.closest('[data-action="filter-orders-tab"]');
       if (tabBtn) {
         const tab = tabBtn.getAttribute('data-tab');
         if (tab) {
-          state.ordersTab = tab;
+          state.setOrdersTab(tab);
           this.render(container);
+          return;
         }
-        return;
       }
 
       // 3. Open Pickup Pass
@@ -174,8 +194,8 @@ export const studentOrdersPage = {
         const orderId = passBtn.getAttribute('data-order-id');
         if (orderId) {
           openPickupPass(orderId);
+          return;
         }
-        return;
       }
 
       // 4. Cancel Order
@@ -183,37 +203,19 @@ export const studentOrdersPage = {
       if (cancelBtn) {
         const orderId = cancelBtn.getAttribute('data-order-id');
         if (orderId) {
-          this.handleCancelOrder(orderId, container);
+          if (!confirm(`Cancel pre-order #${orderId}? Your reserved portions will be made available back to your campus canteen.`)) {
+            return;
+          }
+          const success = SapatStorage.cancelOrder(orderId);
+          if (success) {
+            showToast(`Pre-order #${orderId} was cancelled.`, 'info');
+            this.render(container);
+          } else {
+            showToast('Unable to cancel this order.', 'error');
+          }
+          return;
         }
-        return;
       }
     });
-  },
-
-  handleCancelOrder(orderId, container) {
-    if (!confirm(`Cancel pre-order #${orderId}? This releases your reserved servings back to the stall immediately.`)) {
-      return;
-    }
-
-    const orders = SapatStorage.getOrders();
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
-
-    // Release reserved servings back to menu items
-    const menu = SapatStorage.getMenu();
-    order.items.forEach(item => {
-      const dish = menu.find(d => d.id === item.id);
-      if (dish) {
-        dish.reservedServings = Math.max(0, dish.reservedServings - item.quantity);
-      }
-    });
-    SapatStorage.saveMenu(menu);
-
-    order.status = 'Cancelled';
-    SapatStorage.saveOrders(orders);
-
-    showToast(`Pre-order #${orderId} cancelled. Servings returned to kitchen.`, 'info');
-    this.render(container);
   }
 };
-

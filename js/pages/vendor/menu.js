@@ -18,69 +18,76 @@ export const vendorMenuPage = {
 
     const categories = [
       { id: 'all', label: 'All Dishes' },
-      { id: 'rice-meals', label: 'Kanin at Ulam' },
-      { id: 'merienda', label: 'Meryenda' },
-      { id: 'veggies', label: 'Gulay & Healthy' },
-      { id: 'drinks', label: 'Inumin' }
+      { id: 'rice-meals', label: 'Rice Meals' },
+      { id: 'merienda', label: 'Merienda' },
+      { id: 'veggies', label: 'Healthy Bowls' },
+      { id: 'drinks', label: 'Beverages' }
     ];
 
     container.innerHTML = `
       <section class="screen active" id="screen-vendor-menu">
+        
+        <!-- Stall Account Selector Bar -->
         <div class="vendor-account-bar">
           ${renderVendorAccountBar(state.currentVendorId, vendors)}
         </div>
 
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <!-- Section Header -->
+        <div class="page-title-wrap" style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
-            <h3>${currentVendor.stallNumber} Menu Management</h3>
-            <p>Control preparation limits and availability for ${currentVendor.name}</p>
+            <h2 class="page-main-heading">${currentVendor.stallNumber} Dishes</h2>
+            <p class="page-main-sub">Control daily prep limits & availability for ${currentVendor.name}</p>
           </div>
-          <button class="btn-primary-action" data-action="add-dish" style="height: 36px; padding: 0 14px; font-size: 12px; white-space: nowrap;">
+          <button class="btn-primary-action" data-action="add-dish" style="width: auto; height: 34px; padding: 0 14px; font-size: 11.5px;">
             + Add Dish
           </button>
         </div>
 
         <!-- Category Filter -->
-        <div class="chip-filter-scroll" style="margin-bottom: 12px;">
+        <div class="category-chips-strip">
           ${categories.map(cat => `
-            <button class="chip-btn ${state.vendorMenuTab === cat.id ? 'active' : ''}" data-action="filter-vendor-menu" data-cat-id="${cat.id}">
+            <button class="cat-chip-btn ${state.vendorMenuTab === cat.id ? 'active' : ''}" data-action="filter-vendor-menu" data-cat-id="${cat.id}">
               ${cat.label}
             </button>
           `).join('')}
         </div>
 
-        <!-- Dishes List -->
-        <div class="vendor-menu-list-wrap" style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Dishes Management Stack -->
+        <div class="v-menu-manage-stack">
           ${vendorDishes.length === 0 ? `
-            <div class="empty-state-wrap" style="padding: 30px 16px;">
+            <div class="empty-state-wrap">
               <p>No dishes found in this category.</p>
-              <button class="btn-secondary-action" style="margin-top: 10px;" data-action="add-dish">+ Add New Dish</button>
+              <button class="btn-primary-action" style="margin-top: 10px; width: auto; padding: 0 16px;" data-action="add-dish">+ Add New Dish</button>
             </div>
           ` : vendorDishes.map(dish => {
             const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
+            const isSoldOut = remaining <= 0;
             return `
-              <div class="v-dish-row-card" style="background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                <div style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--surface-muted);">
-                  <img src="${dish.image}" alt="${dish.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='${getImgFallback()}';">
+              <div class="v-dish-manage-card">
+                <div class="v-dish-thumb-wrap">
+                  <img src="${dish.image}" alt="${dish.name}" onerror="this.onerror=null; this.src='${getImgFallback()}';">
                 </div>
-                <div style="flex: 1;">
-                  <h4 style="font-size: 13.5px; font-weight: 700; margin-bottom: 2px;">${dish.name}</h4>
-                  <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">${dish.categoryName} &bull; ₱${dish.price}</div>
-                  <div style="font-size: 11.5px;">
-                    <strong>${dish.reservedServings}</strong> of ${dish.dailyLimit} reserved (${remaining} left)
+                
+                <div class="v-dish-info-col">
+                  <h4 class="v-dish-title">${dish.name}</h4>
+                  <div class="v-dish-price-line">₱${dish.price} &bull; <span class="v-cat-name">${dish.categoryName}</span></div>
+                  <div class="v-dish-quota-meta">
+                    <strong>${dish.reservedServings}</strong> of ${dish.dailyLimit} reserved (<span class="${isSoldOut ? 'text-danger' : 'text-primary'}">${remaining} left</span>)
                   </div>
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
-                  <label class="switch">
+
+                <div class="v-dish-controls-col">
+                  <label class="switch-toggle" title="Toggle active in canteen menu">
                     <input type="checkbox" data-action="toggle-availability" data-dish-id="${dish.id}" ${dish.isAvailable ? 'checked' : ''}>
-                    <span class="slider"></span>
+                    <span class="slider-round"></span>
                   </label>
-                  <button class="btn-bump" data-action="edit-dish" data-dish-id="${dish.id}">Edit</button>
+                  <button class="btn-edit-dish" data-action="edit-dish" data-dish-id="${dish.id}">Edit</button>
                 </div>
               </div>
             `;
           }).join('')}
         </div>
+
       </section>
     `;
 
@@ -129,21 +136,17 @@ export const vendorMenuPage = {
       }
     });
 
+    // Toggle availability
     container.addEventListener('change', (e) => {
-      // Toggle availability
       const toggle = e.target.closest('[data-action="toggle-availability"]');
       if (toggle) {
         const dishId = toggle.getAttribute('data-dish-id');
         const isChecked = toggle.checked;
-        const menu = SapatStorage.getMenu();
-        const dish = menu.find(d => d.id === dishId);
-        if (dish) {
-          dish.isAvailable = isChecked;
-          SapatStorage.saveMenu(menu);
-          showToast(`${dish.name} is now ${isChecked ? 'Available' : 'Hidden'} for students`, 'info');
+        const success = SapatStorage.toggleDishAvailability(dishId, isChecked);
+        if (success) {
+          showToast(`Dish is now ${isChecked ? 'available in menu' : 'hidden from students'}`, 'info');
         }
       }
     });
   }
 };
-

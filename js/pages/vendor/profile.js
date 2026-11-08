@@ -11,58 +11,80 @@ export const vendorProfilePage = {
 
     container.innerHTML = `
       <section class="screen active" id="screen-vendor-profile">
+        
+        <!-- Stall Account Selector Bar -->
         <div class="vendor-account-bar">
           ${renderVendorAccountBar(state.currentVendorId, vendors)}
         </div>
 
-        <div class="profile-card">
-          <div class="profile-avatar" style="background: ${currentVendor.avatarColor};">${currentVendor.avatar}</div>
-          <h3 class="profile-name">${currentVendor.name}</h3>
-          <p class="profile-sub">${currentVendor.stallNumber} &bull; Main Canteen Hall</p>
+        <!-- Minimal Profile Header -->
+        <div class="profile-minimal-header">
+          <div class="profile-avatar-circle" style="background: ${currentVendor.avatarColor}; color: white; border: none;">${currentVendor.avatar}</div>
+          <h2 class="profile-display-name">${currentVendor.name}</h2>
+          <span class="profile-role-sub">${currentVendor.stallNumber} &bull; ${currentVendor.category}</span>
+          <span class="profile-campus-pill">Main Canteen Hall &bull; Hours: ${currentVendor.hours}</span>
+        </div>
 
-          <div class="profile-stats-grid">
-            <div class="p-stat-box">
-              <div class="p-stat-val">${currentVendor.efficiency || '96%'}</div>
-              <div class="p-stat-lbl">Kitchen Prep Accuracy</div>
+        <!-- Metrics Duo -->
+        <div class="profile-stats-duo">
+          <div class="profile-duo-card">
+            <span class="duo-number">${currentVendor.efficiency || '96%'}</span>
+            <span class="duo-label">Prep Target Accuracy</span>
+          </div>
+          <div class="profile-duo-card">
+            <span class="duo-number">${currentVendor.wasteSaved || '14.8 kg'}</span>
+            <span class="duo-label">Waste Prevented / Week</span>
+          </div>
+        </div>
+
+        <!-- Section: Stall Guidelines -->
+        <div class="profile-info-group">
+          <h4 class="profile-group-heading">Canteen Operating Rules</h4>
+          <div class="profile-list-card">
+            <div class="profile-list-row">
+              <div class="list-row-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <div class="list-row-content">
+                <strong>Prep Cutoff Window</strong>
+                <p>Cutoff is 30 minutes before each student pickup slot. Lock batches before cooking.</p>
+              </div>
             </div>
-            <div class="p-stat-box">
-              <div class="p-stat-val">${currentVendor.wasteSaved || '14.8 kg'}</div>
-              <div class="p-stat-lbl">Waste Prevented This Wk</div>
+
+            <div class="profile-list-row">
+              <div class="list-row-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              </div>
+              <div class="list-row-content">
+                <strong>Express Pickup Window</strong>
+                <p>${currentVendor.expressWindow || 'Counter Window 2'} is dedicated for fast student pickup pass verification.</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="info-box-card">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            Canteen Operating Rules
-          </h4>
-          <p>
-            <strong>Operating Hours:</strong> ${currentVendor.hours}<br>
-            <strong>Prep Cutoff:</strong> 30 minutes before slot<br>
-            <strong>Express Pickup Lane:</strong> ${currentVendor.expressWindow || 'Counter Window 2'}
-          </p>
+        <!-- Section: Sapat Principle -->
+        <div class="profile-info-group">
+          <h4 class="profile-group-heading">Sapat Kitchen Principles</h4>
+          <div class="profile-list-card" style="padding: 12px 14px;">
+            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+              By locking in student pre-orders before mass cooking, school canteens eliminate the guess-work of food preparation, saving raw ingredient costs and preventing food spoilage.
+            </p>
+          </div>
         </div>
 
-        <div class="info-box-card">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Sapat Principle for Canteens
-          </h4>
-          <p>
-            By locking in student pre-orders before mass cooking, school canteens eliminate the guess-work of food preparation, saving raw ingredient costs and preventing food spoilage.
-          </p>
+        <!-- Actions -->
+        <div class="profile-actions-stack">
+          <button class="btn-profile-secondary" data-action="open-role-modal">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+            Switch Role or Stall Account
+          </button>
+          
+          <button class="btn-profile-danger" data-action="reset-demo-data">
+            Reset Demo Prototype Data
+          </button>
         </div>
 
-        <button class="btn-secondary-action" style="width: 100%; height: 40px; margin-top: 10px;" data-action="open-role-modal">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-          Switch Role / Canteen Stall
-        </button>
-
-        <button class="btn-secondary-action" style="width: 100%; height: 40px; margin-top: 10px;" data-action="reset-demo-data">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-          Reset Demo Data
-        </button>
       </section>
     `;
 
@@ -99,4 +121,3 @@ export const vendorProfilePage = {
     });
   }
 };
-
