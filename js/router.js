@@ -14,6 +14,7 @@ import { vendorMenuPage } from './pages/vendor/menu.js';
 import { vendorOrdersPage } from './pages/vendor/orders.js';
 import { vendorPrepPage } from './pages/vendor/prep.js';
 import { vendorProfilePage } from './pages/vendor/profile.js';
+import { vendorIntelligencePage } from './pages/vendor/intelligence.js';
 
 import { adminDashboardPage } from './pages/admin/dashboard.js';
 import { adminCanteensPage } from './pages/admin/canteens.js';
@@ -40,6 +41,7 @@ class AppRouter {
         '#/vendor/dashboard': vendorDashboardPage,
         '#/vendor/menu': vendorMenuPage,
         '#/vendor/orders': vendorOrdersPage,
+        '#/vendor/intelligence': vendorIntelligencePage,
         '#/vendor/prep': vendorPrepPage,
         '#/vendor/profile': vendorProfilePage,
 

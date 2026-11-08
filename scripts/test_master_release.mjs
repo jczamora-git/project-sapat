@@ -46,6 +46,7 @@ const { studentOrdersPage } = await import('../js/pages/student/orders.js');
 const { studentProfilePage } = await import('../js/pages/student/profile.js');
 
 const { vendorDashboardPage } = await import('../js/pages/vendor/dashboard.js');
+const { vendorIntelligencePage } = await import('../js/pages/vendor/intelligence.js');
 const { vendorMenuPage } = await import('../js/pages/vendor/menu.js');
 const { vendorOrdersPage } = await import('../js/pages/vendor/orders.js');
 const { vendorPrepPage } = await import('../js/pages/vendor/prep.js');
@@ -169,12 +170,18 @@ assert(wishlist.length > 0 && wishlist[0].votes > 0, 'Requested meals wishlist p
 const tomorrow = ForecastingService.getTomorrowForecast('vendor-lita');
 assert(tomorrow.forecastDate && tomorrow.weatherCondition, 'Tomorrow predictive forecast generated');
 
+// Campus-Wide Aggregated Analytics
+const campusAnalytics = ForecastingService.getCampusWideAnalytics();
+assert(campusAnalytics.totalCampusTarget > 0, 'Campus-wide macro demand calculated');
+assert(campusAnalytics.canteenComparisons.length === 5, 'Campus-wide comparison includes all 5 stalls');
+assert(campusAnalytics.topCampusRequested.length > 0, 'Campus-wide meal requests aggregated');
+
 // Simulation test
 const simRush = ForecastingService.simulateRushOrders('vendor-lita', 5);
 assert(simRush && simRush.newReserved > 0, 'Live simulation increments reservation velocity');
 ForecastingService.resetSimulation('vendor-lita');
 
-// 5. Render All 15 Pages Across Roles
+// 5. Render All 16 Pages Across Roles
 const createMockContainer = () => ({
   innerHTML: '',
   querySelectorAll: () => [],
@@ -200,6 +207,31 @@ assert(container.innerHTML.includes('orders-'), 'Student Orders renders feed');
 
 studentProfilePage.render(container);
 assert(container.innerHTML.includes('profile-'), 'Student Profile renders details');
+
+// Dedicated Vendor SAPAT Intelligence Hub (6 Pillars)
+vendorIntelligencePage._activePillar = 'forecast';
+vendorIntelligencePage.render(container);
+assert(container.innerHTML.includes('v-ai-hub-header-card') && container.innerHTML.includes('v-tomorrow-insight-card'), 'Vendor Intelligence renders Demand & Tomorrow pillar');
+
+vendorIntelligencePage._activePillar = 'prep';
+vendorIntelligencePage.render(container);
+assert(container.innerHTML.includes('v-ai-cards-grid'), 'Vendor Intelligence renders Smart Prep Targets pillar');
+
+vendorIntelligencePage._activePillar = 'taste';
+vendorIntelligencePage.render(container);
+assert(container.innerHTML.includes('v-taste-hero-card'), 'Vendor Intelligence renders Customer Taste AI pillar');
+
+vendorIntelligencePage._activePillar = 'wishlist';
+vendorIntelligencePage.render(container);
+assert(container.innerHTML.includes('v-wishlist-cards-stack'), 'Vendor Intelligence renders Requested Meals wishlist pillar');
+
+vendorIntelligencePage._activePillar = 'performance';
+vendorIntelligencePage.render(container);
+assert(container.innerHTML.includes('admin-data-table'), 'Vendor Intelligence renders Waste & Performance log table');
+
+vendorIntelligencePage._activePillar = 'simulation';
+vendorIntelligencePage.render(container);
+assert(container.innerHTML.includes('v-sim-hero-banner'), 'Vendor Intelligence renders Live Presentation Simulation Sandbox');
 
 // Vendor Pages
 vendorDashboardPage._activeAiTab = 'prep';
@@ -229,7 +261,7 @@ adminMenuPage.render(container);
 assert(container.innerHTML.includes('admin-data-table'), 'Admin Menu renders dish catalog table');
 
 adminAnalyticsPage.render(container);
-assert(container.innerHTML.includes('admin-kpi-grid'), 'Admin Analytics renders reports');
+assert(container.innerHTML.includes('admin-kpi-grid') && container.innerHTML.includes('Canteen Stalls Operational Intelligence Matrix'), 'Admin Analytics renders macro campus-wide reports and multi-canteen table');
 
 adminSettingsPage.render(container);
 assert(container.innerHTML.includes('settings-'), 'Admin Settings renders system configuration');
@@ -239,7 +271,8 @@ const cssContent = fs.readFileSync('css/styles.css', 'utf8');
 assert(cssContent.includes('@media (min-width: 769px)'), 'Desktop responsive layout rules present');
 assert(cssContent.includes('@media (max-width: 500px)'), 'Mobile compact layout rules present');
 assert(cssContent.includes('.vendor-scanner-sheet'), 'Vendor QR scanner modal styles present');
-assert(cssContent.includes('.v-ai-tab-strip'), 'SAPAT Intelligence sub-tab styles present');
+assert(cssContent.includes('.v-ai-pillar-nav'), 'Vendor SAPAT Intelligence 6-pillar nav styles present');
+assert(cssContent.includes('.v-tomorrow-insight-card'), 'Vendor Tomorrow predictive insight card styles present');
 
 console.log('\n========================================================');
 console.log(`RESULTS: ${passedTests}/${totalTests} TESTS PASSED.`);

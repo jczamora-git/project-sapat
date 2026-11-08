@@ -300,6 +300,75 @@ export const ForecastingService = {
   },
 
   /**
+   * ADMIN CAMPUS-WIDE INTELLIGENCE:
+   * Aggregates intelligence across all 5 participating campus canteens.
+   * Generates macro sustainability, overall satisfaction, and multi-stall comparisons.
+   */
+  getCampusWideAnalytics() {
+    const vendors = SapatStorage.getVendors();
+    const menu = SapatStorage.getMenu();
+    const orders = SapatStorage.getOrders().filter(o => o.status !== 'Cancelled');
+
+    let totalCampusTarget = 0;
+    let totalCampusReserved = 0;
+    let totalWastePreventedKg = 0;
+    let totalSatisfactionSum = 0;
+
+    const canteenComparisons = vendors.map(v => {
+      const vDishes = menu.filter(d => d.vendorId === v.id);
+      const target = vDishes.reduce((s, d) => s + d.dailyLimit, 0);
+      const reserved = vDishes.reduce((s, d) => s + d.reservedServings, 0);
+      const remaining = Math.max(0, target - reserved);
+      const bookingRate = target > 0 ? Math.round((reserved / target) * 100) : 0;
+      const tasteData = this.getCustomerTasteAnalysis(v.id);
+      const stallForecast = this.getVendorForecast(v.id);
+
+      totalCampusTarget += target;
+      totalCampusReserved += reserved;
+      totalWastePreventedKg += parseFloat(stallForecast.sustainability.wastePreventedKg);
+      totalSatisfactionSum += tasteData.sentimentScore;
+
+      return {
+        id: v.id,
+        name: v.name,
+        stallNumber: v.stallNumber,
+        category: v.category,
+        isOpen: v.isOpen,
+        target,
+        reserved,
+        remaining,
+        bookingRate,
+        satisfaction: tasteData.sentimentScore,
+        accuracy: stallForecast.sustainability.prepAccuracyPct,
+        wasteSavedKg: stallForecast.sustainability.wastePreventedKg
+      };
+    });
+
+    const avgSatisfaction = vendors.length ? Math.round(totalSatisfactionSum / vendors.length) : 92;
+    const avgAccuracy = vendors.length ? (canteenComparisons.reduce((s, c) => s + parseFloat(c.accuracy), 0) / vendors.length).toFixed(1) : 95.8;
+
+    // Aggregate top campus requested dishes across all stalls
+    const allRequested = [];
+    vendors.forEach(v => {
+      const wishes = this.getRequestedMeals(v.id);
+      wishes.forEach(w => allRequested.push({ ...w, stallName: v.name }));
+    });
+    allRequested.sort((a, b) => b.votes - a.votes);
+
+    return {
+      totalCampusTarget,
+      totalCampusReserved,
+      totalCampusRemaining: Math.max(0, totalCampusTarget - totalCampusReserved),
+      totalWastePreventedKg: totalWastePreventedKg.toFixed(1),
+      co2SavedKg: (totalWastePreventedKg * 2.1).toFixed(1),
+      avgSatisfaction,
+      avgAccuracy,
+      canteenComparisons,
+      topCampusRequested: allRequested.slice(0, 6)
+    };
+  },
+
+  /**
    * LIVE DEMO SIMULATION:
    * Resets simulation overrides and restores standard baseline.
    */

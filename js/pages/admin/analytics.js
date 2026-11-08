@@ -1,6 +1,7 @@
 import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
+import { ForecastingService } from '../../services/forecasting.service.js';
 
 export const adminAnalyticsPage = {
   _unsubscribe: null,
@@ -17,12 +18,7 @@ export const adminAnalyticsPage = {
       });
     }
 
-    const menu = SapatStorage.getMenu();
-    const orders = SapatStorage.getOrders();
-
-    const totalReserved = menu.reduce((s, d) => s + d.reservedServings, 0);
-    const totalLimit = menu.reduce((s, d) => s + d.dailyLimit, 0);
-    const wastePreventedKg = (totalReserved * 0.052).toFixed(1);
+    const campusAnalytics = ForecastingService.getCampusWideAnalytics();
 
     // AI demand sample data for key campus dishes
     const aiPredictions = [
@@ -42,59 +38,84 @@ export const adminAnalyticsPage = {
           <div class="admin-header-left">
             <div class="admin-campus-pill">
               <span class="admin-live-dot"></span>
-              <span>Predictive Intelligence &bull; Machine Learning Engine</span>
+              <span>Predictive Intelligence &bull; Campus-Wide Analytics</span>
             </div>
-            <h2 class="admin-main-title">AI Demand Forecasting & Waste Analytics</h2>
-            <p class="admin-main-sub">Data-driven portion limits eliminating food overproduction across campus</p>
+            <h2 class="admin-main-title">Campus Intelligence & Food Waste Analytics</h2>
+            <p class="admin-main-sub">Macro oversight of food waste prevention, forecasting accuracy, and student satisfaction</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-admin-action primary" data-route="#/admin/dashboard">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-              <span>Back to Overview</span>
+              <span>Executive Dashboard</span>
             </button>
           </div>
         </div>
 
-        <!-- 3 High Impact Visual Cards -->
-        <div class="admin-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+        <!-- Architectural Role Separation Callout -->
+        <div class="v-prep-ai-callout" style="margin-bottom: 16px; background: #F0F8F4; border-color: #A7F3D0;">
+          <div class="v-prep-ai-icon" style="color: var(--primary);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          </div>
+          <div class="v-prep-ai-text">
+            <strong>Campus Overview Mode:</strong> Administrators monitor macro trends and food waste reduction across all canteens. Dish-level recipe improvement, daily limit adjustments, and student feedback details are managed directly by each stall operator inside the <strong>Vendor SAPAT Intelligence</strong> portal.
+          </div>
+        </div>
+
+        <!-- 4 Top-Tier Campus Intelligence KPIs -->
+        <div class="admin-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
-              <span class="kpi-label">Daily Waste Reduction</span>
-              <span class="kpi-badge emerald">-96.2%</span>
+              <span class="kpi-label">Campus Waste Avoided</span>
+              <span class="kpi-badge emerald">-96.2% vs baseline</span>
             </div>
             <div class="kpi-value-row">
-              <span class="kpi-number">${wastePreventedKg} kg</span>
+              <span class="kpi-number">${campusAnalytics.totalWastePreventedKg}</span>
+              <span class="kpi-unit">kg</span>
             </div>
             <p class="kpi-caption" style="margin-top: 8px;">
-              School kitchens eliminate food surplus by producing strictly to locked pre-order quotas.
+              Eliminates ${campusAnalytics.co2SavedKg} kg of CO2 equivalent emissions weekly.
             </p>
           </div>
 
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
-              <span class="kpi-label">AI Forecast Accuracy</span>
-              <span class="kpi-badge success">95.4%</span>
+              <span class="kpi-label">Overall Student Satisfaction</span>
+              <span class="kpi-badge success">${campusAnalytics.avgSatisfaction}% Approval</span>
             </div>
             <div class="kpi-value-row">
-              <span class="kpi-number">&plusmn; 2.8</span>
-              <span class="kpi-denom">servings variance</span>
+              <span class="kpi-number">${campusAnalytics.avgSatisfaction}%</span>
+              <span class="kpi-denom">campus average</span>
             </div>
             <p class="kpi-caption" style="margin-top: 8px;">
-              Algorithms adjust for class rosters, weather, campus calendar, and historical orders.
+              Aggregated across all verified student pre-order feedback ratings.
             </p>
           </div>
 
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
-              <span class="kpi-label">Estimated Monthly Savings</span>
-              <span class="kpi-badge blue">₱24,800</span>
+              <span class="kpi-label">Forecasting Accuracy</span>
+              <span class="kpi-badge blue">${campusAnalytics.avgAccuracy}% Precise</span>
             </div>
             <div class="kpi-value-row">
-              <span class="kpi-number">₱24.8k</span>
-              <span class="kpi-denom">/ month</span>
+              <span class="kpi-number">${campusAnalytics.avgAccuracy}%</span>
+              <span class="kpi-denom">across 5 stalls</span>
             </div>
             <p class="kpi-caption" style="margin-top: 8px;">
-              Saved by stall operators in raw meat, produce, cooking gas, and unsold inventory.
+              Algorithms adjust for class rosters, weather, and historical demand.
+            </p>
+          </div>
+
+          <div class="admin-kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">Total Campus Pre-orders</span>
+              <span class="kpi-badge success">${campusAnalytics.totalCampusReserved} Booked</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-number">${campusAnalytics.totalCampusReserved}</span>
+              <span class="kpi-denom">/ ${campusAnalytics.totalCampusTarget} portions</span>
+            </div>
+            <p class="kpi-caption" style="margin-top: 8px;">
+              ${campusAnalytics.totalCampusRemaining} portions remaining for walk-in students.
             </p>
           </div>
         </div>
@@ -141,13 +162,13 @@ export const adminAnalyticsPage = {
           </div>
         </div>
 
-        <!-- AI Predictive Demand Modeling Table -->
+        <!-- Multi-Canteen Performance Comparison Table -->
         <div class="admin-section-header" style="margin-top: 24px;">
           <div>
-            <h3 class="admin-section-title">AI Demand Forecasting vs Verified Pre-orders</h3>
-            <span class="admin-section-subtitle">Real-time model accuracy across top high-volume menu items</span>
+            <h3 class="admin-section-title">Canteen Stalls Operational Intelligence Matrix</h3>
+            <span class="admin-section-subtitle">Stall performance comparisons, preparation precision, and waste prevention</span>
           </div>
-          <span class="admin-feed-counter">Model v2.4 Active</span>
+          <span class="admin-feed-counter">5 Stalls Active</span>
         </div>
 
         <div class="admin-table-card">
@@ -155,25 +176,64 @@ export const adminAnalyticsPage = {
             <table class="admin-data-table">
               <thead>
                 <tr>
-                  <th>Dish</th>
-                  <th>Stall</th>
-                  <th>Predictive Variables</th>
-                  <th>AI Target</th>
-                  <th>Actual Pre-orders</th>
-                  <th>Variance</th>
-                  <th>Model Confidence</th>
+                  <th>Stall Name</th>
+                  <th>Location</th>
+                  <th>Daily Target</th>
+                  <th>Pre-ordered</th>
+                  <th>Booking Rate</th>
+                  <th>Accuracy</th>
+                  <th>Waste Saved</th>
+                  <th>Student Rating</th>
                 </tr>
               </thead>
               <tbody>
-                ${aiPredictions.map(item => `
+                ${campusAnalytics.canteenComparisons.map(c => `
                   <tr>
-                    <td><strong class="dish-table-name">${item.dish}</strong></td>
-                    <td><span class="table-stall-pill">${item.stall}</span></td>
-                    <td><span class="table-factor-text">${item.factors}</span></td>
-                    <td><strong class="table-quota-number">${item.aiForecast} portions</strong></td>
-                    <td><strong class="table-actual-number">${item.actual} booked</strong></td>
-                    <td><span class="table-variance-pill">${item.variance}</span></td>
-                    <td><span class="table-confidence-badge">${item.confidence}</span></td>
+                    <td><strong>${c.name}</strong></td>
+                    <td><span class="table-stall-pill">${c.stallNumber}</span></td>
+                    <td><strong>${c.target}</strong> portions</td>
+                    <td><strong class="text-primary">${c.reserved}</strong></td>
+                    <td><span class="table-slot-text">${c.bookingRate}%</span></td>
+                    <td><span class="table-confidence-badge">${c.accuracy}%</span></td>
+                    <td><strong class="text-primary">${c.wasteSavedKg} kg</strong></td>
+                    <td><strong style="color: var(--primary);">${c.satisfaction}%</strong></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Most Requested Meals Across Campus -->
+        <div class="admin-section-header" style="margin-top: 24px;">
+          <div>
+            <h3 class="admin-section-title">Most Requested Meals Across Campus</h3>
+            <span class="admin-section-subtitle">Student wishlist dishes aggregated across all campus colleges</span>
+          </div>
+        </div>
+
+        <div class="admin-table-card">
+          <div class="admin-table-responsive">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th>Requested Dish</th>
+                  <th>Associated Stall</th>
+                  <th>Student Votes</th>
+                  <th>Top Requesting College</th>
+                  <th>Suggested Price</th>
+                  <th>Demand Confidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${campusAnalytics.topCampusRequested.map(r => `
+                  <tr>
+                    <td><strong>${r.dishName}</strong></td>
+                    <td><span class="table-stall-pill">${r.stallName}</span></td>
+                    <td><strong class="text-primary">${r.votes} votes</strong></td>
+                    <td>${r.topDept}</td>
+                    <td><strong>₱${r.suggestedPrice}</strong></td>
+                    <td><span class="table-confidence-badge">${r.confidence}</span></td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -243,4 +303,3 @@ export const adminAnalyticsPage = {
     });
   }
 };
-
