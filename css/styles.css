@@ -4,42 +4,56 @@
    ========================================================================== */
 
 :root {
-  /* Restrained Color System */
-  --primary: #087F5B;             /* Deep Forest Green */
-  --primary-hover: #076B4D;
-  --primary-dark: #05513A;
-  --primary-light: #E8F5EE;       /* Soft Green Tint */
-  --primary-subtle: #F0F8F3;
+  /* Official Sapat Brand Color System (Matching Official Logo) */
+  --primary: #005B36;             /* Primary Green */
+  --primary-hover: #004d2e;       /* Deep Green Hover */
+  --primary-dark: #004326;        /* Dark Green */
+  --primary-light: #E8F3EC;       /* Soft Green */
+  --primary-subtle: #F2F8F4;
 
-  --bg-app: #F8F8F5;              /* Warm Off-White */
-  --bg-surface: #FFFFFF;          /* Pure Surface White */
-  --bg-subtle: #F2F4F2;
+  /* Signature Orange Accent */
+  --accent-orange: #FF8A24;       /* Vibrant Orange Accent */
+  --accent-orange-dark: #C85E00;  /* Accessible Dark Orange for Text */
+  --accent-orange-soft: #FFF1E5;  /* Soft Orange Tint */
+  --accent-orange-border: #FFD8BA;
+  --accent-amber: #C85E00;        /* Consistent Brand Orange Alias */
+  --accent-light: #FFD8BA;
 
-  --text-primary: #19231F;        /* Dark Charcoal */
-  --text-secondary: #77817B;      /* Muted Slate Gray */
-  --text-muted: #9BA49E;
+  /* Dominant Neutral Backgrounds */
+  --bg-app: #F7F8F5;              /* Warm Background */
+  --bg-surface: #FFFFFF;          /* White Surface */
+  --bg-subtle: #EFF3F0;           /* Soft Surface Neutral */
+
+  /* Typography */
+  --text-primary: #1B2520;        /* Primary Text */
+  --text-secondary: #77827B;      /* Secondary Text */
+  --text-muted: #9BA49F;
   --text-inverse: #FFFFFF;
 
-  --border-subtle: #E8ECE8;       /* Soft Neutral Gray */
-  --border-focus: #087F5B;
-  --border-strong: #D5DAD5;
+  /* Borders */
+  --border-subtle: #E6EBE7;       /* Border */
+  --border-focus: #005B36;
+  --border-strong: #CFD9D2;
 
-  --warning: #B45309;             /* Muted Amber */
-  --warning-bg: #FEF3C7;
-  --warning-border: #FDE68A;
+  /* Status Colors */
+  --warning: #FF8A24;             /* Approaching Limits (Brand Orange) */
+  --warning-text: #C85E00;        /* High-contrast readable orange */
+  --warning-bg: #FFF1E5;          /* Soft Orange */
+  --warning-border: #FFD8BA;
 
-  --error: #DC2626;               /* Muted Red */
+  /* Errors / Critical Warnings only */
+  --error: #DC2626;               /* Critical Errors / Capacity Exceeded */
   --error-bg: #FEE2E2;
   --error-border: #FECACA;
 
-  --info: #0284C7;
+  --info: #0284C7;                /* System Info / Confirmed */
   --info-bg: #E0F2FE;
 
   /* Restrained Depth: Subtle 1px borders with minimal elevation */
   --shadow-none: none;
-  --shadow-sm: 0 1px 2px rgba(25, 35, 31, 0.03);
-  --shadow-md: 0 3px 8px rgba(25, 35, 31, 0.05);
-  --shadow-sheet: 0 -8px 24px rgba(25, 35, 31, 0.08);
+  --shadow-sm: 0 1px 2px rgba(27, 37, 32, 0.03);
+  --shadow-md: 0 3px 8px rgba(27, 37, 32, 0.05);
+  --shadow-sheet: 0 -8px 24px rgba(27, 37, 32, 0.08);
 
   /* Restrained Radii (No bloated pills on everything) */
   --radius-xs: 4px;
@@ -210,13 +224,13 @@ button, input, select, textarea {
 .header-role-badge.student {
   background: var(--primary-light);
   color: var(--primary);
-  border-color: rgba(8, 127, 91, 0.15);
+  border-color: rgba(0, 91, 54, 0.15);
 }
 
 .header-role-badge.vendor {
-  background: var(--warning-bg);
-  color: var(--warning);
-  border-color: var(--warning-border);
+  background: var(--accent-orange-soft);
+  color: var(--warning-text);
+  border-color: var(--accent-orange-border);
 }
 
 .icon-btn {
@@ -394,7 +408,7 @@ button, input, select, textarea {
   font-weight: 600;
   padding: 3px 8px;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(8, 127, 91, 0.15);
+  border: 1px solid rgba(0, 91, 54, 0.15);
 }
 
 /* ==========================================================================
@@ -436,7 +450,7 @@ button, input, select, textarea {
   border-radius: 50%;
   background: var(--primary);
   display: inline-block;
-  box-shadow: 0 0 0 2px rgba(8, 127, 91, 0.2);
+  box-shadow: 0 0 0 2px rgba(0, 91, 54, 0.2);
 }
 
 .hero-date {
@@ -525,7 +539,7 @@ button, input, select, textarea {
   right: -3px;
   bottom: -3px;
   border-radius: var(--radius-full);
-  background: rgba(8, 127, 91, 0.25);
+  background: rgba(0, 91, 54, 0.25);
 }
 
 .kitchen-live-text h4 {
@@ -649,7 +663,7 @@ button, input, select, textarea {
   position: absolute;
   top: 8px;
   left: 8px;
-  background: rgba(25, 35, 31, 0.88);
+  background: rgba(27, 37, 32, 0.88);
   color: #fff;
   font-size: 9.5px;
   font-weight: 600;
@@ -872,7 +886,7 @@ button, input, select, textarea {
   position: absolute;
   bottom: 6px;
   left: 6px;
-  background: rgba(25, 35, 31, 0.85);
+  background: rgba(27, 37, 32, 0.85);
   color: #fff;
   font-size: 9px;
   font-weight: 600;
@@ -1126,7 +1140,7 @@ button, input, select, textarea {
 .chip-btn.active {
   background: var(--primary-light);
   color: var(--primary);
-  border-color: rgba(8, 127, 91, 0.2);
+  border-color: rgba(0, 91, 54, 0.2);
   font-weight: 600;
 }
 
@@ -1177,7 +1191,7 @@ button, input, select, textarea {
 .sold-out-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(25, 35, 31, 0.78);
+  background: rgba(27, 37, 32, 0.78);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -1194,7 +1208,7 @@ button, input, select, textarea {
   position: absolute;
   top: 4px;
   left: 4px;
-  background: rgba(25, 35, 31, 0.85);
+  background: rgba(27, 37, 32, 0.85);
   color: white;
   font-size: 8.5px;
   font-weight: 600;
@@ -1667,9 +1681,9 @@ button, input, select, textarea {
 }
 
 .order-status-pill.status-pending {
-  background: var(--warning-bg);
-  color: var(--warning);
-  border-color: var(--warning-border);
+  background: var(--accent-orange-soft);
+  color: var(--warning-text);
+  border-color: var(--accent-orange-border);
 }
 
 .order-status-pill.status-confirmed {
@@ -1678,14 +1692,15 @@ button, input, select, textarea {
 }
 
 .order-status-pill.status-preparing {
-  background: #F3E8FF;
-  color: #7E22CE;
+  background: var(--accent-orange-soft);
+  color: var(--warning-text);
+  border-color: var(--accent-orange-border);
 }
 
 .order-status-pill.status-ready-for-pickup {
   background: var(--primary-light);
   color: var(--primary);
-  border-color: rgba(8, 127, 91, 0.2);
+  border-color: rgba(0, 91, 54, 0.2);
 }
 
 .order-status-pill.status-completed {
@@ -1879,7 +1894,7 @@ button, input, select, textarea {
   align-items: center;
   justify-content: center;
   margin: 0 auto 8px;
-  border: 1px solid rgba(8, 127, 91, 0.2);
+  border: 1px solid rgba(0, 91, 54, 0.2);
 }
 
 .profile-name {
@@ -2456,7 +2471,7 @@ input:checked + .slider:before {
   top: 14px;
   left: 16px;
   right: 16px;
-  background: #19231F;
+  background: var(--text-primary);
   color: #FFFFFF;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
@@ -2480,8 +2495,8 @@ input:checked + .slider:before {
 }
 
 .sapat-toast.success {
-  background: #05513A;
-  border-color: rgba(8, 127, 91, 0.4);
+  background: var(--primary-dark);
+  border-color: rgba(0, 91, 54, 0.4);
 }
 
 .sapat-toast.error {

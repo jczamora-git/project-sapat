@@ -65,7 +65,7 @@ export const studentMenuPage = {
                 <div class="s-canteen-left">
                   <div class="s-canteen-avatar" style="background: ${v.avatarColor};">${v.avatar}</div>
                   <div>
-                    <div class="s-canteen-stall">${v.stallNumber} &bull; <span style="color:#059669; font-weight:700;">${v.statusText}</span></div>
+                    <div class="s-canteen-stall">${v.stallNumber} &bull; <span style="color:var(--primary); font-weight:700;">${v.statusText}</span></div>
                     <h3 class="s-canteen-name">${v.name}</h3>
                     <p class="s-canteen-hours"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${v.hours} &bull; <strong>${vLeft} portions</strong> ready to reserve</p>
                   </div>

@@ -169,7 +169,7 @@ export function openMealModal(dishId) {
   const servingsText = document.getElementById('modal-meal-servings-text');
   if (servingsText) {
     servingsText.textContent = isSoldOut ? '0 servings left (SOLD OUT)' : `${remaining} of ${dish.dailyLimit} remaining`;
-    servingsText.style.color = isSoldOut ? '#dc2626' : (remaining <= 5 ? '#d97706' : '#059669');
+    servingsText.style.color = isSoldOut ? 'var(--error)' : (remaining <= 5 ? 'var(--warning-text)' : 'var(--primary)');
   }
 
   const gaugeFill = document.getElementById('modal-meal-gauge-fill');
