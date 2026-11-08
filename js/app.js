@@ -160,11 +160,11 @@ const SapatApp = {
 
     if (badge) {
       if (this.currentRole === 'student') {
-        badge.textContent = '🎓 Student';
+        badge.textContent = 'Student';
         badge.className = 'header-role-badge student';
       } else {
         const v = SapatStorage.getVendorById(this.currentVendorId);
-        badge.textContent = `👨‍🍳 ${v ? v.stallNumber : 'Vendor'}`;
+        badge.textContent = v ? v.stallNumber : 'Vendor';
         badge.className = 'header-role-badge vendor';
       }
     }
@@ -391,7 +391,7 @@ const SapatApp = {
             <div class="canteen-card-cover" style="background-image: url('${v.bannerImage}');">
               <span class="canteen-stall-badge">${v.stallNumber}</span>
               <span class="canteen-status-pill ${v.isOpen ? 'open' : 'closed'}">
-                ${v.isOpen ? '🟢 Open Now' : '🔴 Closed'}
+                <span class="status-indicator ${v.isOpen ? 'online' : 'offline'}"></span> ${v.isOpen ? 'Open Now' : 'Closed'}
               </span>
             </div>
             <div class="canteen-card-body">
@@ -491,7 +491,7 @@ const SapatApp = {
                 <div>
                   <div class="s-canteen-stall">${v.stallNumber} &bull; <span style="color:#059669; font-weight:700;">${v.statusText}</span></div>
                   <h3 class="s-canteen-name">${v.name}</h3>
-                  <p class="s-canteen-hours">🕒 ${v.hours} &bull; <strong>${vLeft} portions</strong> ready to reserve</p>
+                  <p class="s-canteen-hours"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${v.hours} &bull; <strong>${vLeft} portions</strong> ready to reserve</p>
                 </div>
               </div>
               <button class="btn-switch-canteen" onclick="SapatApp.selectVendorForStudent('all')">
@@ -987,19 +987,25 @@ const SapatApp = {
 
       const currentIdx = statusIndexMap[order.status] ?? 0;
 
+      const progressPercent = currentIdx >= 0 ? Math.min(100, Math.max(0, (currentIdx / (steps.length - 1)) * 100)) : 0;
       const stepperHTML = order.status === 'Cancelled' ? `
         <div class="cancelled-banner">
-          ⚠️ This pre-order was cancelled and portions refunded to the kitchen.
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span>This pre-order was cancelled and portions refunded to the kitchen.</span>
         </div>
       ` : `
         <div class="order-progress-stepper">
+          <div class="stepper-progress-fill" style="width: calc(${progressPercent}% * 0.86);"></div>
           ${steps.map((st, idx) => {
             let cls = '';
             if (idx < currentIdx) cls = 'completed';
             else if (idx === currentIdx) cls = 'active';
+            const dotContent = idx < currentIdx 
+              ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>' 
+              : (idx + 1);
             return `
               <div class="step-point ${cls}">
-                <div class="step-dot">${idx < currentIdx ? '✓' : idx + 1}</div>
+                <div class="step-dot">${dotContent}</div>
                 <div class="step-label">${st.label}</div>
               </div>
             `;
@@ -1011,7 +1017,10 @@ const SapatApp = {
         <div class="order-card">
           <div class="order-card-header">
             <div>
-              <div class="order-vendor-title">🏪 ${order.vendorStall || 'Stall'}: <strong>${order.vendorName || 'Canteen'}</strong></div>
+              <div class="order-vendor-title">
+                <span class="order-stall-tag">${order.vendorStall || 'Stall'}</span>
+                <strong>${order.vendorName || 'Canteen'}</strong>
+              </div>
               <span class="order-id-badge">Order #${order.id}</span>
               <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${order.createdAt}</div>
             </div>
@@ -1038,7 +1047,8 @@ const SapatApp = {
 
           <div class="order-actions-row">
             <button class="btn-secondary-action" onclick="SapatApp.openPickupPass('${order.id}')">
-              📱 View Pickup Pass
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="7" y1="8" x2="7" y2="8.01"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="13" y2="16"></line></svg>
+              View Pickup Pass
             </button>
             ${(order.status === 'Pending' || order.status === 'Confirmed') ? `
               <button class="btn-danger-outline" onclick="SapatApp.cancelStudentOrder('${order.id}')">
@@ -1164,7 +1174,7 @@ const SapatApp = {
       if (urgentDishes.length === 0) {
         urgentContainer.innerHTML = `
           <div style="background: white; border-radius: 12px; padding: 14px; text-align: center; color: var(--text-secondary); font-size: 12px; border: 1px solid var(--border-light);">
-            ✅ All ${currentVendor.name} dishes are operating within safe preparation limits. No sold-out spikes yet.
+            <div style="display:inline-flex; align-items:center; gap:6px; color: var(--primary); font-weight: 500;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> All ${currentVendor.name} dishes are operating within safe preparation limits. No sold-out spikes yet.</div>
           </div>
         `;
       } else {
@@ -1421,24 +1431,24 @@ const SapatApp = {
         `;
       } else if (order.status === 'Confirmed') {
         actionsHTML = `
-          <button class="btn-primary-action" style="flex: 1; height: 38px; font-size: 12px; background: #7c3aed;" onclick="SapatApp.updateOrderStatus('${order.id}', 'Preparing')">
-            👨‍🍳 Start Preparing
+          <button class="btn-primary-action" style="flex: 1; height: 38px; font-size: 12px;" onclick="SapatApp.updateOrderStatus('${order.id}', 'Preparing')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Start Preparing
           </button>
         `;
       } else if (order.status === 'Preparing') {
         actionsHTML = `
-          <button class="btn-primary-action" style="flex: 1; height: 38px; font-size: 12px; background: #059669;" onclick="SapatApp.updateOrderStatus('${order.id}', 'Ready for Pickup')">
-            🔔 Mark Ready for Pickup
+          <button class="btn-primary-action" style="flex: 1; height: 38px; font-size: 12px;" onclick="SapatApp.updateOrderStatus('${order.id}', 'Ready for Pickup')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg> Mark Ready for Pickup
           </button>
         `;
       } else if (order.status === 'Ready for Pickup') {
         actionsHTML = `
           <button class="btn-primary-action" style="flex: 1; height: 38px; font-size: 12px; background: #1e293b;" onclick="SapatApp.updateOrderStatus('${order.id}', 'Completed')">
-            ✓ Complete & Handover
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Complete & Handover
           </button>
         `;
       } else if (order.status === 'Completed') {
-        actionsHTML = `<div style="font-size: 11.5px; color: var(--primary); font-weight: 700; width: 100%; text-align: center;">✓ Order Claimed and Paid</div>`;
+        actionsHTML = `<div style="font-size: 11.5px; color: var(--primary); font-weight: 600; width: 100%; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Order Claimed and Paid</div>`;
       } else if (order.status === 'Cancelled') {
         actionsHTML = `<div style="font-size: 11.5px; color: var(--status-cancelled); font-weight: 700; width: 100%; text-align: center;">Cancelled &bull; Servings Restored</div>`;
       }
@@ -1671,9 +1681,13 @@ const SapatApp = {
     if (toastMsg) toastMsg.textContent = message;
     
     if (toastIcon) {
-      if (type === 'success') toastIcon.textContent = '✓';
-      else if (type === 'error') toastIcon.textContent = '⚠️';
-      else toastIcon.textContent = 'ℹ️';
+      if (type === 'success') {
+        toastIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+      } else if (type === 'error') {
+        toastIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+      } else {
+        toastIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+      }
     }
 
     if (this._toastTimer) clearTimeout(this._toastTimer);
