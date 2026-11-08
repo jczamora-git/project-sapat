@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { updateHeader } from './components/header.js';
 import { updateNavigation } from './components/navigation.js';
+import { stopScannerCamera } from './components/modals.js';
 
 import { studentHomePage } from './pages/student/home.js';
 import { studentMenuPage } from './pages/student/menu.js';
@@ -23,27 +24,33 @@ import { adminSettingsPage } from './pages/admin/settings.js';
 class AppRouter {
   constructor() {
     this.container = null;
-    this.routes = {
-      '#/student/home': studentHomePage,
-      '#/student/menu': studentMenuPage,
-      '#/student/cart': studentCartPage,
-      '#/student/orders': studentOrdersPage,
-      '#/student/profile': studentProfilePage,
-
-      '#/vendor/dashboard': vendorDashboardPage,
-      '#/vendor/menu': vendorMenuPage,
-      '#/vendor/orders': vendorOrdersPage,
-      '#/vendor/prep': vendorPrepPage,
-      '#/vendor/profile': vendorProfilePage,
-
-      '#/admin/dashboard': adminDashboardPage,
-      '#/admin/canteens': adminCanteensPage,
-      '#/admin/menu': adminMenuPage,
-      '#/admin/analytics': adminAnalyticsPage,
-      '#/admin/settings': adminSettingsPage,
-    };
-
     this.currentPath = '';
+    this._routes = null;
+  }
+
+  get routes() {
+    if (!this._routes) {
+      this._routes = {
+        '#/student/home': studentHomePage,
+        '#/student/menu': studentMenuPage,
+        '#/student/cart': studentCartPage,
+        '#/student/orders': studentOrdersPage,
+        '#/student/profile': studentProfilePage,
+
+        '#/vendor/dashboard': vendorDashboardPage,
+        '#/vendor/menu': vendorMenuPage,
+        '#/vendor/orders': vendorOrdersPage,
+        '#/vendor/prep': vendorPrepPage,
+        '#/vendor/profile': vendorProfilePage,
+
+        '#/admin/dashboard': adminDashboardPage,
+        '#/admin/canteens': adminCanteensPage,
+        '#/admin/menu': adminMenuPage,
+        '#/admin/analytics': adminAnalyticsPage,
+        '#/admin/settings': adminSettingsPage,
+      };
+    }
+    return this._routes;
   }
 
   init(containerElement) {
@@ -114,6 +121,9 @@ class AppRouter {
     }
 
     this.currentPath = hash;
+    // Release any active camera streams on route transition
+    stopScannerCamera();
+
     const page = this.routes[hash];
 
     if (!this.container) {

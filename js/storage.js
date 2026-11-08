@@ -22,7 +22,7 @@ const INITIAL_VENDORS = [
     avatar: "AL",
     avatarColor: "linear-gradient(135deg, #005B36 0%, #004326 100%)",
     accentColor: "#005B36",
-    bannerImage: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/ate-lita.jpg",
     description: "Tender chicken adobo, hot sinigang soup, and crispy lumpia cooked fresh every morning.",
     efficiency: "96%",
     wasteSaved: "14.8 kg",
@@ -41,7 +41,7 @@ const INITIAL_VENDORS = [
     avatar: "KB",
     avatarColor: "linear-gradient(135deg, #FF8A24 0%, #D96E14 100%)",
     accentColor: "#FF8A24",
-    bannerImage: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/kuya-ben.jpg",
     description: "Crispy savory beef tapa, sweet longganisa, and jumbo hotdogs with fragrant sinangag.",
     efficiency: "94%",
     wasteSaved: "12.3 kg",
@@ -60,7 +60,7 @@ const INITIAL_VENDORS = [
     avatar: "NC",
     avatarColor: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
     accentColor: "#0284c7",
-    bannerImage: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/nanay-cora.jpg",
     description: "Flavorful pork giniling, malunggay monggo soup, and golden fried fish meal with toyomansi.",
     efficiency: "92%",
     wasteSaved: "11.5 kg",
@@ -79,7 +79,7 @@ const INITIAL_VENDORS = [
     avatar: "GB",
     avatarColor: "linear-gradient(135deg, #007A48 0%, #005B36 100%)",
     accentColor: "#005B36",
-    bannerImage: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/green-bowl.jpg",
     description: "Glazed chicken teriyaki, pan-seared tofu bowls, and zesty tuna rice bowls with crisp veggies.",
     efficiency: "95%",
     wasteSaved: "9.7 kg",
@@ -98,7 +98,7 @@ const INITIAL_VENDORS = [
     avatar: "AT",
     avatarColor: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
     accentColor: "#8b5cf6",
-    bannerImage: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/aling-tess.jpg",
     description: "Freshly tossed pancit bihon, crunchy golden turon with langka, and creamy fried cheese lumpia.",
     efficiency: "97%",
     wasteSaved: "15.1 kg",
@@ -124,7 +124,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 45,
     historicalAvg: 42,
-    image: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/chicken-adobo.jpg',
     tags: ['Best Seller', 'High Protein'],
     prepNote: 'Morning batch ready at 10:00 AM'
   },
@@ -143,7 +143,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 35,
     historicalAvg: 34,
-    image: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/pork-sinigang.jpg',
     tags: ['Soup Favorite', 'Almost Full'],
     prepNote: 'Cooked fresh at 11:00 AM'
   },
@@ -162,7 +162,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 50,
     historicalAvg: 48,
-    image: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/lumpiang-shanghai.jpg',
     tags: ['Sold Out', 'Snack Favorite'],
     prepNote: 'Preparation limit reached for today'
   },
@@ -183,7 +183,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 40,
     historicalAvg: 38,
-    image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/tapsilog.jpg',
     tags: ['All-Day Breakfast', 'Top Pick'],
     prepNote: 'Served with atchara and spiced vinegar'
   },
@@ -202,7 +202,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 30,
     historicalAvg: 28,
-    image: 'https://images.unsplash.com/photo-1627042633145-b780d842ba45?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/hotsilog.jpg',
     tags: ['Budget Friendly', 'Quick Meal'],
     prepNote: 'Cooked to order in minutes'
   },
@@ -221,7 +221,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 35,
     historicalAvg: 33,
-    image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/longsilog.jpg',
     tags: ['Classic Pinoy', 'Hearty'],
     prepNote: 'Sweet garlic blend'
   },
@@ -242,7 +242,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 35,
     historicalAvg: 32,
-    image: 'https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/pork-giniling.jpg',
     tags: ['Budget Ulam', 'Comfort Food'],
     prepNote: 'Nutritious homestyle portion'
   },
@@ -261,7 +261,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 40,
     historicalAvg: 38,
-    image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/ginisang-monggo.jpg',
     tags: ['High Fiber', 'Friday Favorite'],
     prepNote: 'Made with fresh malunggay'
   },
@@ -280,7 +280,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 25,
     historicalAvg: 24,
-    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/fried-fish-meal.jpg',
     tags: ['Fresh Catch', 'Almost Full'],
     prepNote: 'Fried fresh per pickup window'
   },
@@ -301,7 +301,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 30,
     historicalAvg: 29,
-    image: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/chicken-teriyaki.jpg',
     tags: ['Healthy Choice', 'Lean Protein'],
     prepNote: 'Low sodium homemade glaze'
   },
@@ -320,7 +320,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 25,
     historicalAvg: 22,
-    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/tofu-veggie-bowl.jpg',
     tags: ['Vegetarian', 'Zero Cholesterol'],
     prepNote: 'High protein plant-based meal'
   },
@@ -339,7 +339,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 30,
     historicalAvg: 28,
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/tuna-rice-bowl.jpg',
     tags: ['Omega-3', 'Fresh & Light'],
     prepNote: 'Prepared cold with warm rice'
   },
@@ -360,7 +360,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 45,
     historicalAvg: 42,
-    image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/pancit-bihon.jpg',
     tags: ['Snack Staple', 'Merienda Hit'],
     prepNote: 'Cooked fresh every recess shift'
   },
@@ -379,7 +379,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 50,
     historicalAvg: 48,
-    image: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/turon.jpg',
     tags: ['Sweet Treat', 'Warm & Crispy'],
     prepNote: 'Fried fresh every 30 minutes'
   },
@@ -398,7 +398,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 40,
     historicalAvg: 37,
-    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/cheese-lumpia.jpg',
     tags: ['Kid Favorite', 'Crispy Snack'],
     prepNote: 'Served hot with melted cheese'
   }
@@ -565,7 +565,19 @@ class SapatStorage {
         this.saveVendors(INITIAL_VENDORS);
         return INITIAL_VENDORS;
       }
-      return JSON.parse(data);
+      const vendors = JSON.parse(data);
+      let vendorsUpdated = false;
+      vendors.forEach(v => {
+        const seed = INITIAL_VENDORS.find(sv => sv.id === v.id);
+        if (seed && (!v.bannerImage || v.bannerImage.includes('unsplash.com'))) {
+          v.bannerImage = seed.bannerImage;
+          vendorsUpdated = true;
+        }
+      });
+      if (vendorsUpdated) {
+        localStorage.setItem(SAPAT_STORAGE_KEY_VENDORS, JSON.stringify(vendors));
+      }
+      return vendors;
     } catch (e) {
       console.error('Failed reading vendors from localStorage', e);
       return INITIAL_VENDORS;
@@ -623,6 +635,17 @@ class SapatStorage {
         this.saveMenu(INITIAL_MENU);
         return INITIAL_MENU;
       }
+      let menuUpdated = false;
+      menu.forEach(item => {
+        const seed = INITIAL_MENU.find(sm => sm.id === item.id);
+        if (seed && (!item.image || item.image.includes('unsplash.com'))) {
+          item.image = seed.image;
+          menuUpdated = true;
+        }
+      });
+      if (menuUpdated) {
+        localStorage.setItem(SAPAT_STORAGE_KEY_MENU, JSON.stringify(menu));
+      }
       return menu;
     } catch (e) {
       console.error('Failed reading menu from localStorage', e);
@@ -635,23 +658,138 @@ class SapatStorage {
     window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'menu' } }));
   }
 
+  static updateDishDailyLimit(dishId, newLimit) {
+    const menu = this.getMenu();
+    const dish = menu.find(d => d.id === dishId);
+    if (!dish) return { success: false, error: 'Dish not found' };
+    const minVal = dish.reservedCount || 0;
+    dish.dailyLimit = Math.max(minVal, Math.min(250, Number(newLimit) || minVal));
+    this.saveMenu(menu);
+    return { success: true, dish };
+  }
+
   static getOrders() {
     try {
       const data = localStorage.getItem(SAPAT_STORAGE_KEY_ORDERS);
-      if (!data) {
-        this.saveOrders(INITIAL_ORDERS);
-        return INITIAL_ORDERS;
+      let orders = INITIAL_ORDERS;
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) orders = parsed;
+        } catch (e) {
+          console.error('Failed reading orders from localStorage', e);
+        }
       }
-      const orders = JSON.parse(data);
-      if (!Array.isArray(orders)) {
-        this.saveOrders(INITIAL_ORDERS);
-        return INITIAL_ORDERS;
+
+      // Ensure every reservation has a persistent opaque pickup token
+      let hasUpdates = false;
+      orders.forEach((o, idx) => {
+        if (!o.pickupToken) {
+          const cleanId = (o.id || `spt${idx}`).toLowerCase().replace(/[^a-z0-9]/g, '');
+          o.pickupToken = `spt_tok_${cleanId}_${(idx + 1) * 31}ab`;
+          hasUpdates = true;
+        }
+      });
+
+      if (hasUpdates || !data) {
+        localStorage.setItem(SAPAT_STORAGE_KEY_ORDERS, JSON.stringify(orders));
       }
       return orders;
     } catch (e) {
-      console.error('Failed reading orders from localStorage', e);
+      console.error('Failed in getOrders', e);
       return INITIAL_ORDERS;
     }
+  }
+
+  static getOrderByToken(tokenOrCode) {
+    if (!tokenOrCode) return null;
+    const clean = String(tokenOrCode).trim();
+    const orders = this.getOrders();
+    return orders.find(o => 
+      o.pickupToken === clean || 
+      (o.id && o.id.toUpperCase() === clean.toUpperCase())
+    ) || null;
+  }
+
+  /**
+   * Validates and completes a reservation handover.
+   * Enforces vendor stall ownership and single-redemption rules.
+   */
+  static claimOrder(orderIdOrToken, currentVendorId) {
+    const orders = this.getOrders();
+    const clean = String(orderIdOrToken).trim();
+    const orderIndex = orders.findIndex(o => 
+      o.id === clean || 
+      o.pickupToken === clean || 
+      (o.id && o.id.toUpperCase() === clean.toUpperCase())
+    );
+
+    if (orderIndex === -1) {
+      return {
+        success: false,
+        reason: 'NOT_FOUND',
+        message: 'Pre-order reference or QR pickup token not found.'
+      };
+    }
+
+    const order = orders[orderIndex];
+
+    // Check stall ownership
+    if (currentVendorId && order.vendorId !== currentVendorId) {
+      const ownerVendor = this.getVendorById(order.vendorId);
+      const ownerName = ownerVendor ? `${ownerVendor.name} (${ownerVendor.stallNumber})` : 'a different stall';
+      return {
+        success: false,
+        reason: 'WRONG_VENDOR',
+        message: `This pre-order belongs to ${ownerName}. Not redeemable at your stall counter.`,
+        order
+      };
+    }
+
+    // Check if already claimed / completed
+    if (order.status === 'Completed') {
+      return {
+        success: false,
+        reason: 'ALREADY_CLAIMED',
+        message: `Pre-order #${order.id} has already been claimed and handed over. Duplicate redemptions are prevented.`,
+        order
+      };
+    }
+
+    // Check if cancelled
+    if (order.status === 'Cancelled') {
+      return {
+        success: false,
+        reason: 'CANCELLED',
+        message: `Pre-order #${order.id} was cancelled. Reserved portions were returned to inventory.`,
+        order
+      };
+    }
+
+    // Mark as completed
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    order.status = 'Completed';
+    order.claimedAt = now.toISOString();
+
+    if (Array.isArray(order.timeline)) {
+      const completedStep = order.timeline.find(t => t.status === 'Completed');
+      if (completedStep) {
+        completedStep.time = timeStr;
+        completedStep.done = true;
+      } else {
+        order.timeline.push({ status: 'Completed', time: timeStr, done: true });
+      }
+    }
+
+    orders[orderIndex] = order;
+    this.saveOrders(orders);
+
+    return {
+      success: true,
+      message: `Pre-order #${order.id} verified and marked Completed!`,
+      order
+    };
   }
 
   static saveOrders(orders) {

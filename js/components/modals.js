@@ -170,6 +170,51 @@ export function initModals() {
       }
     });
   }
+
+  // Modal 6: Vendor QR Scanner & Handover
+  const scannerModal = document.getElementById('modal-vendor-qr-scanner');
+  if (scannerModal) {
+    const closeBtns = scannerModal.querySelectorAll('[data-action="close-qr-scanner"], .close-modal-btn');
+    closeBtns.forEach(btn => btn.addEventListener('click', closeVendorScannerModal));
+
+    scannerModal.addEventListener('click', (e) => {
+      if (e.target === scannerModal) closeVendorScannerModal();
+    });
+
+    const manualForm = document.getElementById('scanner-manual-form');
+    if (manualForm) {
+      manualForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('manual-preorder-input');
+        if (input && input.value.trim()) {
+          handleScannedPickupCode(input.value.trim());
+        }
+      });
+    }
+
+    const cancelHandoverBtn = document.getElementById('btn-cancel-handover');
+    if (cancelHandoverBtn) {
+      cancelHandoverBtn.addEventListener('click', () => {
+        openVendorScannerModal();
+      });
+    }
+
+    const confirmHandoverBtn = document.getElementById('btn-confirm-handover');
+    if (confirmHandoverBtn) {
+      confirmHandoverBtn.addEventListener('click', () => {
+        confirmPendingHandover();
+      });
+    }
+
+    const cameraSelect = document.getElementById('scanner-camera-select');
+    if (cameraSelect) {
+      cameraSelect.addEventListener('change', (e) => {
+        if (e.target.value) {
+          startScannerCamera(e.target.value);
+        }
+      });
+    }
+  }
 }
 
 // ==========================================
@@ -376,7 +421,7 @@ export function openAddDishModal() {
   document.getElementById('edit-dish-limit').value = '35';
   document.getElementById('edit-dish-suggested').value = '35';
   document.getElementById('edit-dish-img-preset').value = 'custom';
-  document.getElementById('edit-dish-img-url').value = 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=600&q=80';
+  document.getElementById('edit-dish-img-url').value = 'assets/images/products/chicken-adobo.jpg';
   document.getElementById('edit-dish-desc').value = '';
   document.getElementById('edit-dish-available').checked = true;
 
@@ -425,7 +470,7 @@ export function handleSaveDish(e) {
   const price = parseFloat(document.getElementById('edit-dish-price').value) || 50;
   const dailyLimit = parseInt(document.getElementById('edit-dish-limit').value, 10) || 30;
   const suggestedPrep = parseInt(document.getElementById('edit-dish-suggested').value, 10) || dailyLimit;
-  const image = document.getElementById('edit-dish-img-url').value.trim() || 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=600&q=80';
+  const image = document.getElementById('edit-dish-img-url').value.trim() || 'assets/images/products/chicken-adobo.jpg';
   const description = document.getElementById('edit-dish-desc').value.trim();
   const isAvailable = document.getElementById('edit-dish-available').checked;
 
@@ -500,6 +545,30 @@ export function openPickupPass(orderId) {
     passStallInfo.textContent = `Present at ${order.vendorStall || 'Stall Window'} (${order.vendorName || 'Canteen Counter'}) to claim.`;
   }
 
+  // Ensure unique opaque pickup token exists without exposing personal data
+  if (!order.pickupToken) {
+    const cleanId = (order.id || 'SPT').toLowerCase().replace(/[^a-z0-9]/g, '');
+    order.pickupToken = `spt_tok_${cleanId}_${btoa(order.id).substring(0, 8).toLowerCase()}`;
+    SapatStorage.saveOrders(orders);
+  }
+
+  // Render actual QR code on canvas
+  const canvas = document.getElementById('pass-qr-canvas');
+  if (canvas) {
+    if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
+      window.QRCode.toCanvas(canvas, order.pickupToken, {
+        width: 128,
+        margin: 1,
+        color: {
+          dark: '#005B36',
+          light: '#FFFFFF'
+        }
+      }, (err) => {
+        if (err) console.error('QR code generation failed:', err);
+      });
+    }
+  }
+
   const modal = document.getElementById('modal-pickup-pass');
   if (modal) modal.classList.add('active');
 }
@@ -507,6 +576,235 @@ export function openPickupPass(orderId) {
 export function closePickupPass() {
   const modal = document.getElementById('modal-pickup-pass');
   if (modal) modal.classList.remove('active');
+}
+
+// ==========================================
+// Vendor QR Scanner & Handover Methods
+// ==========================================
+let html5QrScannerInstance = null;
+let currentPendingClaimOrder = null;
+
+export async function openVendorScannerModal() {
+  const modal = document.getElementById('modal-vendor-qr-scanner');
+  if (!modal) return;
+
+  const activeView = document.getElementById('scanner-view-active');
+  const confirmView = document.getElementById('scanner-view-confirmation');
+  const errorBanner = document.getElementById('scanner-error-banner');
+  const statusText = document.getElementById('scanner-status-text');
+  const manualInput = document.getElementById('manual-preorder-input');
+
+  if (activeView) activeView.style.display = 'block';
+  if (confirmView) confirmView.style.display = 'none';
+  if (errorBanner) errorBanner.style.display = 'none';
+  if (manualInput) manualInput.value = '';
+  if (statusText) {
+    statusText.innerHTML = '<span class="scanner-status-dot online"></span><span>Camera starting... Align QR pass in frame.</span>';
+  }
+
+  modal.classList.add('active');
+  currentPendingClaimOrder = null;
+
+  startScannerCamera();
+}
+
+export function closeVendorScannerModal() {
+  stopScannerCamera();
+  const modal = document.getElementById('modal-vendor-qr-scanner');
+  if (modal) modal.classList.remove('active');
+  currentPendingClaimOrder = null;
+}
+
+export async function stopScannerCamera() {
+  if (html5QrScannerInstance) {
+    try {
+      if (html5QrScannerInstance.isScanning) {
+        await html5QrScannerInstance.stop();
+      }
+      await html5QrScannerInstance.clear();
+    } catch (e) {
+      console.warn('Error stopping QR scanner:', e);
+    }
+    html5QrScannerInstance = null;
+  }
+}
+
+async function startScannerCamera(cameraId = null) {
+  const qrReaderEl = document.getElementById('qr-reader');
+  if (!qrReaderEl) return;
+
+  await stopScannerCamera();
+
+  if (!window.Html5Qrcode) {
+    showScannerError('QR Scanner Library Unavailable', 'Please enter the pre-order code manually below.');
+    return;
+  }
+
+  try {
+    html5QrScannerInstance = new window.Html5Qrcode('qr-reader');
+    
+    // Check available cameras
+    try {
+      const devices = await window.Html5Qrcode.getCameras();
+      const select = document.getElementById('scanner-camera-select');
+      if (devices && devices.length > 1 && select) {
+        select.innerHTML = devices.map((d, i) => `
+          <option value="${d.id}" ${i === 0 ? 'selected' : ''}>${d.label || `Camera ${i + 1}`}</option>
+        `).join('');
+        select.style.display = 'block';
+      }
+    } catch (devErr) {
+      console.log('Camera enumeration note:', devErr);
+    }
+
+    const config = {
+      fps: 10,
+      qrbox: { width: 220, height: 220 },
+      aspectRatio: 1.0
+    };
+
+    const cameraConfig = cameraId ? { deviceId: { exact: cameraId } } : { facingMode: 'environment' };
+
+    await html5QrScannerInstance.start(
+      cameraConfig,
+      config,
+      (decodedText) => {
+        handleScannedPickupCode(decodedText);
+      },
+      () => {
+        // scan frame in progress
+      }
+    );
+
+    const statusText = document.getElementById('scanner-status-text');
+    if (statusText) {
+      statusText.innerHTML = '<span class="scanner-status-dot online"></span><span>Camera live. Align student QR pass within frame.</span>';
+    }
+  } catch (err) {
+    console.warn('Camera start failed or permission denied:', err);
+    showScannerError(
+      'Camera Permission Denied or Unavailable',
+      'Please grant camera permissions in your browser, or verify the order reference code manually below.'
+    );
+  }
+}
+
+function showScannerError(title, desc) {
+  const errorBanner = document.getElementById('scanner-error-banner');
+  const errorTitle = document.getElementById('scanner-error-title');
+  const errorDesc = document.getElementById('scanner-error-desc');
+  const statusText = document.getElementById('scanner-status-text');
+
+  if (errorBanner) errorBanner.style.display = 'flex';
+  if (errorTitle) errorTitle.textContent = title;
+  if (errorDesc) errorDesc.textContent = desc;
+  if (statusText) {
+    statusText.innerHTML = '<span class="scanner-status-dot offline"></span><span>Camera unavailable &bull; Manual fallback ready</span>';
+  }
+}
+
+export function handleScannedPickupCode(codeOrToken) {
+  if (!codeOrToken) return;
+
+  let token = String(codeOrToken).trim();
+  try {
+    const parsed = JSON.parse(token);
+    if (parsed && (parsed.token || parsed.id)) {
+      token = parsed.token || parsed.id;
+    }
+  } catch (e) {
+    // Plain string
+  }
+
+  const order = SapatStorage.getOrderByToken(token);
+  if (!order) {
+    showToast('Invalid QR Code. Pre-order reference not found.', 'error');
+    return;
+  }
+
+  if (order.vendorId !== state.currentVendorId) {
+    const owner = SapatStorage.getVendorById(order.vendorId);
+    const ownerName = owner ? `${owner.name} (${owner.stallNumber})` : 'another stall';
+    showToast(`Wrong stall: Pre-order #${order.id} belongs to ${ownerName}.`, 'warning');
+    return;
+  }
+
+  if (order.status === 'Completed') {
+    showToast(`Pre-order #${order.id} has already been claimed and completed!`, 'error');
+    return;
+  }
+
+  if (order.status === 'Cancelled') {
+    showToast(`Pre-order #${order.id} was cancelled.`, 'error');
+    return;
+  }
+
+  stopScannerCamera();
+  showHandoverConfirmation(order);
+}
+
+function showHandoverConfirmation(order) {
+  currentPendingClaimOrder = order;
+
+  const activeView = document.getElementById('scanner-view-active');
+  const confirmView = document.getElementById('scanner-view-confirmation');
+
+  if (activeView) activeView.style.display = 'none';
+  if (confirmView) confirmView.style.display = 'block';
+
+  const orderIdEl = document.getElementById('confirm-order-id');
+  if (orderIdEl) orderIdEl.textContent = `#${order.id}`;
+
+  const statusEl = document.getElementById('confirm-order-status');
+  if (statusEl) {
+    statusEl.textContent = order.status;
+    statusEl.className = `order-status-badge ${order.status === 'Ready for Pickup' || order.status === 'Confirmed' ? 'status-confirmed' : 'status-preparing'}`;
+  }
+
+  const studentNameEl = document.getElementById('confirm-student-name');
+  if (studentNameEl) studentNameEl.textContent = order.studentName;
+
+  const studentMetaEl = document.getElementById('confirm-student-meta');
+  if (studentMetaEl) {
+    studentMetaEl.textContent = `${order.gradeSection || 'Student'} • Slot: ${order.pickupTime}`;
+  }
+
+  const itemsListEl = document.getElementById('confirm-items-list');
+  if (itemsListEl) {
+    itemsListEl.innerHTML = (order.items || []).map(item => `
+      <div class="handover-item-row">
+        <span class="handover-item-qty">${item.quantity}x</span>
+        <span class="handover-item-name">${item.name}</span>
+        <span class="handover-item-price">₱${(item.price * item.quantity).toFixed(2)}</span>
+      </div>
+    `).join('');
+  }
+
+  const noteWrap = document.getElementById('confirm-instructions-wrap');
+  const noteText = document.getElementById('confirm-instructions-text');
+  if (noteWrap && noteText) {
+    if (order.specialInstructions && order.specialInstructions.trim()) {
+      noteText.textContent = order.specialInstructions;
+      noteWrap.style.display = 'block';
+    } else {
+      noteWrap.style.display = 'none';
+    }
+  }
+
+  const totalEl = document.getElementById('confirm-order-total');
+  if (totalEl) totalEl.textContent = `₱${(order.totalAmount || 0).toFixed(2)}`;
+}
+
+export function confirmPendingHandover() {
+  if (!currentPendingClaimOrder) return;
+  const result = SapatStorage.claimOrder(currentPendingClaimOrder.id, state.currentVendorId);
+  if (result.success) {
+    showToast(`Handover complete! Pre-order #${result.order.id} claimed.`, 'success');
+    closeVendorScannerModal();
+    window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'orders' } }));
+  } else {
+    showToast(result.message || 'Failed to claim pre-order', 'error');
+  }
 }
 
 // ==========================================
@@ -542,11 +840,11 @@ function populateFilterModal() {
   if (vContainer) {
     vContainer.innerHTML = `
       <button type="button" class="filter-chip ${state.studentVendorFilter === 'all' ? 'active' : ''}" data-vendor-id="all">
-        All Stalls (5)
+        All Canteens
       </button>
       ${vendors.map(v => `
         <button type="button" class="filter-chip ${state.studentVendorFilter === v.id ? 'active' : ''}" data-vendor-id="${v.id}">
-          ${v.stallNumber}: ${v.name}
+          ${v.name}
         </button>
       `).join('')}
     `;

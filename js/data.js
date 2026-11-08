@@ -22,7 +22,7 @@ const INITIAL_VENDORS = [
     avatar: "AL",
     avatarColor: "linear-gradient(135deg, #005B36 0%, #004326 100%)",
     accentColor: "#005B36",
-    bannerImage: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/ate-lita.jpg",
     description: "Tender chicken adobo, hot sinigang soup, and crispy lumpia cooked fresh every morning.",
     efficiency: "96%",
     wasteSaved: "14.8 kg",
@@ -41,7 +41,7 @@ const INITIAL_VENDORS = [
     avatar: "KB",
     avatarColor: "linear-gradient(135deg, #FF8A24 0%, #D96E14 100%)",
     accentColor: "#FF8A24",
-    bannerImage: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/kuya-ben.jpg",
     description: "Crispy savory beef tapa, sweet longganisa, and jumbo hotdogs with fragrant sinangag.",
     efficiency: "94%",
     wasteSaved: "12.3 kg",
@@ -60,7 +60,7 @@ const INITIAL_VENDORS = [
     avatar: "NC",
     avatarColor: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
     accentColor: "#0284c7",
-    bannerImage: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/nanay-cora.jpg",
     description: "Flavorful pork giniling, malunggay monggo soup, and golden fried fish meal with toyomansi.",
     efficiency: "92%",
     wasteSaved: "11.5 kg",
@@ -79,7 +79,7 @@ const INITIAL_VENDORS = [
     avatar: "GB",
     avatarColor: "linear-gradient(135deg, #007A48 0%, #005B36 100%)",
     accentColor: "#005B36",
-    bannerImage: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/green-bowl.jpg",
     description: "Glazed chicken teriyaki, pan-seared tofu bowls, and zesty tuna rice bowls with crisp veggies.",
     efficiency: "95%",
     wasteSaved: "9.7 kg",
@@ -98,7 +98,7 @@ const INITIAL_VENDORS = [
     avatar: "AT",
     avatarColor: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
     accentColor: "#8b5cf6",
-    bannerImage: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=600&q=80",
+    bannerImage: "assets/images/canteens/aling-tess.jpg",
     description: "Freshly tossed pancit bihon, crunchy golden turon with langka, and creamy fried cheese lumpia.",
     efficiency: "97%",
     wasteSaved: "15.1 kg",
@@ -124,7 +124,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 45,
     historicalAvg: 42,
-    image: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/chicken-adobo.jpg',
     tags: ['Best Seller', 'High Protein'],
     prepNote: 'Morning batch ready at 10:00 AM'
   },
@@ -143,7 +143,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 35,
     historicalAvg: 34,
-    image: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/pork-sinigang.jpg',
     tags: ['Soup Favorite', 'Almost Full'],
     prepNote: 'Cooked fresh at 11:00 AM'
   },
@@ -162,7 +162,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 50,
     historicalAvg: 48,
-    image: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/lumpiang-shanghai.jpg',
     tags: ['Sold Out', 'Snack Favorite'],
     prepNote: 'Preparation limit reached for today'
   },
@@ -183,7 +183,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 40,
     historicalAvg: 38,
-    image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/tapsilog.jpg',
     tags: ['All-Day Breakfast', 'Top Pick'],
     prepNote: 'Served with atchara and spiced vinegar'
   },
@@ -202,7 +202,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 30,
     historicalAvg: 28,
-    image: 'https://images.unsplash.com/photo-1627042633145-b780d842ba45?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/hotsilog.jpg',
     tags: ['Budget Friendly', 'Quick Meal'],
     prepNote: 'Cooked to order in minutes'
   },
@@ -221,7 +221,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 35,
     historicalAvg: 33,
-    image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/longsilog.jpg',
     tags: ['Classic Pinoy', 'Hearty'],
     prepNote: 'Sweet garlic blend'
   },
@@ -242,7 +242,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 35,
     historicalAvg: 32,
-    image: 'https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/pork-giniling.jpg',
     tags: ['Budget Ulam', 'Comfort Food'],
     prepNote: 'Nutritious homestyle portion'
   },
@@ -261,7 +261,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 40,
     historicalAvg: 38,
-    image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/ginisang-monggo.jpg',
     tags: ['High Fiber', 'Friday Favorite'],
     prepNote: 'Made with fresh malunggay'
   },
@@ -280,7 +280,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 25,
     historicalAvg: 24,
-    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/fried-fish-meal.jpg',
     tags: ['Fresh Catch', 'Almost Full'],
     prepNote: 'Fried fresh per pickup window'
   },
@@ -301,7 +301,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 30,
     historicalAvg: 29,
-    image: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/chicken-teriyaki.jpg',
     tags: ['Healthy Choice', 'Lean Protein'],
     prepNote: 'Low sodium homemade glaze'
   },
@@ -320,7 +320,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 25,
     historicalAvg: 22,
-    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/tofu-veggie-bowl.jpg',
     tags: ['Vegetarian', 'Zero Cholesterol'],
     prepNote: 'High protein plant-based meal'
   },
@@ -339,7 +339,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 30,
     historicalAvg: 28,
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/tuna-rice-bowl.jpg',
     tags: ['Omega-3', 'Fresh & Light'],
     prepNote: 'Prepared cold with warm rice'
   },
@@ -360,7 +360,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 45,
     historicalAvg: 42,
-    image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/pancit-bihon.jpg',
     tags: ['Snack Staple', 'Merienda Hit'],
     prepNote: 'Cooked fresh every recess shift'
   },
@@ -379,7 +379,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 50,
     historicalAvg: 48,
-    image: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/turon.jpg',
     tags: ['Sweet Treat', 'Warm & Crispy'],
     prepNote: 'Fried fresh every 30 minutes'
   },
@@ -398,7 +398,7 @@ const INITIAL_MENU = [
     isAvailable: true,
     suggestedPrep: 40,
     historicalAvg: 37,
-    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=600&q=80',
+    image: 'assets/images/products/cheese-lumpia.jpg',
     tags: ['Kid Favorite', 'Crispy Snack'],
     prepNote: 'Served hot with melted cheese'
   }

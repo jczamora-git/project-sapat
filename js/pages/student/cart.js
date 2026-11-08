@@ -2,7 +2,8 @@ import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
 import { showToast } from '../../components/toast.js';
-import { getImgFallback } from '../../components/food-card.js';
+import { renderFeaturedMealCard, getImgFallback } from '../../components/food-card.js';
+import { openMealModal } from '../../components/modals.js';
 
 export const studentCartPage = {
   render(container) {
@@ -11,21 +12,39 @@ export const studentCartPage = {
     const count = state.getCartCount();
 
     if (items.length === 0) {
+      const menu = SapatStorage.getMenu();
+      const suggestions = menu.filter(d => d.isAvailable && (d.dailyLimit - d.reservedServings) > 0).slice(0, 4);
+
       container.innerHTML = `
         <section class="screen active" id="screen-student-cart">
           <div class="page-title-wrap">
             <h2 class="page-main-heading">Pre-order Tray</h2>
             <p class="page-main-sub">Review portions & select your lunch pickup window</p>
           </div>
-          <div class="empty-state-wrap">
-            <div class="empty-state-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+
+          <!-- Engaging Empty State Banner -->
+          <div class="cart-empty-feature-card">
+            <div class="empty-tray-art">
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             </div>
-            <h3>Your tray is empty</h3>
-            <p>Browse today's canteen dishes and reserve your portions early before daily kitchen quotas are reached.</p>
-            <button class="btn-primary-action" style="margin-top: 14px; width: auto; padding: 0 22px;" data-route="#/student/menu">
-              Browse Canteen Menu
+            <h3 class="cart-empty-title">Your Pre-order Tray is Empty</h3>
+            <p class="cart-empty-sub">Avoid lunchtime sellouts by reserving freshly cooked meals ahead of time. Canteen kitchens lock portion batches specifically for pre-orders.</p>
+            <button class="btn-primary-action cart-empty-browse-btn" data-route="#/student/menu">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+              <span>Explore Canteen Menu</span>
             </button>
+          </div>
+
+          <!-- Suggested Dishes to Reserve -->
+          <div class="section-row-header" style="margin-top: 24px;">
+            <div>
+              <h3 class="section-heading">Available Specials Today</h3>
+              <span class="section-subtext">Popular dishes ready for lunch reservation</span>
+            </div>
+            <button class="section-see-all-btn" data-route="#/student/menu">View all menu &rarr;</button>
+          </div>
+          <div class="meals-grid-2col" id="cart-suggested-grid">
+            ${suggestions.map(d => renderFeaturedMealCard(d)).join('')}
           </div>
         </section>
       `;
@@ -56,7 +75,12 @@ export const studentCartPage = {
                   </div>
                   
                   <div class="cart-item-details">
-                    <span class="cart-item-stall">${item.vendorStall || 'Stall'} &bull; ${item.vendorName || 'Canteen'}</span>
+                    <div class="cart-item-top-row">
+                      <span class="cart-item-stall">${item.vendorStall || 'Stall'} &bull; ${item.vendorName || 'Canteen'}</span>
+                      <button class="cart-item-remove-btn" data-action="cart-remove" data-dish-id="${item.id}" title="Remove item" aria-label="Remove item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    </div>
                     <h4 class="cart-item-name">${item.name}</h4>
                     <div class="cart-item-pricing">
                       <span class="cart-item-subtotal">₱${item.price * item.quantity}</span>
@@ -212,7 +236,43 @@ export const studentCartPage = {
         return;
       }
 
-      // 4. Confirm Checkout
+      // 4. Cart Remove Item
+      const removeBtn = e.target.closest('[data-action="cart-remove"]');
+      if (removeBtn) {
+        const dishId = removeBtn.getAttribute('data-dish-id');
+        state.updateCartQty(dishId, -999);
+        showToast('Item removed from tray', 'info');
+        this.render(container);
+        return;
+      }
+
+      // 5. Quick Add from empty tray recommendations
+      const quickAddBtn = e.target.closest('[data-action="quick-add"]');
+      if (quickAddBtn) {
+        e.stopPropagation();
+        const dishId = quickAddBtn.getAttribute('data-dish-id');
+        const dish = SapatStorage.getDishById(dishId);
+        if (dish) {
+          const success = state.addToCart(dish, 1);
+          if (success) {
+            showToast(`Added 1x ${dish.name} to tray`, 'success');
+            this.render(container);
+          }
+        }
+        return;
+      }
+
+      // 6. Open meal modal
+      const mealEl = e.target.closest('[data-action="open-meal"]');
+      if (mealEl) {
+        const dishId = mealEl.getAttribute('data-dish-id');
+        if (dishId) {
+          openMealModal(dishId);
+          return;
+        }
+      }
+
+      // 7. Confirm Checkout
       const checkoutBtn = e.target.closest('[data-action="confirm-checkout"]');
       if (checkoutBtn) {
         if (state.cart.length === 0) {
@@ -245,6 +305,7 @@ export const studentCartPage = {
           const orderId = 'SPT-' + Math.floor(1000 + Math.random() * 9000);
           const newOrder = {
             id: orderId,
+            pickupToken: 'spt_tok_' + orderId.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Math.random().toString(36).substring(2, 8),
             studentName: 'Maria Santos',
             gradeSection: 'Grade 11 - STEM A',
             vendorId,

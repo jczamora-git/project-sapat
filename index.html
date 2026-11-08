@@ -269,14 +269,14 @@
         <label class="form-label">Image Selection</label>
         <select class="form-select" id="edit-dish-img-preset">
           <option value="custom">Custom Image URL</option>
-          <option value="https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=600&q=80">Chicken Adobo</option>
-          <option value="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80">Pork Sinigang</option>
-          <option value="https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&w=600&q=80">Lumpiang Shanghai</option>
-          <option value="https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=600&q=80">Pancit Canton</option>
-          <option value="https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80">Beef Tapa Silog</option>
-          <option value="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80">Ginataang Gulay</option>
-          <option value="https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80">Sago't Gulaman Drink</option>
-          <option value="https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=600&q=80">Caramel Turon</option>
+          <option value="assets/images/products/chicken-adobo.jpg">Chicken Adobo</option>
+          <option value="assets/images/products/pork-sinigang.jpg">Pork Sinigang</option>
+          <option value="assets/images/products/lumpiang-shanghai.jpg">Lumpiang Shanghai</option>
+          <option value="assets/images/products/pancit-bihon.jpg">Pancit Bihon</option>
+          <option value="assets/images/products/tapsilog.jpg">Tapsilog</option>
+          <option value="assets/images/products/ginisang-monggo.jpg">Ginisang Monggo</option>
+          <option value="assets/images/categories/drinks.jpg">Sago't Gulaman Drink</option>
+          <option value="assets/images/products/turon.jpg">Caramel Turon</option>
         </select>
         <input type="url" class="form-input" id="edit-dish-img-url" style="margin-top: 6px;" placeholder="https://example.com/photo.jpg">
       </div>
@@ -312,11 +312,9 @@
       <span style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Preorder Code</span>
       <h2 id="pass-order-id" style="font-size: 26px; font-weight: 800; color: var(--primary); margin: 6px 0 12px;">#SPT-9021</h2>
       
-      <!-- Simulated QR code -->
-      <div style="width: 130px; height: 130px; margin: 0 auto 12px; background: white; border: 1px solid var(--border-subtle); border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 8px;">
-        <svg viewBox="0 0 24 24" width="100" height="100" fill="currentColor">
-          <path d="M2 2h8v8H2zm2 2v4h4V4zm-2 10h8v8H2zm2 2v4h4v-4zm10-14h8v8h-8zm2 2v4h4V4zm-1 9h2v2h-2zm4 0h3v5h-3zm-4 4h2v5h-2zm4 2h3v3h-3zm-7-2h2v2h-2zm0 3h2v2h-2z"/>
-        </svg>
+      <!-- Real Generated QR Code -->
+      <div class="pass-qr-frame" id="pass-qr-frame" style="width: 140px; height: 140px; margin: 0 auto 12px; background: white; border: 1px solid var(--border-subtle); border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+        <canvas id="pass-qr-canvas" style="width: 128px; height: 128px; display: block;"></canvas>
       </div>
 
       <h4 id="pass-student-name" style="font-size: 15px; font-weight: 700;">Maria Santos</h4>
@@ -337,8 +335,8 @@
     <div class="sheet-handle"></div>
     <div class="modal-header-row">
       <div>
-        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0;">Filter & Sort Menu</h3>
-        <span style="font-size: 11px; color: var(--text-secondary);">Refine dishes by stall, category, and price</span>
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Filter & Sort Meals</h3>
+        <span style="font-size: 11.5px; color: var(--text-secondary);">Refine dishes by canteen, category, and price</span>
       </div>
       <button class="close-modal-btn" data-action="close-menu-filters">&times;</button>
     </div>
@@ -381,9 +379,9 @@
         </label>
       </div>
 
-      <!-- Canteen Stall -->
+      <!-- Campus Canteen -->
       <div class="filter-group">
-        <label class="filter-group-title">Canteen Stall</label>
+        <label class="filter-group-title">Campus Canteen</label>
         <div class="filter-chips-grid" id="modal-filter-vendor-chips">
           <!-- Populated by JS -->
         </div>
@@ -406,11 +404,115 @@
   </div>
 </div>
 
+<!-- 6. Vendor QR Scanner & Handover Modal -->
+<div class="modal-overlay" id="modal-vendor-qr-scanner">
+  <div class="bottom-sheet vendor-scanner-sheet" style="max-height: 94%;">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row">
+      <div class="scanner-header-title-wrap">
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Scan Student Pickup Pass</h3>
+        <span style="font-size: 11px; color: var(--text-muted);">Verify QR code or enter preorder code</span>
+      </div>
+      <button class="close-modal-btn" data-action="close-qr-scanner">&times;</button>
+    </div>
+
+    <!-- Active Scanner View -->
+    <div id="scanner-view-active">
+      <!-- Camera Viewport with custom guide overlay -->
+      <div class="qr-camera-container">
+        <div id="qr-reader" style="width: 100%;"></div>
+        <div class="qr-scanner-guide" id="qr-scanner-guide">
+          <div class="scanner-guide-corners">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+          </div>
+          <div class="scanner-laser-line"></div>
+        </div>
+      </div>
+
+      <!-- Camera Selector & Status -->
+      <div class="scanner-controls-row">
+        <div class="scanner-status-indicator" id="scanner-status-text">
+          <span class="scanner-status-dot online"></span>
+          <span>Camera ready. Align QR pass within frame.</span>
+        </div>
+        <select class="scanner-camera-select" id="scanner-camera-select" style="display: none;">
+          <option value="">Switch Camera...</option>
+        </select>
+      </div>
+
+      <!-- Permission / Unavailable Fallback Message (hidden by default) -->
+      <div class="scanner-error-banner" id="scanner-error-banner" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <div class="scanner-error-text">
+          <strong id="scanner-error-title">Camera Permission Required</strong>
+          <span id="scanner-error-desc">Enable camera access in your browser or enter the Preorder Code manually below.</span>
+        </div>
+      </div>
+
+      <!-- Manual Code Entry Fallback -->
+      <div class="scanner-manual-fallback">
+        <div class="manual-input-heading">
+          <span>Manual Pre-order Code Verification</span>
+        </div>
+        <form id="scanner-manual-form" class="scanner-manual-form">
+          <input type="text" id="manual-preorder-input" class="form-input manual-code-input" placeholder="e.g. SPT-9021" autocomplete="off" autocapitalize="characters">
+          <button type="submit" class="btn-primary-action btn-manual-verify">Verify Pass</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Handover Confirmation View (shows when valid pass scanned) -->
+    <div id="scanner-view-confirmation" style="display: none;">
+      <div class="handover-confirmation-card">
+        <div class="handover-badge-row">
+          <span class="handover-code-pill" id="confirm-order-id">#SPT-9021</span>
+          <span class="order-status-badge status-confirmed" id="confirm-order-status">Ready for Pickup</span>
+        </div>
+
+        <div class="handover-student-block">
+          <h4 id="confirm-student-name" style="font-size: 16px; font-weight: 800; margin: 0 0 2px;">Maria Santos</h4>
+          <span id="confirm-student-meta" style="font-size: 11.5px; color: var(--text-muted);">Grade 11 - STEM A &bull; Pickup: 11:30 AM (Shift 1)</span>
+        </div>
+
+        <div class="handover-items-list" id="confirm-items-list">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="handover-instructions-box" id="confirm-instructions-wrap" style="display: none;">
+          <span class="instructions-label">Student Kitchen Note:</span>
+          <p id="confirm-instructions-text" class="instructions-text"></p>
+        </div>
+
+        <div class="handover-total-row">
+          <span>Total Pre-order Amount</span>
+          <strong id="confirm-order-total" style="font-size: 17px; font-weight: 800; color: var(--primary);">₱65.00</strong>
+        </div>
+
+        <div class="handover-actions-row">
+          <button type="button" class="btn-filter-reset" id="btn-cancel-handover">Scan Another</button>
+          <button type="button" class="btn-primary-action" id="btn-confirm-handover" style="flex: 2;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Confirm Meal Handover</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- Dynamic Toast Notification Container -->
 <div class="sapat-toast" id="sapat-toast">
   <span id="toast-icon"></span>
   <span id="toast-message">Notification message</span>
 </div>
+
+<!-- Local QR Code Libraries: Bundled Browser Distributions (Zero unpinned CDN dependencies) -->
+<script src="js/lib/qrcode.min.js"></script>
+<script src="js/lib/html5-qrcode.min.js"></script>
 
 <!-- Application Entry Point: ES Module -->
 <script type="module" src="./js/app.js"></script>
