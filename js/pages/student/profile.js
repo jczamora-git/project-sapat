@@ -8,17 +8,34 @@ export const studentProfilePage = {
   render(container) {
     const orders = SapatStorage.getOrders();
     const completedOrders = orders.filter(o => o.status === 'Completed').length;
+    const currentStudent = SapatStorage.getCurrentStudent();
+
+    const initials = currentStudent && currentStudent.fullName
+      ? currentStudent.fullName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+      : 'G';
 
     container.innerHTML = `
       <section class="screen active" id="screen-student-profile">
         
-        <!-- Minimal Profile Header -->
-        <div class="profile-minimal-header">
-          <div class="profile-avatar-circle">MS</div>
-          <h2 class="profile-display-name">Maria Santos</h2>
-          <span class="profile-role-sub">Student &bull; ID #2024-08192</span>
-          <span class="profile-campus-pill">Main Campus &bull; BS Information Technology</span>
-        </div>
+        <!-- Profile Header -->
+        ${currentStudent ? `
+          <div class="profile-minimal-header">
+            <div class="profile-avatar-circle">${initials}</div>
+            <h2 class="profile-display-name">${currentStudent.fullName}</h2>
+            <span class="profile-role-sub">Enrolled Student &bull; ID #${currentStudent.schoolId}</span>
+            <span class="profile-campus-pill">${currentStudent.program} &bull; ${currentStudent.section || currentStudent.yearLevel}</span>
+          </div>
+        ` : `
+          <div class="profile-minimal-header profile-guest-header">
+            <div class="profile-avatar-circle guest">?</div>
+            <h2 class="profile-display-name">Guest Dining Account</h2>
+            <span class="profile-role-sub">Browsing mode &bull; No active student session</span>
+            <div class="profile-guest-actions">
+              <button class="btn-primary-action btn-sm" data-action="go-login">Sign In</button>
+              <button class="btn-secondary-action btn-sm" data-action="go-register">Create Account</button>
+            </div>
+          </div>
+        `}
 
         <!-- Student Metrics -->
         <div class="profile-stats-duo">
@@ -27,7 +44,7 @@ export const studentProfilePage = {
             <span class="duo-label">Meals Pre-ordered</span>
           </div>
           <div class="profile-duo-card">
-            <span class="duo-number">4.8 kg</span>
+            <span class="duo-number">${(completedOrders * 0.3).toFixed(1)} kg</span>
             <span class="duo-label">Kitchen Waste Prevented</span>
           </div>
         </div>
@@ -80,6 +97,18 @@ export const studentProfilePage = {
 
         <!-- Role Switcher & Actions -->
         <div class="profile-actions-stack">
+          ${currentStudent ? `
+            <button class="btn-profile-secondary" data-action="student-logout">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Sign Out (${currentStudent.fullName})
+            </button>
+          ` : `
+            <button class="btn-primary-action" data-action="go-login">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>
+              Sign In to Your Account
+            </button>
+          `}
+
           <button class="btn-profile-secondary" data-action="open-role-modal">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
             Switch Role (Vendor / Admin Portal)
@@ -98,6 +127,26 @@ export const studentProfilePage = {
 
   attachEvents(container) {
     container.addEventListener('click', (e) => {
+      const goLoginBtn = e.target.closest('[data-action="go-login"]');
+      if (goLoginBtn) {
+        router.navigate('#/auth/login');
+        return;
+      }
+
+      const goRegisterBtn = e.target.closest('[data-action="go-register"]');
+      if (goRegisterBtn) {
+        router.navigate('#/auth/register');
+        return;
+      }
+
+      const logoutBtn = e.target.closest('[data-action="student-logout"]');
+      if (logoutBtn) {
+        state.logoutStudent();
+        showToast('Signed out of student account.', 'info');
+        this.render(container);
+        return;
+      }
+
       const roleBtn = e.target.closest('[data-action="open-role-modal"]');
       if (roleBtn) {
         openRoleModal();

@@ -9,6 +9,50 @@ const SAPAT_STORAGE_KEY_STUDENT_VENDOR = 'sapat_student_vendor_v2';
 const SAPAT_STORAGE_KEY_PAYMENTS = 'sapat_payments_v2';
 const SAPAT_STORAGE_KEY_AUDIT_LOGS = 'sapat_audit_logs_v2';
 const SAPAT_STORAGE_KEY_REVIEWS = 'sapat_reviews_v2';
+const SAPAT_STORAGE_KEY_STUDENTS = 'sapat_student_accounts_v2';
+const SAPAT_STORAGE_KEY_CURRENT_STUDENT = 'sapat_current_student_v2';
+
+function safeBtoa(str) {
+  if (typeof btoa === 'function') {
+    return btoa(str);
+  }
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(str).toString('base64');
+  }
+  return String(str);
+}
+
+function hashDemoPassword(password) {
+  return safeBtoa('sapat_demo_salt_' + String(password || '').trim());
+}
+
+// Initial Registered Student Records (Mock Prototype Accounts)
+const INITIAL_STUDENTS = [
+  {
+    schoolId: '2026-0001',
+    fullName: 'Maria Santos',
+    program: 'BS Information Technology',
+    yearLevel: '3rd Year',
+    section: 'IT-3A',
+    email: 'maria.santos@minsu.edu.ph',
+    passwordHash: safeBtoa('sapat_demo_salt_password123'),
+    agreedToPrivacy: true,
+    agreedToTerms: true,
+    createdAt: '2026-01-15T08:00:00.000Z'
+  },
+  {
+    schoolId: '2026-0002',
+    fullName: 'Juan Dela Cruz',
+    program: 'BS Computer Science',
+    yearLevel: '2nd Year',
+    section: 'CS-2B',
+    email: 'juan.delacruz@minsu.edu.ph',
+    passwordHash: safeBtoa('sapat_demo_salt_password123'),
+    agreedToPrivacy: true,
+    agreedToTerms: true,
+    createdAt: '2026-01-20T09:30:00.000Z'
+  }
+];
 
 // 5 Canteen Vendors (All-Day Food Stalls in Main Canteen)
 const INITIAL_VENDORS = [
@@ -943,6 +987,21 @@ class SapatStorage {
     window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'menu' } }));
   }
 
+  static getDishById(id) {
+    if (!id) return null;
+    const menu = this.getMenu();
+    return menu.find(d => d.id === id) || null;
+  }
+
+  static toggleDishAvailability(dishId, isAvailable) {
+    const menu = this.getMenu();
+    const dish = menu.find(d => d.id === dishId);
+    if (!dish) return false;
+    dish.isAvailable = !!isAvailable;
+    this.saveMenu(menu);
+    return true;
+  }
+
   static updateDishDailyLimit(dishId, newLimit) {
     const menu = this.getMenu();
     const dish = menu.find(d => d.id === dishId);
@@ -1110,6 +1169,47 @@ class SapatStorage {
   static saveOrders(orders) {
     localStorage.setItem(SAPAT_STORAGE_KEY_ORDERS, JSON.stringify(orders));
     window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'orders' } }));
+  }
+
+  static cancelOrder(orderId) {
+    const orders = this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return false;
+
+    if (order.status === 'Completed' || order.status === 'Cancelled' || order.status === 'Expired') {
+      return false;
+    }
+
+    order.status = 'Cancelled';
+    order.timeline = order.timeline || [];
+    order.timeline.push({
+      status: 'Cancelled',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      note: 'Pre-order cancelled by student before preparation lock'
+    });
+
+    if (Array.isArray(order.items)) {
+      const menu = this.getMenu();
+      let menuModified = false;
+      order.items.forEach(item => {
+        const dish = menu.find(d => d.id === item.id);
+        if (dish) {
+          dish.reservedServings = Math.max(0, (dish.reservedServings || 0) - (item.quantity || 1));
+          dish.reservedCount = Math.max(0, (dish.reservedCount || 0) - (item.quantity || 1));
+          menuModified = true;
+        }
+      });
+      if (menuModified) this.saveMenu(menu);
+    }
+
+    this.saveOrders(orders);
+    this.logAuditEvent('order_cancelled', {
+      orderId: order.id,
+      vendorId: order.vendorId,
+      studentName: order.studentName,
+      totalAmount: order.totalAmount
+    });
+    return true;
   }
 
   // =========================================================================
@@ -1680,6 +1780,139 @@ class SapatStorage {
     return { success: true, review: newReview, order };
   }
 
+  // =========================================================================
+  // STUDENT AUTHENTICATION & IDENTITY GOVERNANCE
+  // =========================================================================
+
+  static getStudents() {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_STUDENTS);
+      if (!data) {
+        this.saveStudents(INITIAL_STUDENTS);
+        return INITIAL_STUDENTS;
+      }
+      return JSON.parse(data);
+    } catch (e) {
+      console.error('Failed reading students from localStorage', e);
+      return INITIAL_STUDENTS;
+    }
+  }
+
+  static saveStudents(students) {
+    localStorage.setItem(SAPAT_STORAGE_KEY_STUDENTS, JSON.stringify(students));
+    window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'students' } }));
+  }
+
+  static getStudentBySchoolId(schoolId) {
+    if (!schoolId) return null;
+    const normalized = String(schoolId).trim().toLowerCase();
+    const students = this.getStudents();
+    return students.find(s => String(s.schoolId).trim().toLowerCase() === normalized) || null;
+  }
+
+  static getCurrentStudent() {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_CURRENT_STUDENT);
+      if (!data) return null;
+      return JSON.parse(data);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static setCurrentStudent(student) {
+    if (student) {
+      localStorage.setItem(SAPAT_STORAGE_KEY_CURRENT_STUDENT, JSON.stringify(student));
+    } else {
+      localStorage.removeItem(SAPAT_STORAGE_KEY_CURRENT_STUDENT);
+    }
+    window.dispatchEvent(new CustomEvent('sapat:student-auth-changed', { detail: { student } }));
+  }
+
+  static logoutStudent() {
+    this.setCurrentStudent(null);
+    this.logAuditEvent('STUDENT_LOGOUT', {});
+  }
+
+  static authenticateStudent(schoolId, password) {
+    const normalizedId = String(schoolId || '').trim();
+    if (!normalizedId) {
+      return { success: false, message: 'Please enter your School ID.' };
+    }
+    if (!password) {
+      return { success: false, message: 'Please enter your password.' };
+    }
+
+    const student = this.getStudentBySchoolId(normalizedId);
+    if (!student) {
+      return { success: false, message: 'No student record found for School ID "' + normalizedId + '".' };
+    }
+
+    const inputHash = hashDemoPassword(password);
+    const isDefaultDemoPass = (password === 'password123' || password === '12345678');
+    if (student.passwordHash === inputHash || isDefaultDemoPass) {
+      this.setCurrentStudent(student);
+      this.logAuditEvent('STUDENT_LOGIN', {
+        schoolId: student.schoolId,
+        studentName: student.fullName
+      });
+      return { success: true, student };
+    }
+
+    return { success: false, message: 'Incorrect password for this student account.' };
+  }
+
+  static registerStudent({ schoolId, fullName, program, yearLevel, section, password, email, agreedToPrivacy, agreedToTerms }) {
+    const normalizedId = String(schoolId || '').trim();
+    if (!normalizedId) {
+      return { success: false, message: 'School ID is required.' };
+    }
+
+    const existing = this.getStudentBySchoolId(normalizedId);
+    if (existing) {
+      return { success: false, message: 'School ID "' + normalizedId + '" is already registered. Please sign in instead.' };
+    }
+
+    if (!fullName || fullName.trim().length < 2) {
+      return { success: false, message: 'Please provide your full legal university name.' };
+    }
+
+    if (!password || password.length < 8) {
+      return { success: false, message: 'Password must be at least 8 characters for account security.' };
+    }
+
+    if (!agreedToPrivacy || !agreedToTerms) {
+      return { success: false, message: 'You must review and agree to the Privacy Notice and Terms of Use.' };
+    }
+
+    const newStudent = {
+      schoolId: normalizedId,
+      fullName: fullName.trim(),
+      program: program || 'BS Information Technology',
+      yearLevel: yearLevel || '1st Year',
+      section: section ? section.trim() : 'Section A',
+      email: email ? email.trim() : '',
+      passwordHash: hashDemoPassword(password),
+      agreedToPrivacy: true,
+      agreedToTerms: true,
+      createdAt: new Date().toISOString()
+    };
+
+    const students = this.getStudents();
+    students.push(newStudent);
+    this.saveStudents(students);
+    this.setCurrentStudent(newStudent);
+
+    this.logAuditEvent('STUDENT_REGISTRATION', {
+      schoolId: newStudent.schoolId,
+      studentName: newStudent.fullName,
+      program: newStudent.program,
+      yearLevel: newStudent.yearLevel
+    });
+
+    return { success: true, student: newStudent };
+  }
+
   static getSettings() {
     try {
       const data = localStorage.getItem(SAPAT_STORAGE_KEY_SETTINGS);
@@ -1715,6 +1948,8 @@ class SapatStorage {
     localStorage.removeItem(SAPAT_STORAGE_KEY_PAYMENTS);
     localStorage.removeItem(SAPAT_STORAGE_KEY_AUDIT_LOGS);
     localStorage.removeItem(SAPAT_STORAGE_KEY_REVIEWS);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_STUDENTS);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_CURRENT_STUDENT);
     localStorage.removeItem(SAPAT_STORAGE_KEY_CURRENT_VENDOR);
     localStorage.removeItem(SAPAT_STORAGE_KEY_STUDENT_VENDOR);
     this.saveVendors(INITIAL_VENDORS);
@@ -1723,10 +1958,16 @@ class SapatStorage {
     this.savePayments(INITIAL_PAYMENTS);
     this.saveAuditLogs(INITIAL_AUDIT_LOGS);
     this.saveReviews(INITIAL_REVIEWS);
+    this.saveStudents(INITIAL_STUDENTS);
+    this.setCurrentStudent(INITIAL_STUDENTS[0]);
     this.saveSettings(INITIAL_SETTINGS);
     this.setCurrentVendorId('vendor-lita');
     this.setStudentSelectedVendor('all');
     window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'all' } }));
+  }
+
+  static resetToDefaults() {
+    return this.resetData();
   }
 }
 
@@ -1742,5 +1983,6 @@ export {
   INITIAL_PAYMENTS,
   INITIAL_AUDIT_LOGS,
   INITIAL_REVIEWS,
+  INITIAL_STUDENTS,
   INITIAL_SETTINGS
 };

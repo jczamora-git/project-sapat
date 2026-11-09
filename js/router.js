@@ -9,6 +9,9 @@ import { studentCartPage } from './pages/student/cart.js';
 import { studentOrdersPage } from './pages/student/orders.js';
 import { studentProfilePage } from './pages/student/profile.js';
 
+import { authLoginPage } from './pages/auth/login.js';
+import { authRegisterPage } from './pages/auth/register.js';
+
 import { vendorDashboardPage } from './pages/vendor/dashboard.js';
 import { vendorMenuPage } from './pages/vendor/menu.js';
 import { vendorOrdersPage } from './pages/vendor/orders.js';
@@ -37,6 +40,11 @@ class AppRouter {
         '#/student/cart': studentCartPage,
         '#/student/orders': studentOrdersPage,
         '#/student/profile': studentProfilePage,
+
+        '#/auth/login': authLoginPage,
+        '#/auth/register': authRegisterPage,
+        '#/login': authLoginPage,
+        '#/register': authRegisterPage,
 
         '#/vendor/dashboard': vendorDashboardPage,
         '#/vendor/menu': vendorMenuPage,

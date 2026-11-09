@@ -10,6 +10,15 @@ export const studentCartPage = {
     const items = state.cart;
     const subtotal = state.getCartTotal();
     const count = state.getCartCount();
+    const currentStudent = SapatStorage.getCurrentStudent();
+
+    let preserved = null;
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('sapat_preserved_checkout');
+        if (raw) preserved = JSON.parse(raw);
+      } catch (e) {}
+    }
 
     if (items.length === 0) {
       const menu = SapatStorage.getMenu();
@@ -104,6 +113,21 @@ export const studentCartPage = {
 
           <!-- Right Column: Pickup & Settlement -->
           <div class="cart-summary-column">
+
+            <!-- Guest Authentication Gate Banner -->
+            ${!currentStudent ? `
+              <div class="cart-guest-banner">
+                <div class="guest-banner-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#005B36" stroke-width="2"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>
+                </div>
+                <div class="guest-banner-text">
+                  <strong>Browsing as Guest</strong>
+                  <p>You can prepare your meal tray now. You'll sign in or create an account at checkout to receive your verified digital pickup pass.</p>
+                </div>
+                <button type="button" class="btn-guest-banner-signin" data-action="guest-login">Sign In</button>
+              </div>
+            ` : ''}
+
             <!-- Pickup Window Selection (Food App Style) -->
             <div class="checkout-block-card">
               <div class="block-card-header">
@@ -114,7 +138,7 @@ export const studentCartPage = {
               
               <div class="pickup-options-stack">
                 <label class="pickup-select-card">
-                  <input type="radio" name="pickup-slot" value="11:30 AM (Lunch Shift 1)" checked>
+                  <input type="radio" name="pickup-slot" value="11:30 AM (Lunch Shift 1)" ${(!preserved || preserved.selectedSlot === '11:30 AM (Lunch Shift 1)') ? 'checked' : ''}>
                   <div class="pickup-select-content">
                     <div>
                       <span class="pickup-select-time">11:30 AM</span>
@@ -125,7 +149,7 @@ export const studentCartPage = {
                 </label>
 
                 <label class="pickup-select-card">
-                  <input type="radio" name="pickup-slot" value="12:15 PM (Lunch Shift 2)">
+                  <input type="radio" name="pickup-slot" value="12:15 PM (Lunch Shift 2)" ${preserved?.selectedSlot === '12:15 PM (Lunch Shift 2)' ? 'checked' : ''}>
                   <div class="pickup-select-content">
                     <div>
                       <span class="pickup-select-time">12:15 PM</span>
@@ -136,7 +160,7 @@ export const studentCartPage = {
                 </label>
 
                 <label class="pickup-select-card">
-                  <input type="radio" name="pickup-slot" value="2:45 PM (Afternoon Recess)">
+                  <input type="radio" name="pickup-slot" value="2:45 PM (Afternoon Recess)" ${preserved?.selectedSlot === '2:45 PM (Afternoon Recess)' ? 'checked' : ''}>
                   <div class="pickup-select-content">
                     <div>
                       <span class="pickup-select-time">2:45 PM</span>
@@ -154,20 +178,20 @@ export const studentCartPage = {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 <label class="block-card-title" for="cart-kitchen-note" style="margin: 0;">Special Kitchen Note (Optional)</label>
               </div>
-              <input type="text" class="cart-note-input" id="cart-kitchen-note" placeholder="e.g. Less gravy, separate chili sauce, no onion..." maxlength="100">
+              <input type="text" class="cart-note-input" id="cart-kitchen-note" placeholder="e.g. Less gravy, separate chili sauce, no onion..." maxlength="100" value="${preserved?.note || ''}">
             </div>
 
             <!-- Payment Method Selection -->
             <div class="checkout-block-card">
               <div class="block-card-header">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                <h4 class="block-card-title">Payment Method & Settlement</h4>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="10" y1="1" x2="10" y2="23"></line></svg>
+                <h4 class="block-card-title">Payment Method &amp; Settlement</h4>
               </div>
               <p class="block-card-desc">Reservations require verified payment before official confirmation.</p>
               
               <div class="payment-method-options-stack">
-                <label class="payment-select-card active">
-                  <input type="radio" name="payment-method" value="Online Payment" checked>
+                <label class="payment-select-card ${(!preserved || preserved.paymentMethod === 'Online Payment') ? 'active' : ''}">
+                  <input type="radio" name="payment-method" value="Online Payment" ${(!preserved || preserved.paymentMethod === 'Online Payment') ? 'checked' : ''}>
                   <div class="payment-select-content">
                     <div class="payment-select-info">
                       <span class="payment-method-name">Online Payment</span>
@@ -177,8 +201,8 @@ export const studentCartPage = {
                   </div>
                 </label>
 
-                <label class="payment-select-card">
-                  <input type="radio" name="payment-method" value="Counter Payment">
+                <label class="payment-select-card ${preserved?.paymentMethod === 'Counter Payment' ? 'active' : ''}">
+                  <input type="radio" name="payment-method" value="Counter Payment" ${preserved?.paymentMethod === 'Counter Payment' ? 'checked' : ''}>
                   <div class="payment-select-content">
                     <div class="payment-select-info">
                       <span class="payment-method-name">Pay at Canteen Counter</span>
@@ -315,11 +339,42 @@ export const studentCartPage = {
         }
       }
 
+      // Guest Banner Sign In
+      const guestSignInBtn = e.target.closest('[data-action="guest-login"]');
+      if (guestSignInBtn) {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('sapat_auth_redirect', '#/student/cart');
+        }
+        router.navigate('#/auth/login');
+        return;
+      }
+
       // 7. Confirm Checkout
       const checkoutBtn = e.target.closest('[data-action="confirm-checkout"]');
       if (checkoutBtn) {
         if (state.cart.length === 0) {
           showToast('Your tray is empty.', 'error');
+          return;
+        }
+
+        // Authenticated Student Gate Check
+        const currentStudent = SapatStorage.getCurrentStudent();
+        if (!currentStudent) {
+          const selectedSlot = container.querySelector('input[name="pickup-slot"]:checked')?.value || '11:30 AM (Lunch Shift 1)';
+          const paymentMethod = container.querySelector('input[name="payment-method"]:checked')?.value || 'Online Payment';
+          const note = container.querySelector('#cart-kitchen-note')?.value.trim() || '';
+
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('sapat_auth_redirect', '#/student/cart');
+            sessionStorage.setItem('sapat_preserved_checkout', JSON.stringify({
+              selectedSlot,
+              paymentMethod,
+              note
+            }));
+          }
+
+          showToast('Please sign in with your School ID to confirm your reservation.', 'info');
+          router.navigate('#/auth/login');
           return;
         }
 
@@ -333,9 +388,19 @@ export const studentCartPage = {
         const paymentMethod = container.querySelector('input[name="payment-method"]:checked')?.value || 'Online Payment';
         const note = container.querySelector('#cart-kitchen-note')?.value.trim() || '';
 
+        // Revalidate availability against live menu
+        const menu = SapatStorage.getMenu();
+        for (const item of state.cart) {
+          const dish = menu.find(d => d.id === item.id);
+          const remaining = dish ? (dish.dailyLimit - (dish.reservedServings || 0)) : 0;
+          if (!dish || !dish.isAvailable || remaining < item.quantity) {
+            showToast(`"${item.name}" has only ${Math.max(0, remaining)} portions remaining today. Please adjust tray.`, 'error');
+            return;
+          }
+        }
+
         // Generate orders grouped by vendor
         const currentOrders = SapatStorage.getOrders();
-        const menu = SapatStorage.getMenu();
         const settings = SapatStorage.getSettings();
         const deadlineMin = settings.counterPaymentDeadlineMinutes || 20;
 
@@ -362,8 +427,9 @@ export const studentCartPage = {
           const newOrder = {
             id: orderId,
             pickupToken: 'spt_tok_' + orderId.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Math.random().toString(36).substring(2, 8),
-            studentName: 'Maria Santos',
-            gradeSection: 'Grade 11 - STEM A',
+            studentName: currentStudent.fullName,
+            gradeSection: `${currentStudent.program} • ${currentStudent.section || currentStudent.yearLevel || 'Enrolled'}`,
+            schoolId: currentStudent.schoolId,
             vendorId,
             vendorName: vendor ? vendor.name : 'Canteen Stall',
             vendorStall: vendor ? vendor.stallNumber : 'Stall',
@@ -428,6 +494,9 @@ export const studentCartPage = {
         SapatStorage.saveMenu(menu);
         SapatStorage.saveOrders(currentOrders);
         state.clearCart();
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem('sapat_preserved_checkout');
+        }
 
         if (paymentMethod === 'Online Payment') {
           showToast(`Order #${createdOrders[0].id} created! Complete payment below.`, 'info');

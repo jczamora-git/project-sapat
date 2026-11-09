@@ -43,7 +43,7 @@ export function initHeader() {
 
   // Subscribe to state updates
   state.subscribe((event) => {
-    if (event === 'role-changed' || event === 'vendor-changed' || event === 'cart-updated' || event === 'data-reset') {
+    if (event === 'role-changed' || event === 'vendor-changed' || event === 'cart-updated' || event === 'data-reset' || event === 'student-auth-changed') {
       updateHeader();
     }
   });
@@ -52,6 +52,14 @@ export function initHeader() {
 }
 
 export function updateHeader() {
+  const header = document.querySelector('.app-header');
+  const currentRoute = router.getCurrentRoute() || '';
+  if (currentRoute.startsWith('#/auth') || currentRoute === '#/login' || currentRoute === '#/register') {
+    if (header) header.style.display = 'none';
+    return;
+  }
+  if (header) header.style.display = 'flex';
+
   const roleBadge = document.getElementById('current-role-badge');
   const subtitle = document.getElementById('header-subtitle');
   const cartBtn = document.getElementById('header-cart-btn');
@@ -59,9 +67,17 @@ export function updateHeader() {
 
   if (roleBadge) {
     if (state.role === 'student') {
-      roleBadge.innerHTML = 'Student';
-      roleBadge.className = 'header-role-badge student';
-      roleBadge.title = 'Current Mode: Student. Tap to switch to Canteen Vendor or Admin.';
+      const currentStudent = SapatStorage.getCurrentStudent();
+      if (currentStudent) {
+        const shortName = currentStudent.fullName ? currentStudent.fullName.split(' ')[0] : 'Student';
+        roleBadge.innerHTML = `<span class="student-auth-dot"></span><span>${shortName}</span>`;
+        roleBadge.className = 'header-role-badge student authenticated';
+        roleBadge.title = `Logged in: ${currentStudent.fullName} (${currentStudent.schoolId}). Tap to switch role.`;
+      } else {
+        roleBadge.innerHTML = '<span>Guest</span>';
+        roleBadge.className = 'header-role-badge student guest';
+        roleBadge.title = 'Browsing as Guest. Tap to switch role or sign in.';
+      }
     } else if (state.role === 'admin') {
       roleBadge.innerHTML = '<span class="admin-live-pulse-dot"></span><span>Admin Portal</span>';
       roleBadge.className = 'header-role-badge admin';

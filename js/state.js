@@ -73,6 +73,29 @@ class AppState {
     this.notify('menu-filter-changed', this.menuInStockOnly);
   }
 
+  setOrdersTab(tab) {
+    this.ordersTab = tab || 'active';
+    this.notify('orders-tab-changed', this.ordersTab);
+  }
+
+  getCurrentStudent() {
+    return SapatStorage.getCurrentStudent();
+  }
+
+  isStudentAuthenticated() {
+    return !!SapatStorage.getCurrentStudent();
+  }
+
+  loginStudent(student) {
+    SapatStorage.setCurrentStudent(student);
+    this.notify('student-auth-changed', student);
+  }
+
+  logoutStudent() {
+    SapatStorage.logoutStudent();
+    this.notify('student-auth-changed', null);
+  }
+
   getCartCount() {
     return this.cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
   }

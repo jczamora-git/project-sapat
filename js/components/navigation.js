@@ -26,6 +26,12 @@ export function updateNavigation(currentRoute = '') {
   const nav = document.getElementById('app-bottom-nav');
   if (!nav) return;
 
+  if (currentRoute.startsWith('#/auth') || currentRoute === '#/login' || currentRoute === '#/register') {
+    nav.style.display = 'none';
+    return;
+  }
+  nav.style.display = 'flex';
+
   if (state.role === 'student') {
     const cartCount = state.getCartCount();
     nav.innerHTML = `
