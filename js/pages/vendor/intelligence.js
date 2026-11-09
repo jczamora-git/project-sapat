@@ -210,17 +210,17 @@ export const vendorIntelligencePage = {
 
             <div class="v-ai-cards-grid">
               ${forecast.dishes.map(d => {
-                let badgeClass = 'maintain';
-                let badgeLabel = 'Target Optimal';
-                if (d.actionType === 'increase') {
-                  badgeClass = 'increase';
-                  badgeLabel = `+${d.delta} Prep Needed`;
-                } else if (d.actionType === 'decrease') {
-                  badgeClass = 'reduce';
-                  badgeLabel = `-${d.delta} Safe Trim`;
-                }
+      let badgeClass = 'maintain';
+      let badgeLabel = 'Target Optimal';
+      if (d.actionType === 'increase') {
+        badgeClass = 'increase';
+        badgeLabel = `+${d.delta} Prep Needed`;
+      } else if (d.actionType === 'decrease') {
+        badgeClass = 'reduce';
+        badgeLabel = `-${d.delta} Safe Trim`;
+      }
 
-                return `
+      return `
                   <div class="v-ai-dish-card">
                     <div class="v-ai-dish-head">
                       <div class="v-ai-dish-info">
@@ -262,7 +262,7 @@ export const vendorIntelligencePage = {
                     `}
                   </div>
                 `;
-              }).join('')}
+    }).join('')}
             </div>
           </div>
         ` : ''}
@@ -684,3 +684,4 @@ export const vendorIntelligencePage = {
     });
   }
 };
+
