@@ -55,7 +55,49 @@ export const adminSettingsPage = {
           </div>
         </div>
 
-        <!-- Section 2: Campus Pickup Windows -->
+        <!-- Section 2: Payment Governance & Student Accountability -->
+        <div class="admin-settings-card">
+          <div class="settings-card-head">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <h3 class="settings-card-title">Payment Governance & OSAS Accountability Policies</h3>
+          </div>
+          
+          <div class="settings-options-list">
+            <div class="settings-option-row">
+              <div class="option-info">
+                <strong>Institution & Student Affairs Office</strong>
+                <p>Official body receiving disciplinary referrals for uncollected meals and food waste violations.</p>
+              </div>
+              <span class="settings-value-pill">MinSU &bull; OSAS</span>
+            </div>
+
+            <div class="settings-option-row">
+              <div class="option-info">
+                <strong>Direct Counter Payment Cutoff</strong>
+                <p>Time allowed for students to complete payment in-person at the canteen stall before automatic cancellation.</p>
+              </div>
+              <span class="settings-value-pill">20 Minutes</span>
+            </div>
+
+            <div class="settings-option-row">
+              <div class="option-info">
+                <strong>Pickup Shift Grace Period</strong>
+                <p>Window after scheduled shift ends before uncollected orders are permanently marked as No-Show.</p>
+              </div>
+              <span class="settings-value-pill">15 Minutes</span>
+            </div>
+
+            <div class="settings-option-row">
+              <div class="option-info">
+                <strong>Disciplinary Review Threshold</strong>
+                <p>Number of unexcused no-show incidents triggering mandatory referral to student affairs.</p>
+              </div>
+              <span class="settings-badge-active" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A;">2 Incidents (Flagged)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Campus Pickup Windows -->
         <div class="admin-settings-card">
           <div class="settings-card-head">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>

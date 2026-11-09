@@ -6,6 +6,9 @@ const SAPAT_STORAGE_KEY_SETTINGS = 'sapat_settings_v2';
 const SAPAT_STORAGE_KEY_ROLE = 'sapat_current_role_v2';
 const SAPAT_STORAGE_KEY_CURRENT_VENDOR = 'sapat_current_vendor_v2';
 const SAPAT_STORAGE_KEY_STUDENT_VENDOR = 'sapat_student_vendor_v2';
+const SAPAT_STORAGE_KEY_PAYMENTS = 'sapat_payments_v2';
+const SAPAT_STORAGE_KEY_AUDIT_LOGS = 'sapat_audit_logs_v2';
+const SAPAT_STORAGE_KEY_REVIEWS = 'sapat_reviews_v2';
 
 // 5 Canteen Vendors (All-Day Food Stalls in Main Canteen)
 const INITIAL_VENDORS = [
@@ -404,11 +407,12 @@ const INITIAL_MENU = [
   }
 ];
 
-// Seed Orders across vendors
+// Seed Orders across vendors with Payment & Lifecycle separation
 const INITIAL_ORDERS = [
-  // Order 1 for Ate Lita's Kitchen
+  // Order 1 for Ate Lita's Kitchen (Paid Online & Ready for Pickup)
   {
     id: 'SPT-9021',
+    pickupToken: 'spt_tok_spt9021_09218a',
     vendorId: 'vendor-lita',
     vendorName: "Ate Lita's Kitchen",
     vendorStall: "Stall #3",
@@ -422,19 +426,25 @@ const INITIAL_ORDERS = [
     ],
     totalAmount: 65,
     totalServings: 1,
-    status: 'Ready for Pickup', // Pending, Confirmed, Preparing, Ready for Pickup, Completed, Cancelled
+    status: 'Ready for Pickup',
+    paymentMethod: 'Online Payment (GCash)',
+    paymentStatus: 'Paid',
+    paidAt: 'Today 08:31 AM',
+    transactionReference: 'TXN-GCASH-90218',
     createdAt: 'Today 08:30 AM',
     timeline: [
       { status: 'Preordered', time: '8:30 AM', done: true },
+      { status: 'Payment Verified', time: '8:31 AM', done: true },
       { status: 'Confirmed', time: '8:45 AM', done: true },
       { status: 'Preparing', time: '10:45 AM', done: true },
       { status: 'Ready for Pickup', time: '11:15 AM', done: true },
       { status: 'Completed', time: '--', done: false }
     ]
   },
-  // Order 2 for Kuya Ben's Silog Meals
+  // Order 2 for Kuya Ben's Silog Meals (Paid Online & Preparing)
   {
     id: 'SPT-9022',
+    pickupToken: 'spt_tok_spt9022_44120b',
     vendorId: 'vendor-ben',
     vendorName: "Kuya Ben's Silog Meals",
     vendorStall: "Stall #1",
@@ -449,18 +459,24 @@ const INITIAL_ORDERS = [
     totalAmount: 170,
     totalServings: 2,
     status: 'Preparing',
+    paymentMethod: 'Online Payment (Maya)',
+    paymentStatus: 'Paid',
+    paidAt: 'Today 09:11 AM',
+    transactionReference: 'TXN-MAYA-44120',
     createdAt: 'Today 09:10 AM',
     timeline: [
       { status: 'Preordered', time: '9:10 AM', done: true },
+      { status: 'Payment Verified', time: '9:11 AM', done: true },
       { status: 'Confirmed', time: '9:25 AM', done: true },
       { status: 'Preparing', time: '11:00 AM', done: true },
       { status: 'Ready for Pickup', time: '--', done: false },
       { status: 'Completed', time: '--', done: false }
     ]
   },
-  // Order 3 for Nanay Cora's Lutong Bahay
+  // Order 3 for Nanay Cora's Lutong Bahay (Direct Counter Paid & Confirmed)
   {
     id: 'SPT-9025',
+    pickupToken: 'spt_tok_spt9025_09250c',
     vendorId: 'vendor-cora',
     vendorName: "Nanay Cora's Lutong Bahay",
     vendorStall: "Stall #2",
@@ -476,18 +492,25 @@ const INITIAL_ORDERS = [
     totalAmount: 105,
     totalServings: 2,
     status: 'Confirmed',
+    paymentMethod: 'Direct Counter Payment',
+    paymentStatus: 'Paid',
+    paidAt: 'Today 08:58 AM',
+    verifiedBy: "Nanay Cora's Cashier",
+    transactionReference: 'RCPT-STALL2-0925',
     createdAt: 'Today 08:50 AM',
     timeline: [
       { status: 'Preordered', time: '8:50 AM', done: true },
+      { status: 'Counter Payment Verified', time: '8:58 AM', done: true },
       { status: 'Confirmed', time: '9:00 AM', done: true },
       { status: 'Preparing', time: '--', done: false },
       { status: 'Ready for Pickup', time: '--', done: false },
       { status: 'Completed', time: '--', done: false }
     ]
   },
-  // Order 4 for Green Bowl Express
+  // Order 4 for Green Bowl Express (Direct Counter Payment AWAITING VERIFICATION)
   {
     id: 'SPT-9026',
+    pickupToken: 'spt_tok_spt9026_pending',
     vendorId: 'vendor-green',
     vendorName: "Green Bowl Express",
     vendorStall: "Stall #4",
@@ -502,19 +525,25 @@ const INITIAL_ORDERS = [
     ],
     totalAmount: 150,
     totalServings: 2,
-    status: 'Pending',
+    status: 'Awaiting Counter Payment',
+    paymentMethod: 'Direct Counter Payment',
+    paymentStatus: 'Pending',
+    paymentDeadline: '10:00 AM (Pay at Counter Window 4)',
+    counterWindow: 'Counter Window 4',
     createdAt: 'Today 09:30 AM',
     timeline: [
       { status: 'Preordered', time: '9:30 AM', done: true },
+      { status: 'Awaiting Counter Payment', time: '9:30 AM', done: true },
       { status: 'Confirmed', time: '--', done: false },
       { status: 'Preparing', time: '--', done: false },
       { status: 'Ready for Pickup', time: '--', done: false },
       { status: 'Completed', time: '--', done: false }
     ]
   },
-  // Order 5 for Merienda ni Aling Tess
+  // Order 5 for Merienda ni Aling Tess (Paid & Completed Handover)
   {
     id: 'SPT-9018',
+    pickupToken: 'spt_tok_spt9018_88194e',
     vendorId: 'vendor-tess',
     vendorName: "Merienda ni Aling Tess",
     vendorStall: "Stall #5",
@@ -530,20 +559,244 @@ const INITIAL_ORDERS = [
     totalAmount: 80,
     totalServings: 3,
     status: 'Completed',
+    paymentMethod: 'Online Payment (GCash)',
+    paymentStatus: 'Paid',
+    paidAt: 'Today 07:46 AM',
+    claimedAt: 'Today 09:50 AM',
+    transactionReference: 'TXN-GCASH-88194',
     createdAt: 'Today 07:45 AM',
     timeline: [
       { status: 'Preordered', time: '7:45 AM', done: true },
+      { status: 'Payment Verified', time: '7:46 AM', done: true },
       { status: 'Confirmed', time: '8:00 AM', done: true },
       { status: 'Preparing', time: '9:15 AM', done: true },
       { status: 'Ready for Pickup', time: '9:35 AM', done: true },
       { status: 'Completed', time: '9:50 AM', done: true }
     ]
+  },
+  // Order 6: Confirmed & Prepared but Uncollected No-Show
+  {
+    id: 'SPT-9012',
+    pickupToken: 'spt_tok_spt9012_90128f',
+    vendorId: 'vendor-lita',
+    vendorName: "Ate Lita's Kitchen",
+    vendorStall: "Stall #3",
+    studentName: 'Kenji Garcia',
+    studentId: '2024-0312',
+    gradeSection: 'Grade 12 - STEM C',
+    pickupTime: '11:30 AM (Lunch Shift 1)',
+    specialInstructions: 'Extra rice portion',
+    items: [
+      { id: 'dish-lita-1', name: 'Chicken Adobo', price: 65, quantity: 1, vendorId: 'vendor-lita' }
+    ],
+    totalAmount: 65,
+    totalServings: 1,
+    status: 'No-show',
+    paymentMethod: 'Online Payment (GCash)',
+    paymentStatus: 'Paid',
+    paidAt: 'Today 08:16 AM',
+    transactionReference: 'TXN-GCASH-90128',
+    createdAt: 'Today 08:15 AM',
+    noShowExplanation: 'Emergency physics laboratory experiment extended past scheduled class hours.',
+    incidentStatus: 'Under Review',
+    timeline: [
+      { status: 'Preordered', time: '8:15 AM', done: true },
+      { status: 'Payment Verified', time: '8:16 AM', done: true },
+      { status: 'Confirmed', time: '8:30 AM', done: true },
+      { status: 'Preparing', time: '10:45 AM', done: true },
+      { status: 'Ready for Pickup', time: '11:15 AM', done: true },
+      { status: 'No-show', time: '12:00 PM', done: true }
+    ]
+  },
+  // Order 7: Expired Counter Payment (Portions Released)
+  {
+    id: 'SPT-9010',
+    pickupToken: 'spt_tok_spt9010_expired',
+    vendorId: 'vendor-ben',
+    vendorName: "Kuya Ben's Silog Meals",
+    vendorStall: "Stall #1",
+    studentName: 'Mark Cruz',
+    studentId: '2024-0711',
+    gradeSection: 'Grade 11 - TVL ICT',
+    pickupTime: '11:30 AM (Lunch Shift 1)',
+    specialInstructions: 'Well done egg',
+    items: [
+      { id: 'dish-ben-1', name: 'Tapsilog', price: 85, quantity: 1, vendorId: 'vendor-ben' }
+    ],
+    totalAmount: 85,
+    totalServings: 1,
+    status: 'Expired',
+    paymentMethod: 'Direct Counter Payment',
+    paymentStatus: 'Expired',
+    paymentDeadline: '09:00 AM (Expired)',
+    expiredReason: 'Payment deadline exceeded at Counter Window 1. Portions released.',
+    createdAt: 'Today 08:40 AM',
+    timeline: [
+      { status: 'Preordered', time: '8:40 AM', done: true },
+      { status: 'Expired', time: '9:00 AM', done: true }
+    ]
+  }
+];
+
+// Structured Payment Records (Audit Trail)
+const INITIAL_PAYMENTS = [
+  {
+    paymentId: 'PAY-9021',
+    reservationId: 'SPT-9021',
+    studentId: '2024-0891',
+    studentName: 'Maria Santos',
+    vendorId: 'vendor-lita',
+    vendorName: "Ate Lita's Kitchen",
+    paymentMethod: 'Online Payment (GCash)',
+    amount: 65,
+    paymentStatus: 'Paid',
+    transactionReference: 'TXN-GCASH-90218',
+    createdAt: '2026-11-09T08:30:00.000Z',
+    paidAt: '2026-11-09T08:31:00.000Z',
+    verifiedBy: 'Gateway Webhook (Simulated GCash)',
+    verificationTimestamp: '2026-11-09T08:31:00.000Z'
+  },
+  {
+    paymentId: 'PAY-9022',
+    reservationId: 'SPT-9022',
+    studentId: '2024-0412',
+    studentName: 'Juan Dela Cruz',
+    vendorId: 'vendor-ben',
+    vendorName: "Kuya Ben's Silog Meals",
+    paymentMethod: 'Online Payment (Maya)',
+    amount: 170,
+    paymentStatus: 'Paid',
+    transactionReference: 'TXN-MAYA-44120',
+    createdAt: '2026-11-09T09:10:00.000Z',
+    paidAt: '2026-11-09T09:11:00.000Z',
+    verifiedBy: 'Gateway Webhook (Simulated Maya)',
+    verificationTimestamp: '2026-11-09T09:11:00.000Z'
+  },
+  {
+    paymentId: 'PAY-9025',
+    reservationId: 'SPT-9025',
+    studentId: '2024-1102',
+    studentName: 'Bea Alonzo',
+    vendorId: 'vendor-cora',
+    vendorName: "Nanay Cora's Lutong Bahay",
+    paymentMethod: 'Direct Counter Payment',
+    amount: 105,
+    paymentStatus: 'Paid',
+    transactionReference: 'RCPT-STALL2-0925',
+    createdAt: '2026-11-09T08:50:00.000Z',
+    paidAt: '2026-11-09T08:58:00.000Z',
+    verifiedBy: "Nanay Cora's Cashier",
+    verificationTimestamp: '2026-11-09T08:58:00.000Z'
+  },
+  {
+    paymentId: 'PAY-9026',
+    reservationId: 'SPT-9026',
+    studentId: '2024-0551',
+    studentName: 'Paolo Reyes',
+    vendorId: 'vendor-green',
+    vendorName: "Green Bowl Express",
+    paymentMethod: 'Direct Counter Payment',
+    amount: 150,
+    paymentStatus: 'Pending',
+    transactionReference: 'PENDING-COUNTER-026',
+    createdAt: '2026-11-09T09:30:00.000Z',
+    paidAt: null,
+    verifiedBy: null,
+    verificationTimestamp: null
+  },
+  {
+    paymentId: 'PAY-9018',
+    reservationId: 'SPT-9018',
+    studentId: '2024-0891',
+    studentName: 'Maria Santos',
+    vendorId: 'vendor-tess',
+    vendorName: "Merienda ni Aling Tess",
+    paymentMethod: 'Online Payment (GCash)',
+    amount: 80,
+    paymentStatus: 'Paid',
+    transactionReference: 'TXN-GCASH-88194',
+    createdAt: '2026-11-09T07:45:00.000Z',
+    paidAt: '2026-11-09T07:46:00.000Z',
+    verifiedBy: 'Gateway Webhook (Simulated GCash)',
+    verificationTimestamp: '2026-11-09T07:46:00.000Z'
+  },
+  {
+    paymentId: 'PAY-9012',
+    reservationId: 'SPT-9012',
+    studentId: '2024-0312',
+    studentName: 'Kenji Garcia',
+    vendorId: 'vendor-lita',
+    vendorName: "Ate Lita's Kitchen",
+    paymentMethod: 'Online Payment (GCash)',
+    amount: 65,
+    paymentStatus: 'Paid',
+    transactionReference: 'TXN-GCASH-90128',
+    createdAt: '2026-11-09T08:15:00.000Z',
+    paidAt: '2026-11-09T08:16:00.000Z',
+    verifiedBy: 'Gateway Webhook (Simulated GCash)',
+    verificationTimestamp: '2026-11-09T08:16:00.000Z'
+  }
+];
+
+// Structured Incident & Audit Trail Logs
+const INITIAL_AUDIT_LOGS = [
+  {
+    id: 'LOG-001',
+    timestamp: '2026-11-09T08:31:00.000Z',
+    eventType: 'PAYMENT_VERIFIED',
+    orderId: 'SPT-9021',
+    studentId: '2024-0891',
+    studentName: 'Maria Santos',
+    vendorId: 'vendor-lita',
+    details: 'Verified online payment via GCash (TXN-GCASH-90218) for ₱65.00. Reservation confirmed.',
+    incidentStatus: 'N/A'
+  },
+  {
+    id: 'LOG-002',
+    timestamp: '2026-11-09T08:58:00.000Z',
+    eventType: 'COUNTER_PAYMENT_VERIFIED',
+    orderId: 'SPT-9025',
+    studentId: '2024-1102',
+    studentName: 'Bea Alonzo',
+    vendorId: 'vendor-cora',
+    details: 'Counter payment received and verified by Nanay Cora cashier for ₱105.00. Reservation confirmed.',
+    incidentStatus: 'N/A'
+  },
+  {
+    id: 'LOG-003',
+    timestamp: '2026-11-09T10:05:00.000Z',
+    eventType: 'NO_SHOW_RECORDED',
+    orderId: 'SPT-9012',
+    studentId: '2024-0312',
+    studentName: 'Kenji Garcia',
+    vendorId: 'vendor-lita',
+    details: 'Student did not claim confirmed pre-order within 11:30 AM shift + 15 min grace period. Meal held.',
+    explanation: 'Emergency physics laboratory experiment extended past scheduled class hours.',
+    incidentStatus: 'Under Review',
+    referralOffice: 'Office of Student Affairs and Services (OSAS)'
+  },
+  {
+    id: 'LOG-004',
+    timestamp: '2026-11-09T09:55:00.000Z',
+    eventType: 'RESERVATION_EXPIRED',
+    orderId: 'SPT-9010',
+    studentId: '2024-0711',
+    studentName: 'Mark Cruz',
+    vendorId: 'vendor-ben',
+    details: 'Counter payment deadline exceeded (20 mins expired). 1 portion returned to kitchen inventory.',
+    incidentStatus: 'Resolved',
+    notes: 'Auto-released inventory; student notified.'
   }
 ];
 
 // Seed Settings & Profile
 const INITIAL_SETTINGS = {
-  schoolName: "Ramon Magsaysay High School Main Canteen",
+  schoolName: "Mindoro State University (MinSU) Main Canteen",
+  institutionName: "Mindoro State University (MinSU)",
+  studentAffairsOffice: "Office of Student Affairs and Services (OSAS)",
+  counterPaymentDeadlineMinutes: 20,
+  pickupGracePeriodMinutes: 15,
+  noShowThresholdForReview: 2,
   operatingHours: "6:30 AM - 5:00 PM",
   prepCutoffTime: "30 minutes before slot",
   studentProfile: {
@@ -555,6 +808,38 @@ const INITIAL_SETTINGS = {
     wasteSavedKg: 5.4
   }
 };
+
+// Seed Verified Student Reviews
+const INITIAL_REVIEWS = [
+  {
+    id: 'REV-101',
+    orderId: 'SPT-9021',
+    vendorId: 'vendor-lita',
+    vendorName: "Ate Lita's Kitchen",
+    dishId: 'dish-lita-1',
+    dishName: 'Chicken Adobo',
+    studentName: 'Maria Santos',
+    rating: 5,
+    tasteTag: 'Perfect Flavor',
+    portionTag: 'Generous Serving',
+    comment: 'Super savory and tender chicken. Claimed instantly via QR pass without waiting in line!',
+    createdAt: '2026-11-09T03:30:00Z'
+  },
+  {
+    id: 'REV-102',
+    orderId: 'SPT-9014',
+    vendorId: 'vendor-lita',
+    vendorName: "Ate Lita's Kitchen",
+    dishId: 'dish-lita-2',
+    dishName: 'Pork Sinigang',
+    studentName: 'Joshua Reyes',
+    rating: 4,
+    tasteTag: 'Slightly Sour',
+    portionTag: 'Just Right',
+    comment: 'Great broth and crisp kangkong. Steaming hot and fresh upon pickup.',
+    createdAt: '2026-11-08T12:15:00Z'
+  }
+];
 
 // Storage Handler with multi-vendor support
 class SapatStorage {
@@ -705,22 +990,22 @@ class SapatStorage {
     if (!tokenOrCode) return null;
     const clean = String(tokenOrCode).trim();
     const orders = this.getOrders();
-    return orders.find(o => 
-      o.pickupToken === clean || 
+    return orders.find(o =>
+      o.pickupToken === clean ||
       (o.id && o.id.toUpperCase() === clean.toUpperCase())
     ) || null;
   }
 
   /**
    * Validates and completes a reservation handover.
-   * Enforces vendor stall ownership and single-redemption rules.
+   * Enforces vendor stall ownership, verified payment, and single-redemption rules.
    */
   static claimOrder(orderIdOrToken, currentVendorId) {
     const orders = this.getOrders();
     const clean = String(orderIdOrToken).trim();
-    const orderIndex = orders.findIndex(o => 
-      o.id === clean || 
-      o.pickupToken === clean || 
+    const orderIndex = orders.findIndex(o =>
+      o.id === clean ||
+      o.pickupToken === clean ||
       (o.id && o.id.toUpperCase() === clean.toUpperCase())
     );
 
@@ -742,6 +1027,36 @@ class SapatStorage {
         success: false,
         reason: 'WRONG_VENDOR',
         message: `This pre-order belongs to ${ownerName}. Not redeemable at your stall counter.`,
+        order
+      };
+    }
+
+    // Check if expired
+    if (order.status === 'Expired' || order.paymentStatus === 'Expired') {
+      return {
+        success: false,
+        reason: 'EXPIRED',
+        message: `Pre-order #${order.id} expired due to unpaid counter payment deadline.`,
+        order
+      };
+    }
+
+    // Check if marked no-show
+    if (order.status === 'No-show') {
+      return {
+        success: false,
+        reason: 'NO_SHOW',
+        message: `Pre-order #${order.id} was marked as No-Show.`,
+        order
+      };
+    }
+
+    // Check if unpaid / pending payment
+    if (order.paymentStatus === 'Pending' || order.paymentStatus === 'Failed' || order.status === 'Awaiting Counter Payment') {
+      return {
+        success: false,
+        reason: 'UNPAID_ORDER',
+        message: `Pre-order #${order.id} is unpaid. Unverified reservations cannot be handed over.`,
         order
       };
     }
@@ -797,6 +1112,574 @@ class SapatStorage {
     window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'orders' } }));
   }
 
+  // =========================================================================
+  // PAYMENT MANAGEMENT & RESERVATION CONFIRMATION
+  // =========================================================================
+
+  static getPayments() {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_PAYMENTS);
+      if (!data) {
+        this.savePayments(INITIAL_PAYMENTS);
+        return INITIAL_PAYMENTS;
+      }
+      return JSON.parse(data);
+    } catch (e) {
+      console.error('Failed in getPayments', e);
+      return INITIAL_PAYMENTS;
+    }
+  }
+
+  static savePayments(payments) {
+    localStorage.setItem(SAPAT_STORAGE_KEY_PAYMENTS, JSON.stringify(payments));
+    window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'payments' } }));
+  }
+
+  static getPaymentByReservationId(reservationId) {
+    if (!reservationId) return null;
+    const clean = String(reservationId).trim().toUpperCase();
+    const payments = this.getPayments();
+    return payments.find(p => p.reservationId && p.reservationId.toUpperCase() === clean) || null;
+  }
+
+  static createPaymentRecord(data) {
+    const payments = this.getPayments();
+    const newPayment = {
+      paymentId: data.paymentId || ('PAY-' + Math.floor(1000 + Math.random() * 9000)),
+      reservationId: data.reservationId,
+      studentId: data.studentId || '2024-0891',
+      studentName: data.studentName || 'Student',
+      vendorId: data.vendorId,
+      vendorName: data.vendorName || 'Canteen',
+      paymentMethod: data.paymentMethod || 'Online Payment (GCash)',
+      amount: data.amount || 0,
+      paymentStatus: data.paymentStatus || 'Pending',
+      transactionReference: data.transactionReference || ('TXN-' + Math.random().toString(36).substring(2, 9).toUpperCase()),
+      createdAt: data.createdAt || new Date().toISOString(),
+      paidAt: data.paidAt || null,
+      verifiedBy: data.verifiedBy || null,
+      verificationTimestamp: data.verificationTimestamp || null
+    };
+    payments.unshift(newPayment);
+    this.savePayments(payments);
+    return newPayment;
+  }
+
+  /**
+   * Verifies a counter payment in person.
+   * Only verified payments transition an order to Confirmed.
+   */
+  static verifyCounterPayment(orderId, verifiedBy = 'Canteen Cashier') {
+    const orders = this.getOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) return { success: false, message: 'Order not found' };
+
+    const order = orders[orderIndex];
+    if (order.paymentStatus === 'Paid') {
+      return { success: false, reason: 'ALREADY_PAID', message: 'Order is already marked as paid' };
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    order.paymentStatus = 'Paid';
+    order.status = 'Confirmed';
+    order.paidAt = now.toISOString();
+    order.verifiedBy = verifiedBy;
+    order.transactionReference = order.transactionReference || ('RCPT-' + (order.vendorStall || 'STALL').replace(/[^a-zA-Z0-9]/g, '') + '-' + order.id.replace(/[^0-9]/g, ''));
+
+    // Ensure pickup token is generated and valid
+    if (!order.pickupToken) {
+      const cleanId = order.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+      order.pickupToken = `spt_tok_${cleanId}_${btoa(order.id).substring(0, 8).toLowerCase()}`;
+    }
+
+    if (Array.isArray(order.timeline)) {
+      const counterStep = order.timeline.find(t => t.status === 'Counter Payment Verified' || t.status === 'Payment Verified');
+      if (counterStep) {
+        counterStep.done = true;
+        counterStep.time = timeStr;
+      } else {
+        order.timeline.push({ status: 'Counter Payment Verified', time: timeStr, done: true });
+      }
+      const confirmStep = order.timeline.find(t => t.status === 'Confirmed');
+      if (confirmStep) {
+        confirmStep.done = true;
+        confirmStep.time = timeStr;
+      }
+    }
+
+    orders[orderIndex] = order;
+    this.saveOrders(orders);
+
+    // Update payment record
+    const payments = this.getPayments();
+    let payment = payments.find(p => p.reservationId === order.id);
+    if (payment) {
+      payment.paymentStatus = 'Paid';
+      payment.paidAt = now.toISOString();
+      payment.verifiedBy = verifiedBy;
+      payment.verificationTimestamp = now.toISOString();
+      payment.transactionReference = order.transactionReference;
+    } else {
+      payments.unshift({
+        paymentId: 'PAY-' + Math.floor(1000 + Math.random() * 9000),
+        reservationId: order.id,
+        studentId: order.studentId || '2024-0891',
+        studentName: order.studentName || 'Student',
+        vendorId: order.vendorId,
+        vendorName: order.vendorName,
+        paymentMethod: 'Direct Counter Payment',
+        amount: order.totalAmount,
+        paymentStatus: 'Paid',
+        transactionReference: order.transactionReference,
+        createdAt: order.createdAt || now.toISOString(),
+        paidAt: now.toISOString(),
+        verifiedBy: verifiedBy,
+        verificationTimestamp: now.toISOString()
+      });
+    }
+    this.savePayments(payments);
+
+    // Log audit event
+    this.logAuditEvent('COUNTER_PAYMENT_VERIFIED', {
+      orderId: order.id,
+      studentId: order.studentId,
+      studentName: order.studentName,
+      vendorId: order.vendorId,
+      details: `Counter payment of ₱${order.totalAmount} verified by ${verifiedBy}. Reservation #${order.id} confirmed.`
+    });
+
+    return { success: true, order };
+  }
+
+  /**
+   * Completes online payment verification (simulated gateway callback).
+   */
+  static recordOnlinePayment(orderId, paymentMethod = 'Online Payment (GCash)', txnRef = null) {
+    const orders = this.getOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) return { success: false, message: 'Order not found' };
+
+    const order = orders[orderIndex];
+    if (order.paymentStatus === 'Paid') {
+      return { success: false, reason: 'ALREADY_PAID', message: 'Order is already marked as paid' };
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const ref = txnRef || ('TXN-' + (paymentMethod.includes('Maya') ? 'MAYA' : (paymentMethod.includes('QR Ph') ? 'QRPH' : 'GCASH')) + '-' + Math.floor(10000 + Math.random() * 90000));
+
+    order.paymentMethod = paymentMethod;
+    order.paymentStatus = 'Paid';
+    order.status = 'Confirmed';
+    order.paidAt = now.toISOString();
+    order.transactionReference = ref;
+
+    if (!order.pickupToken) {
+      const cleanId = order.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+      order.pickupToken = `spt_tok_${cleanId}_${btoa(order.id).substring(0, 8).toLowerCase()}`;
+    }
+
+    if (Array.isArray(order.timeline)) {
+      order.timeline.push({ status: 'Online Payment Verified', time: timeStr, done: true });
+      const confirmStep = order.timeline.find(t => t.status === 'Confirmed');
+      if (confirmStep) {
+        confirmStep.done = true;
+        confirmStep.time = timeStr;
+      }
+    }
+
+    orders[orderIndex] = order;
+    this.saveOrders(orders);
+
+    // Payment record
+    const payments = this.getPayments();
+    let payment = payments.find(p => p.reservationId === order.id);
+    if (payment) {
+      payment.paymentMethod = paymentMethod;
+      payment.paymentStatus = 'Paid';
+      payment.transactionReference = ref;
+      payment.paidAt = now.toISOString();
+      payment.verifiedBy = `Gateway Webhook (${paymentMethod})`;
+      payment.verificationTimestamp = now.toISOString();
+    } else {
+      payments.unshift({
+        paymentId: 'PAY-' + Math.floor(1000 + Math.random() * 9000),
+        reservationId: order.id,
+        studentId: order.studentId || '2024-0891',
+        studentName: order.studentName || 'Student',
+        vendorId: order.vendorId,
+        vendorName: order.vendorName,
+        paymentMethod,
+        amount: order.totalAmount,
+        paymentStatus: 'Paid',
+        transactionReference: ref,
+        createdAt: order.createdAt || now.toISOString(),
+        paidAt: now.toISOString(),
+        verifiedBy: `Gateway Webhook (${paymentMethod})`,
+        verificationTimestamp: now.toISOString()
+      });
+    }
+    this.savePayments(payments);
+
+    this.logAuditEvent('PAYMENT_VERIFIED', {
+      orderId: order.id,
+      studentId: order.studentId,
+      studentName: order.studentName,
+      vendorId: order.vendorId,
+      details: `Online payment via ${paymentMethod} (${ref}) for ₱${order.totalAmount} verified. Reservation #${order.id} confirmed.`
+    });
+
+    return { success: true, order, transactionReference: ref };
+  }
+
+  /**
+   * Simulates a payment failure.
+   */
+  static recordOnlinePaymentFailure(orderId, errorReason = 'Transaction declined by gateway') {
+    const orders = this.getOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) return { success: false, message: 'Order not found' };
+
+    const order = orders[orderIndex];
+    order.paymentStatus = 'Failed';
+    orders[orderIndex] = order;
+    this.saveOrders(orders);
+
+    const payments = this.getPayments();
+    let payment = payments.find(p => p.reservationId === order.id);
+    if (payment) {
+      payment.paymentStatus = 'Failed';
+      payment.failureReason = errorReason;
+      this.savePayments(payments);
+    }
+
+    this.logAuditEvent('PAYMENT_FAILED', {
+      orderId: order.id,
+      studentId: order.studentId,
+      studentName: order.studentName,
+      vendorId: order.vendorId,
+      details: `Payment failure for #${order.id}: ${errorReason}.`
+    });
+
+    return { success: true, order };
+  }
+
+  /**
+   * Expires an unpaid counter reservation and restores portions to inventory.
+   */
+  static expireUnpaidReservation(orderId, reason = 'Payment deadline exceeded at stall counter') {
+    const orders = this.getOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) return { success: false, message: 'Order not found' };
+
+    const order = orders[orderIndex];
+    if (order.paymentStatus === 'Paid') {
+      return { success: false, message: 'Cannot expire a paid order' };
+    }
+
+    // Release portions back to menu inventory
+    const menu = this.getMenu();
+    let inventoryRestored = 0;
+    if (Array.isArray(order.items)) {
+      for (const item of order.items) {
+        const dish = menu.find(d => d.id === item.id);
+        if (dish) {
+          dish.reservedServings = Math.max(0, (dish.reservedServings || 0) - item.quantity);
+          inventoryRestored += item.quantity;
+        }
+      }
+      this.saveMenu(menu);
+    }
+
+    order.status = 'Expired';
+    order.paymentStatus = 'Expired';
+    order.expiredReason = reason;
+    order.expiredAt = new Date().toISOString();
+
+    if (Array.isArray(order.timeline)) {
+      order.timeline.push({ status: 'Expired', time: 'Expired', done: true });
+    }
+
+    orders[orderIndex] = order;
+    this.saveOrders(orders);
+
+    const payments = this.getPayments();
+    let payment = payments.find(p => p.reservationId === order.id);
+    if (payment) {
+      payment.paymentStatus = 'Expired';
+      this.savePayments(payments);
+    }
+
+    this.logAuditEvent('RESERVATION_EXPIRED', {
+      orderId: order.id,
+      studentId: order.studentId,
+      studentName: order.studentName,
+      vendorId: order.vendorId,
+      details: `Unpaid reservation #${order.id} expired. ${inventoryRestored} portion(s) released back to kitchen inventory.`
+    });
+
+    return { success: true, order, inventoryRestored };
+  }
+
+  /**
+   * Marks a confirmed ready order as an uncollected No-show.
+   */
+  static markOrderNoShow(orderId, vendorId = null) {
+    const orders = this.getOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) return { success: false, message: 'Order not found' };
+
+    const order = orders[orderIndex];
+    order.status = 'No-show';
+    order.noShowRecordedAt = new Date().toISOString();
+    order.incidentStatus = 'Under Review';
+
+    if (Array.isArray(order.timeline)) {
+      order.timeline.push({ status: 'No-show', time: 'Uncollected', done: true });
+    }
+
+    orders[orderIndex] = order;
+    this.saveOrders(orders);
+
+    this.logAuditEvent('NO_SHOW_RECORDED', {
+      orderId: order.id,
+      studentId: order.studentId,
+      studentName: order.studentName,
+      vendorId: order.vendorId,
+      details: `Pre-order #${order.id} was not claimed within pickup window + grace period. Prepared meal held.`,
+      incidentStatus: 'Under Review'
+    });
+
+    return { success: true, order };
+  }
+
+  /**
+   * Records student-submitted explanation for a missed pickup.
+   */
+  static submitNoShowExplanation(orderId, explanationText) {
+    if (!explanationText || !explanationText.trim()) {
+      return { success: false, message: 'Explanation text is required' };
+    }
+
+    const orders = this.getOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) return { success: false, message: 'Order not found' };
+
+    const order = orders[orderIndex];
+    order.noShowExplanation = explanationText.trim();
+    order.explanationSubmittedAt = new Date().toISOString();
+    orders[orderIndex] = order;
+    this.saveOrders(orders);
+
+    // Update audit logs
+    const logs = this.getAuditLogs();
+    const match = logs.find(l => (l.orderId === orderId || l.reservationId === orderId) && l.eventType === 'NO_SHOW_RECORDED');
+    if (match) {
+      match.explanation = explanationText.trim();
+      match.studentExplanation = explanationText.trim();
+      match.explanationSubmittedAt = order.explanationSubmittedAt;
+      this.saveAuditLogs(logs);
+    } else {
+      this.logAuditEvent('STUDENT_EXPLANATION_SUBMITTED', {
+        orderId: order.id,
+        reservationId: order.id,
+        studentId: order.studentId,
+        studentName: order.studentName,
+        vendorId: order.vendorId,
+        details: `Student explanation submitted: "${explanationText.trim()}"`,
+        explanation: explanationText.trim(),
+        studentExplanation: explanationText.trim()
+      });
+    }
+
+    return { success: true, order };
+  }
+
+  // =========================================================================
+  // AUDIT LOGS & INCIDENT GOVERNANCE
+  // =========================================================================
+
+  static getAuditLogs() {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_AUDIT_LOGS);
+      if (!data) {
+        this.saveAuditLogs(INITIAL_AUDIT_LOGS);
+        return INITIAL_AUDIT_LOGS;
+      }
+      return JSON.parse(data);
+    } catch (e) {
+      console.error('Failed in getAuditLogs', e);
+      return INITIAL_AUDIT_LOGS;
+    }
+  }
+
+  static saveAuditLogs(logs) {
+    localStorage.setItem(SAPAT_STORAGE_KEY_AUDIT_LOGS, JSON.stringify(logs));
+    window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'audit-logs' } }));
+  }
+
+  static logAuditEvent(eventType, payload = {}) {
+    const logs = this.getAuditLogs();
+    const orderRef = payload.orderId || payload.reservationId || null;
+    const expl = payload.studentExplanation || payload.explanation || null;
+    const newEntry = {
+      id: 'LOG-' + Math.floor(100 + Math.random() * 900),
+      timestamp: new Date().toISOString(),
+      eventType,
+      orderId: orderRef,
+      reservationId: orderRef,
+      studentId: payload.studentId || null,
+      studentName: payload.studentName || null,
+      vendorId: payload.vendorId || null,
+      details: payload.details || '',
+      explanation: expl,
+      studentExplanation: expl,
+      incidentStatus: payload.incidentStatus || 'N/A',
+      referredToOSAS: payload.referredToOSAS || false,
+      resolved: payload.resolved || false,
+      notes: payload.notes || null,
+      referralOffice: payload.referralOffice || null
+    };
+    logs.unshift(newEntry);
+    this.saveAuditLogs(logs);
+    return newEntry;
+  }
+
+  static referIncidentToOSAS(logIdOrOrderId, adminNotes = '') {
+    const logs = this.getAuditLogs();
+    const log = logs.find(l => l.id === logIdOrOrderId || l.orderId === logIdOrOrderId || l.reservationId === logIdOrOrderId);
+    if (!log) return { success: false, message: 'Incident log not found' };
+
+    const settings = this.getSettings();
+    const officeName = settings.studentAffairsOffice || 'Office of Student Affairs and Services (OSAS)';
+
+    log.incidentStatus = 'Referred to OSAS';
+    log.referredToOSAS = true;
+    log.referralOffice = officeName;
+    log.referredAt = new Date().toISOString();
+    log.adminNotes = adminNotes || `Referred to ${officeName} for student accountability review`;
+    this.saveAuditLogs(logs);
+
+    // Also update order if present
+    const orderRef = log.orderId || log.reservationId;
+    if (orderRef) {
+      const orders = this.getOrders();
+      const order = orders.find(o => o.id === orderRef);
+      if (order) {
+        order.incidentStatus = 'Referred to OSAS';
+        order.referralOffice = officeName;
+        this.saveOrders(orders);
+      }
+    }
+
+    return { success: true, log, officeName };
+  }
+
+  static resolveIncident(logIdOrOrderId, adminNotes = '') {
+    const logs = this.getAuditLogs();
+    const log = logs.find(l => l.id === logIdOrOrderId || l.orderId === logIdOrOrderId || l.reservationId === logIdOrOrderId);
+    if (!log) return { success: false, message: 'Incident log not found' };
+
+    log.incidentStatus = 'Resolved';
+    log.resolved = true;
+    log.resolvedAt = new Date().toISOString();
+    log.resolutionNote = adminNotes || 'Incident reviewed and resolved by campus administrator';
+    log.adminNotes = log.resolutionNote;
+    this.saveAuditLogs(logs);
+
+    const orderRef = log.orderId || log.reservationId;
+    if (orderRef) {
+      const orders = this.getOrders();
+      const order = orders.find(o => o.id === orderRef);
+      if (order) {
+        order.incidentStatus = 'Resolved';
+        this.saveOrders(orders);
+      }
+    }
+
+    return { success: true, log };
+  }
+
+  // =========================================================================
+  // STUDENT FOOD FEEDBACK & VERIFIED REVIEWS
+  // =========================================================================
+
+  static getReviews(vendorId = null) {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_REVIEWS);
+      let reviews = [];
+      if (!data) {
+        this.saveReviews(INITIAL_REVIEWS);
+        reviews = INITIAL_REVIEWS;
+      } else {
+        reviews = JSON.parse(data);
+      }
+      if (vendorId) {
+        return reviews.filter(r => r.vendorId === vendorId);
+      }
+      return reviews;
+    } catch (e) {
+      console.error('Failed in getReviews', e);
+      return INITIAL_REVIEWS;
+    }
+  }
+
+  static saveReviews(reviews) {
+    localStorage.setItem(SAPAT_STORAGE_KEY_REVIEWS, JSON.stringify(reviews));
+    window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'reviews' } }));
+  }
+
+  static submitReview({ orderId, vendorId, dishId, dishName, studentName, rating, tasteTag, portionTag, comment }) {
+    if (!orderId) return { success: false, message: 'Order reference is required' };
+
+    const orders = this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return { success: false, message: 'Order not found' };
+
+    const cleanRating = Math.max(1, Math.min(5, Number(rating) || 5));
+    const now = new Date().toISOString();
+
+    const newReview = {
+      id: 'REV-' + Math.floor(1000 + Math.random() * 9000),
+      orderId: order.id,
+      vendorId: vendorId || order.vendorId,
+      vendorName: order.vendorName,
+      dishId: dishId || (order.items && order.items[0] ? order.items[0].id : null),
+      dishName: dishName || (order.items && order.items[0] ? order.items[0].name : 'Canteen Dish'),
+      studentName: studentName || order.studentName || 'Student',
+      rating: cleanRating,
+      tasteTag: tasteTag || 'Perfect Flavor',
+      portionTag: portionTag || 'Just Right',
+      comment: (comment || '').trim(),
+      createdAt: now
+    };
+
+    const reviews = this.getReviews();
+    reviews.unshift(newReview);
+    this.saveReviews(reviews);
+
+    // Update order record
+    order.reviewed = true;
+    order.reviewRating = cleanRating;
+    order.reviewComment = newReview.comment;
+    order.reviewTasteTag = newReview.tasteTag;
+    order.reviewPortionTag = newReview.portionTag;
+    order.reviewedAt = now;
+    this.saveOrders(orders);
+
+    // Log audit event
+    this.logAuditEvent('FEEDBACK_SUBMITTED', {
+      orderId: order.id,
+      studentName: newReview.studentName,
+      vendorId: newReview.vendorId,
+      details: `Student meal review submitted for #${order.id} (${newReview.dishName}): ${cleanRating}/5 stars. Tag: ${newReview.tasteTag}.`
+    });
+
+    return { success: true, review: newReview, order };
+  }
+
   static getSettings() {
     try {
       const data = localStorage.getItem(SAPAT_STORAGE_KEY_SETTINGS);
@@ -829,11 +1712,17 @@ class SapatStorage {
     localStorage.removeItem(SAPAT_STORAGE_KEY_MENU);
     localStorage.removeItem(SAPAT_STORAGE_KEY_ORDERS);
     localStorage.removeItem(SAPAT_STORAGE_KEY_SETTINGS);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_PAYMENTS);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_AUDIT_LOGS);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_REVIEWS);
     localStorage.removeItem(SAPAT_STORAGE_KEY_CURRENT_VENDOR);
     localStorage.removeItem(SAPAT_STORAGE_KEY_STUDENT_VENDOR);
     this.saveVendors(INITIAL_VENDORS);
     this.saveMenu(INITIAL_MENU);
     this.saveOrders(INITIAL_ORDERS);
+    this.savePayments(INITIAL_PAYMENTS);
+    this.saveAuditLogs(INITIAL_AUDIT_LOGS);
+    this.saveReviews(INITIAL_REVIEWS);
     this.saveSettings(INITIAL_SETTINGS);
     this.setCurrentVendorId('vendor-lita');
     this.setStudentSelectedVendor('all');
@@ -850,5 +1739,8 @@ export {
   INITIAL_VENDORS,
   INITIAL_MENU,
   INITIAL_ORDERS,
+  INITIAL_PAYMENTS,
+  INITIAL_AUDIT_LOGS,
+  INITIAL_REVIEWS,
   INITIAL_SETTINGS
 };

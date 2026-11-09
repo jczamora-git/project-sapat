@@ -309,12 +309,21 @@
     </div>
 
     <div style="background: var(--surface-muted); border-radius: 16px; padding: 20px; border: 1.5px dashed var(--border-subtle); margin-bottom: 16px;">
+      <div id="pass-payment-status-badge" style="margin-bottom: 8px;"></div>
       <span style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Preorder Code</span>
-      <h2 id="pass-order-id" style="font-size: 26px; font-weight: 800; color: var(--primary); margin: 6px 0 12px;">#SPT-9021</h2>
+      <h2 id="pass-order-id" style="font-size: 26px; font-weight: 800; color: var(--primary); margin: 4px 0 10px;">#SPT-9021</h2>
       
-      <!-- Real Generated QR Code -->
+      <!-- Real Generated QR Code (Active when Verified Paid) -->
       <div class="pass-qr-frame" id="pass-qr-frame" style="width: 140px; height: 140px; margin: 0 auto 12px; background: white; border: 1px solid var(--border-subtle); border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
         <canvas id="pass-qr-canvas" style="width: 128px; height: 128px; display: block;"></canvas>
+      </div>
+
+      <!-- Locked Notice (Shown if Unpaid / Awaiting Counter Settlement) -->
+      <div id="pass-unpaid-notice" style="display: none; padding: 14px; background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 12px; margin-bottom: 12px; text-align: center;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" style="margin: 0 auto 6px; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <h4 style="font-size: 13.5px; font-weight: 800; color: #92400E; margin: 0 0 4px;">Payment Verification Required</h4>
+        <p id="pass-unpaid-desc" style="font-size: 11.5px; color: #B45309; line-height: 1.4; margin: 0 0 8px;">Please settle payment at the stall counter before your deadline to activate your QR pickup pass.</p>
+        <div id="pass-unpaid-deadline" style="font-size: 11px; font-weight: 700; color: #92400E; background: rgba(217, 119, 6, 0.12); padding: 4px 8px; border-radius: 6px; display: inline-block;"></div>
       </div>
 
       <h4 id="pass-student-name" style="font-size: 15px; font-weight: 700;">Maria Santos</h4>
@@ -501,6 +510,398 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- 7. Online Payment Simulated Gateway Sheet -->
+<div class="modal-overlay" id="modal-online-payment">
+  <div class="bottom-sheet online-payment-sheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row">
+      <div>
+        <h3 style="font-size: 16.5px; font-weight: 800; color: var(--text-primary); margin: 0;">Online Pre-order Checkout</h3>
+        <span style="font-size: 11.5px; color: var(--text-secondary);">Secure E-Wallet &bull; Fast-Track Express Counter Pickup</span>
+      </div>
+      <button class="close-modal-btn" data-action="close-online-payment">&times;</button>
+    </div>
+
+    <!-- Amount & Order Overview -->
+    <div class="payment-overview-banner">
+      <div class="payment-order-meta">
+        <span class="payment-order-ref" id="online-pay-order-ref">#SPT-XXXX</span>
+        <span class="payment-stall-target" id="online-pay-stall-name">Canteen Stall</span>
+      </div>
+      <div class="payment-amount-box">
+        <span class="payment-amount-lbl">Total Payable</span>
+        <strong class="payment-amount-val" id="online-pay-amount">₱0.00</strong>
+      </div>
+    </div>
+
+    <!-- E-Wallet Provider Selection -->
+    <div class="payment-methods-tab-strip">
+      <button type="button" class="pay-provider-btn active" data-provider="GCash">
+        <span class="pay-provider-dot gcash"></span>
+        <span>GCash</span>
+      </button>
+      <button type="button" class="pay-provider-btn" data-provider="Maya">
+        <span class="pay-provider-dot maya"></span>
+        <span>Maya</span>
+      </button>
+      <button type="button" class="pay-provider-btn" data-provider="QR Ph">
+        <span class="pay-provider-dot qrph"></span>
+        <span>QR Ph</span>
+      </button>
+    </div>
+
+    <!-- Mobile Number / Account Input -->
+    <div class="payment-input-group">
+      <label for="online-pay-phone" class="payment-input-label">E-Wallet Account / Mobile Number</label>
+      <div class="payment-input-wrap">
+        <span class="payment-country-prefix">+63</span>
+        <input type="tel" id="online-pay-phone" class="form-input payment-phone-field" placeholder="917 123 4567" value="917 555 0891">
+      </div>
+      <small class="payment-input-hint">Prototype Sandbox &bull; Simulates authenticated gateway authorization</small>
+    </div>
+
+    <!-- Security & Prototype Sandbox Callout -->
+    <div class="payment-sandbox-notice">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      <span>Production payments connect to authorized BSP-regulated gateway webhooks.</span>
+    </div>
+
+    <!-- Simulation Actions -->
+    <div class="payment-action-buttons-stack">
+      <button type="button" class="btn-primary-action btn-pay-confirm" id="btn-simulate-pay-success">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="btn-pay-label">Authorize &amp; Pay (Simulate Success)</span>
+      </button>
+
+      <button type="button" class="btn-danger-outline btn-pay-fail" id="btn-simulate-pay-fail" style="width: 100%; padding: 10px; font-weight: 700; border-radius: var(--radius-sm); border: 1.5px solid #FECACA; background: #FEF2F2; color: #DC2626; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+        <span>Simulate Gateway Failure (Declined)</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 8. Student No-Show Explanation Modal -->
+<div class="modal-overlay" id="modal-noshow-explanation">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row">
+      <div>
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Uncollected Order Explanation</h3>
+        <span style="font-size: 11.5px; color: var(--text-secondary);">Student Accountability &amp; Institutional Governance</span>
+      </div>
+      <button class="close-modal-btn" data-action="close-noshow-modal">&times;</button>
+    </div>
+
+    <div class="noshow-modal-body">
+      <div class="noshow-warning-box" style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
+        <strong id="noshow-modal-order-ref" style="font-size: 14px; color: #991B1B; display: block; margin-bottom: 4px;">Pre-order #SPT-XXXX</strong>
+        <p style="font-size: 11.5px; color: #7F1D1D; margin: 0; line-height: 1.4;">A confirmed pre-order was prepared by the canteen kitchen but was not collected during the scheduled lunch shift.</p>
+      </div>
+
+      <div class="form-group" style="margin: 14px 0;">
+        <label for="noshow-explanation-textarea" class="form-label" style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px;">Reason for Missed Pickup:</label>
+        <textarea id="noshow-explanation-textarea" class="form-textarea" rows="4" placeholder="e.g. Unscheduled quiz in engineering lab, medical clinic appointment, class delayed past lunch slot..." maxlength="300" style="width: 100%; border: 1.5px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 12.5px;"></textarea>
+        <div style="text-align: right; font-size: 10.5px; color: var(--text-muted); margin-top: 4px;"><span id="noshow-char-count">0</span> / 300</div>
+      </div>
+
+      <div class="noshow-policy-notice" style="background: var(--bg-subtle); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; gap: 8px; align-items: flex-start; margin-bottom: 14px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <p style="font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin: 0;">Your statement is recorded on file and reviewed under the Mindoro State University (MinSU) student dining guidelines before any referral to the <strong>Office of Student Affairs and Services (OSAS)</strong>.</p>
+      </div>
+
+      <div class="modal-actions-row" style="display: flex; gap: 8px;">
+        <button type="button" class="btn-filter-reset" data-action="close-noshow-modal">Cancel</button>
+        <button type="button" class="btn-primary-action" id="btn-submit-noshow-explanation" style="flex: 2;">Submit Explanation</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Meal Feedback & Rating Modal -->
+<div class="modal-overlay" id="modal-meal-feedback">
+  <div class="bottom-sheet modal-feedback-sheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row" style="margin-bottom: 10px;">
+      <div>
+        <span class="modal-sheet-kicker" style="color: var(--primary);">Student Food Feedback</span>
+        <h3 class="modal-header-title" style="margin: 0; font-size: 17px; font-weight: 700;">Rate &amp; Review Meal</h3>
+      </div>
+      <button class="close-modal-btn" data-action="close-meal-feedback" aria-label="Close modal">&times;</button>
+    </div>
+
+    <div class="feedback-modal-body">
+      <!-- Dish Info Card -->
+      <div class="feedback-dish-summary-card">
+        <div class="feedback-dish-thumb">
+          <img id="feedback-dish-img" src="" alt="Dish">
+        </div>
+        <div class="feedback-dish-details">
+          <span class="feedback-stall-tag" id="feedback-dish-stall">Stall #3 &bull; Ate Lita's Kitchen</span>
+          <h4 class="feedback-dish-title" id="feedback-dish-name">Chicken Adobo</h4>
+          <span class="feedback-order-ref" id="feedback-order-id">Order #SPT-9021</span>
+        </div>
+      </div>
+
+      <!-- Star Rating Section -->
+      <div class="feedback-rating-section">
+        <label class="feedback-section-label">Overall Experience</label>
+        <div class="star-rating-control" id="feedback-star-control">
+          <button type="button" class="star-btn" data-rating="1" aria-label="1 star">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button type="button" class="star-btn" data-rating="2" aria-label="2 stars">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button type="button" class="star-btn" data-rating="3" aria-label="3 stars">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button type="button" class="star-btn" data-rating="4" aria-label="4 stars">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button type="button" class="star-btn active" data-rating="5" aria-label="5 stars">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+        </div>
+        <span class="star-rating-hint" id="feedback-rating-hint">5 - Excellent! Highly recommended</span>
+      </div>
+
+      <!-- Taste & Portion Attributes -->
+      <div class="feedback-attributes-section">
+        <label class="feedback-section-label">Taste &amp; Recipe Feedback (Tap to tag)</label>
+        <div class="feedback-tags-grid" id="feedback-taste-tags">
+          <button type="button" class="feedback-tag-chip selected" data-tag="Perfect Flavor">Perfect Flavor</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Generous Portion">Generous Portion</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Just Right">Just Right</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Too Salty">Too Salty</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Too Bland">Too Bland</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Too Sweet">Too Sweet</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Hot & Fresh">Hot &amp; Fresh</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Needs More Sauce">Needs More Sauce</button>
+        </div>
+      </div>
+
+      <!-- Written Review Comment -->
+      <div class="feedback-comment-section">
+        <label for="feedback-comment-textarea" class="feedback-section-label">Your Review &amp; Kitchen Suggestions</label>
+        <textarea id="feedback-comment-textarea" class="feedback-textarea" rows="3" placeholder="Tell the cooks what made this meal great, or what would make it even better..." maxlength="250"></textarea>
+        <div class="feedback-char-meta"><span id="feedback-char-count">0</span> / 250</div>
+      </div>
+
+      <!-- AI Impact Note -->
+      <div class="feedback-ai-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        <p>Your feedback feeds directly into <strong>SAPAT Intelligence</strong> to help canteen vendors calibrate daily seasoning, reduce leftovers, and enhance portion satisfaction.</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="feedback-modal-actions">
+        <button type="button" class="btn-filter-reset" data-action="close-meal-feedback">Cancel</button>
+        <button type="button" class="btn-primary-action" id="btn-submit-meal-feedback" style="flex: 2;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Submit Review</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Meal Feedback & Rating Modal -->
+<div class="modal-overlay" id="modal-meal-feedback">
+  <div class="bottom-sheet modal-feedback-sheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row" style="margin-bottom: 10px;">
+      <div>
+        <span class="modal-sheet-kicker" style="color: var(--primary);">Student Food Feedback</span>
+        <h3 class="modal-header-title" style="margin: 0; font-size: 17px; font-weight: 700;">Rate &amp; Review Meal</h3>
+      </div>
+      <button class="close-modal-btn" data-action="close-meal-feedback" aria-label="Close modal">&times;</button>
+    </div>
+
+    <div class="feedback-modal-body">
+      <!-- Dish Info Card -->
+      <div class="feedback-dish-summary-card">
+        <div class="feedback-dish-thumb">
+          <img id="feedback-dish-img" src="" alt="Dish">
+        </div>
+        <div class="feedback-dish-details">
+          <span class="feedback-stall-tag" id="feedback-dish-stall">Stall #3 &bull; Ate Lita's Kitchen</span>
+          <h4 class="feedback-dish-title" id="feedback-dish-name">Chicken Adobo</h4>
+          <span class="feedback-order-ref" id="feedback-order-id">Order #SPT-9021</span>
+        </div>
+      </div>
+
+      <!-- Star Rating Section -->
+      <div class="feedback-rating-section">
+        <label class="feedback-section-label">Overall Experience</label>
+        <div class="star-rating-control" id="feedback-star-control">
+          <button type="button" class="star-btn" data-rating="1" aria-label="1 star">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button type="button" class="star-btn" data-rating="2" aria-label="2 stars">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button type="button" class="star-btn" data-rating="3" aria-label="3 stars">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button type="button" class="star-btn" data-rating="4" aria-label="4 stars">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button type="button" class="star-btn active" data-rating="5" aria-label="5 stars">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+        </div>
+        <span class="star-rating-hint" id="feedback-rating-hint">5 - Excellent! Highly recommended</span>
+      </div>
+
+      <!-- Taste & Portion Attributes -->
+      <div class="feedback-attributes-section">
+        <label class="feedback-section-label">Taste &amp; Recipe Feedback (Tap to tag)</label>
+        <div class="feedback-tags-grid" id="feedback-taste-tags">
+          <button type="button" class="feedback-tag-chip selected" data-tag="Perfect Flavor">Perfect Flavor</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Generous Portion">Generous Portion</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Just Right">Just Right</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Too Salty">Too Salty</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Too Bland">Too Bland</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Too Sweet">Too Sweet</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Hot & Fresh">Hot &amp; Fresh</button>
+          <button type="button" class="feedback-tag-chip" data-tag="Needs More Sauce">Needs More Sauce</button>
+        </div>
+      </div>
+
+      <!-- Written Review Comment -->
+      <div class="feedback-comment-section">
+        <label for="feedback-comment-textarea" class="feedback-section-label">Your Review &amp; Kitchen Suggestions</label>
+        <textarea id="feedback-comment-textarea" class="feedback-textarea" rows="3" placeholder="Tell the cooks what made this meal great, or what would make it even better..." maxlength="250"></textarea>
+        <div class="feedback-char-meta"><span id="feedback-char-count">0</span> / 250</div>
+      </div>
+
+      <!-- AI Impact Note -->
+      <div class="feedback-ai-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        <p>Your feedback feeds directly into <strong>SAPAT Intelligence</strong> to help canteen vendors calibrate daily seasoning, reduce leftovers, and enhance portion satisfaction.</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="feedback-modal-actions">
+        <button type="button" class="btn-filter-reset" data-action="close-meal-feedback">Cancel</button>
+        <button type="button" class="btn-primary-action" id="btn-submit-meal-feedback" style="flex: 2;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Submit Review</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. Online Payment Simulated Gateway Sheet -->
+<div class="modal-overlay" id="modal-online-payment">
+  <div class="bottom-sheet online-payment-sheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row">
+      <div>
+        <h3 style="font-size: 16.5px; font-weight: 800; color: var(--text-primary); margin: 0;">Online Pre-order Checkout</h3>
+        <span style="font-size: 11.5px; color: var(--text-secondary);">Secure E-Wallet &bull; Fast-Track Express Counter Pickup</span>
+      </div>
+      <button class="close-modal-btn" data-action="close-online-payment">&times;</button>
+    </div>
+
+    <!-- Amount & Order Overview -->
+    <div class="payment-overview-banner">
+      <div class="payment-order-meta">
+        <span class="payment-order-ref" id="online-pay-order-ref">#SPT-XXXX</span>
+        <span class="payment-stall-target" id="online-pay-stall-name">Canteen Stall</span>
+      </div>
+      <div class="payment-amount-box">
+        <span class="payment-amount-lbl">Total Payable</span>
+        <strong class="payment-amount-val" id="online-pay-amount">₱0.00</strong>
+      </div>
+    </div>
+
+    <!-- E-Wallet Provider Selection -->
+    <div class="payment-methods-tab-strip">
+      <button type="button" class="pay-provider-btn active" data-provider="GCash">
+        <span class="pay-provider-dot gcash"></span>
+        <span>GCash</span>
+      </button>
+      <button type="button" class="pay-provider-btn" data-provider="Maya">
+        <span class="pay-provider-dot maya"></span>
+        <span>Maya</span>
+      </button>
+      <button type="button" class="pay-provider-btn" data-provider="QR Ph">
+        <span class="pay-provider-dot qrph"></span>
+        <span>QR Ph</span>
+      </button>
+    </div>
+
+    <!-- Mobile Number / Account Input -->
+    <div class="payment-input-group">
+      <label for="online-pay-phone" class="payment-input-label">E-Wallet Account / Mobile Number</label>
+      <div class="payment-input-wrap">
+        <span class="payment-country-prefix">+63</span>
+        <input type="tel" id="online-pay-phone" class="form-input payment-phone-field" placeholder="917 123 4567" value="917 555 0891">
+      </div>
+      <small class="payment-input-hint">Prototype Sandbox &bull; Simulates authenticated gateway authorization</small>
+    </div>
+
+    <!-- Security & Prototype Sandbox Callout -->
+    <div class="payment-sandbox-notice">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      <span>Production payments connect to authorized BSP-regulated gateway webhooks.</span>
+    </div>
+
+    <!-- Simulation Actions -->
+    <div class="payment-action-buttons-stack">
+      <button type="button" class="btn-primary-action btn-pay-confirm" id="btn-simulate-pay-success">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="btn-pay-label">Authorize &amp; Pay (Simulate Success)</span>
+      </button>
+
+      <button type="button" class="btn-danger-outline btn-pay-fail" id="btn-simulate-pay-fail" style="width: 100%; padding: 10px; font-weight: 700; border-radius: var(--radius-sm); border: 1.5px solid #FECACA; background: #FEF2F2; color: #DC2626; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+        <span>Simulate Gateway Failure (Declined)</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 8. Student No-Show Explanation Modal -->
+<div class="modal-overlay" id="modal-noshow-explanation">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row">
+      <div>
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Uncollected Order Explanation</h3>
+        <span style="font-size: 11.5px; color: var(--text-secondary);">Student Accountability &amp; Institutional Governance</span>
+      </div>
+      <button class="close-modal-btn" data-action="close-noshow-modal">&times;</button>
+    </div>
+
+    <div class="noshow-modal-body">
+      <div class="noshow-warning-box" style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
+        <strong id="noshow-modal-order-ref" style="font-size: 14px; color: #991B1B; display: block; margin-bottom: 4px;">Pre-order #SPT-XXXX</strong>
+        <p style="font-size: 11.5px; color: #7F1D1D; margin: 0; line-height: 1.4;">A confirmed pre-order was prepared by the canteen kitchen but was not collected during the scheduled lunch shift.</p>
+      </div>
+
+      <div class="form-group" style="margin: 14px 0;">
+        <label for="noshow-explanation-textarea" class="form-label" style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px;">Reason for Missed Pickup:</label>
+        <textarea id="noshow-explanation-textarea" class="form-textarea" rows="4" placeholder="e.g. Unscheduled quiz in engineering lab, medical clinic appointment, class delayed past lunch slot..." maxlength="300" style="width: 100%; border: 1.5px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 12.5px;"></textarea>
+        <div style="text-align: right; font-size: 10.5px; color: var(--text-muted); margin-top: 4px;"><span id="noshow-char-count">0</span> / 300</div>
+      </div>
+
+      <div class="noshow-policy-notice" style="background: var(--bg-subtle); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; gap: 8px; align-items: flex-start; margin-bottom: 14px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <p style="font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin: 0;">Your statement is recorded on file and reviewed under the Mindoro State University (MinSU) student dining guidelines before any referral to the <strong>Office of Student Affairs and Services (OSAS)</strong>.</p>
+      </div>
+
+      <div class="modal-actions-row" style="display: flex; gap: 8px;">
+        <button type="button" class="btn-filter-reset" data-action="close-noshow-modal">Cancel</button>
+        <button type="button" class="btn-primary-action" id="btn-submit-noshow-explanation" style="flex: 2;">Submit Explanation</button>
+      </div>
+    </div>
   </div>
 </div>
 

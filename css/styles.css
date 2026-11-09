@@ -9375,3 +9375,1208 @@ input:checked + .slider-round:before {
     border-radius: 0;
   }
 }
+
+/* ==========================================================================
+   SAPAT PAYMENT MANAGEMENT, RESERVATION CONFIRMATION & STUDENT ACCOUNTABILITY
+   ========================================================================== */
+
+/* Payment Method Selector in Cart */
+.payment-method-options-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.payment-select-card {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.payment-select-card:hover {
+  border-color: var(--primary-light, #007A48);
+  background: #FCFDFB;
+}
+
+.payment-select-card:has(input:checked) {
+  border-color: var(--primary);
+  background: #F0F8F4;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.payment-select-card input[type="radio"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.payment-select-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.payment-select-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.payment-method-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.payment-method-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.payment-select-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.payment-select-tag.instant {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.payment-select-tag.counter {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+/* Policy Acknowledgment in Checkout */
+.checkout-policy-card {
+  padding: 12px 14px;
+  background: #F9FAFB;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  margin-top: 10px;
+}
+
+.policy-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.policy-checkbox-label input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.policy-checkbox-text {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* Payment Status Badges */
+.v-payment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.v-payment-badge.paid {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.v-payment-badge.pending {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.v-payment-badge.expired {
+  background: #F3F4F6;
+  color: #4B5563;
+  border: 1px solid #E5E7EB;
+}
+
+.v-payment-badge.noshow {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.head-right-badges,
+.v-order-head-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Direct Counter Payment & Online Notices in Orders */
+.order-counter-payment-notice,
+.order-online-payment-notice {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #78350F;
+}
+
+.counter-notice-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #92400E;
+}
+
+.counter-deadline-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: #FDE68A;
+  color: #78350F;
+}
+
+/* No-Show Notice in Student Orders */
+.order-noshow-notice {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #7F1D1D;
+}
+
+.noshow-notice-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #991B1B;
+}
+
+.noshow-filed-box {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-xs);
+  border-left: 3px solid #DC2626;
+}
+
+.noshow-filed-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #991B1B;
+}
+
+.noshow-filed-text {
+  font-size: 12px;
+  font-style: italic;
+  margin: 2px 0 0;
+  color: #1F2937;
+}
+
+.noshow-filed-meta {
+  font-size: 10px;
+  color: #6B7280;
+}
+
+.btn-noshow-explain {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 7px 12px;
+  background: #DC2626;
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-noshow-explain:hover {
+  background: #B91C1C;
+}
+
+/* Pass Locked Button */
+.btn-pass-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #F3F4F6;
+  color: #4B5563;
+  border: 1px solid #D1D5DB;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-pass-locked:hover {
+  background: #E5E7EB;
+}
+
+.v-unpaid-gateway-hint {
+  font-size: 11px;
+  color: #D97706;
+  font-weight: 600;
+  align-self: center;
+}
+
+/* Online Payment Gateway Simulation Modal */
+.wallet-provider-tabs {
+  display: flex;
+  gap: 8px;
+  background: #F3F4F6;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.wallet-tab-btn {
+  flex: 1;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.wallet-tab-btn.active {
+  background: #FFFFFF;
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.wallet-amount-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+}
+
+.wallet-amount-summary .amount-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.wallet-form-group {
+  margin-bottom: 14px;
+}
+
+.wallet-form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.wallet-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.wallet-input:focus {
+  border-color: var(--primary);
+}
+
+.wallet-sim-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  line-height: 1.4;
+  color: #1E40AF;
+  margin-bottom: 16px;
+}
+
+.wallet-auth-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.wallet-auth-actions button {
+  flex: 1;
+}
+
+/* No-Show Explanation Modal */
+.noshow-order-ref-card {
+  padding: 10px 14px;
+  background: #F9FAFB;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+
+.noshow-form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.noshow-textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.noshow-textarea:focus {
+  border-color: var(--primary);
+}
+
+.noshow-meta-row {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+.noshow-policy-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  line-height: 1.4;
+  color: #92400E;
+}
+
+/* ==========================================================================
+   STUDENT MEAL FEEDBACK & RECIPE REVIEW SYSTEM
+   ========================================================================== */
+
+/* Home Screen Feedback Prompt Banner */
+.home-feedback-prompt-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #FFF8F1 0%, #FFF3E6 100%);
+  border: 1.5px solid #FED7AA;
+  border-radius: var(--radius-md);
+  margin-top: 16px;
+  box-shadow: 0 2px 8px rgba(255, 138, 36, 0.08);
+}
+
+.feedback-banner-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.feedback-banner-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #C2410C;
+  margin-bottom: 2px;
+}
+
+.feedback-banner-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #7C2D12;
+  margin: 0 0 3px;
+  line-height: 1.3;
+}
+
+.feedback-banner-sub {
+  font-size: 11px;
+  color: #9A3412;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.btn-home-feedback {
+  flex-shrink: 0;
+  width: auto !important;
+  max-width: max-content;
+  background: #FF8A24 !important;
+  color: #FFFFFF !important;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 6px rgba(255, 138, 36, 0.25);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-home-feedback:hover {
+  background: #EA580C !important;
+}
+
+.btn-home-feedback:active {
+  transform: scale(0.98);
+}
+
+/* Order Card Review Actions */
+.btn-rate-meal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #FF8A24 !important;
+  color: #FFFFFF !important;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(255, 138, 36, 0.2);
+}
+
+.btn-rate-meal:hover {
+  background: #EA580C !important;
+}
+
+.order-reviewed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background: #FFF7ED;
+  border: 1px solid #FFEDD5;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  color: #C2410C;
+  transition: all var(--transition-fast);
+}
+
+.order-reviewed-badge:hover {
+  background: #FFEDD5;
+  border-color: #FED7AA;
+}
+
+/* Feedback Modal Sheet */
+.modal-feedback-sheet {
+  max-width: 480px;
+}
+
+.feedback-dish-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.feedback-dish-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #E5E7EB;
+}
+
+.feedback-dish-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feedback-dish-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.feedback-stall-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--primary);
+  display: block;
+}
+
+.feedback-dish-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 1px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feedback-order-ref {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* Star Rating Section */
+.feedback-rating-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px;
+  background: #FAFAFA;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.feedback-section-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.star-rating-control {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.star-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #D1D5DB;
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.star-btn:hover {
+  transform: scale(1.15);
+}
+
+.star-btn.active {
+  color: #FF8A24;
+}
+
+.star-rating-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #C2410C;
+  min-height: 18px;
+}
+
+/* Taste & Portion Attributes Grid */
+.feedback-attributes-section {
+  margin-bottom: 16px;
+}
+
+.feedback-tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.feedback-tag-chip {
+  padding: 6px 12px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.feedback-tag-chip:hover {
+  border-color: #FF8A24;
+  color: #C2410C;
+}
+
+.feedback-tag-chip.selected {
+  background: #FFF7ED;
+  border-color: #FF8A24;
+  color: #C2410C;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(255, 138, 36, 0.15);
+}
+
+/* Written Review Comment Section */
+.feedback-comment-section {
+  margin-bottom: 14px;
+}
+
+.feedback-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.feedback-textarea:focus {
+  border-color: var(--primary);
+}
+
+.feedback-char-meta {
+  text-align: right;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  margin-top: 3px;
+}
+
+/* AI Impact Callout */
+.feedback-ai-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  line-height: 1.4;
+  color: #166534;
+  margin-bottom: 16px;
+}
+
+.feedback-ai-note svg {
+  flex-shrink: 0;
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.feedback-ai-note p {
+  margin: 0;
+}
+
+.feedback-modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   SAPAT PAYMENT MANAGEMENT, RESERVATION CONFIRMATION & STUDENT ACCOUNTABILITY
+   ========================================================================== */
+
+/* Payment Method Selector in Cart */
+.payment-method-options-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.payment-select-card {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.payment-select-card:hover {
+  border-color: var(--primary-light, #007A48);
+  background: #FCFDFB;
+}
+
+.payment-select-card:has(input:checked) {
+  border-color: var(--primary);
+  background: #F0F8F4;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.payment-select-card input[type="radio"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.payment-select-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.payment-select-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.payment-method-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.payment-method-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.payment-select-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.payment-select-tag.instant {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.payment-select-tag.counter {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+/* Policy Acknowledgment in Checkout */
+.checkout-policy-card {
+  padding: 12px 14px;
+  background: #F9FAFB;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  margin-top: 10px;
+}
+
+.policy-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.policy-checkbox-label input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.policy-checkbox-text {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* Payment Status Badges */
+.v-payment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.v-payment-badge.paid {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.v-payment-badge.pending {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.v-payment-badge.expired {
+  background: #F3F4F6;
+  color: #4B5563;
+  border: 1px solid #E5E7EB;
+}
+
+.v-payment-badge.noshow {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.head-right-badges,
+.v-order-head-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Direct Counter Payment & Online Notices in Orders */
+.order-counter-payment-notice,
+.order-online-payment-notice {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #78350F;
+}
+
+.counter-notice-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #92400E;
+}
+
+.counter-deadline-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: #FDE68A;
+  color: #78350F;
+}
+
+/* No-Show Notice in Student Orders */
+.order-noshow-notice {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #7F1D1D;
+}
+
+.noshow-notice-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #991B1B;
+}
+
+.noshow-filed-box {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-xs);
+  border-left: 3px solid #DC2626;
+}
+
+.noshow-filed-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #991B1B;
+}
+
+.noshow-filed-text {
+  font-size: 12px;
+  font-style: italic;
+  margin: 2px 0 0;
+  color: #1F2937;
+}
+
+.noshow-filed-meta {
+  font-size: 10px;
+  color: #6B7280;
+}
+
+.btn-noshow-explain {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 7px 12px;
+  background: #DC2626;
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-noshow-explain:hover {
+  background: #B91C1C;
+}
+
+/* Pass Locked Button */
+.btn-pass-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #F3F4F6;
+  color: #4B5563;
+  border: 1px solid #D1D5DB;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-pass-locked:hover {
+  background: #E5E7EB;
+}
+
+.v-unpaid-gateway-hint {
+  font-size: 11px;
+  color: #D97706;
+  font-weight: 600;
+  align-self: center;
+}
+
+/* Online Payment Gateway Simulation Modal */
+.wallet-provider-tabs {
+  display: flex;
+  gap: 8px;
+  background: #F3F4F6;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.wallet-tab-btn {
+  flex: 1;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.wallet-tab-btn.active {
+  background: #FFFFFF;
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.wallet-amount-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+}
+
+.wallet-amount-summary .amount-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.wallet-form-group {
+  margin-bottom: 14px;
+}
+
+.wallet-form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.wallet-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.wallet-input:focus {
+  border-color: var(--primary);
+}
+
+.wallet-sim-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  line-height: 1.4;
+  color: #1E40AF;
+  margin-bottom: 16px;
+}
+
+.wallet-auth-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.wallet-auth-actions button {
+  flex: 1;
+}
+
+/* No-Show Explanation Modal */
+.noshow-order-ref-card {
+  padding: 10px 14px;
+  background: #F9FAFB;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+
+.noshow-form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.noshow-textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.noshow-textarea:focus {
+  border-color: var(--primary);
+}
+
+.noshow-meta-row {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+.noshow-policy-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  line-height: 1.4;
+  color: #92400E;
+}
+

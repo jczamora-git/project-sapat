@@ -26,13 +26,15 @@ export const vendorOrdersPage = {
 
     const activeFilter = state.vendorOrdersFilter || 'all';
     let filteredOrders = vendorOrders;
-    if (activeFilter !== 'all') {
+    if (activeFilter === 'Pending') {
+      filteredOrders = vendorOrders.filter(o => o.status === 'Pending' || o.status === 'Awaiting Counter Payment' || o.status === 'Awaiting Payment');
+    } else if (activeFilter !== 'all') {
       filteredOrders = vendorOrders.filter(o => o.status === activeFilter);
     }
 
     const counts = {
       all: vendorOrders.length,
-      Pending: vendorOrders.filter(o => o.status === 'Pending').length,
+      Pending: vendorOrders.filter(o => o.status === 'Pending' || o.status === 'Awaiting Counter Payment' || o.status === 'Awaiting Payment').length,
       Confirmed: vendorOrders.filter(o => o.status === 'Confirmed').length,
       Preparing: vendorOrders.filter(o => o.status === 'Preparing').length,
       'Ready for Pickup': vendorOrders.filter(o => o.status === 'Ready for Pickup').length,
@@ -101,10 +103,57 @@ export const vendorOrdersPage = {
             else if (order.status === 'Preparing') statusBadgeClass = 'status-preparing';
             else if (order.status === 'Ready for Pickup') statusBadgeClass = 'status-confirmed';
             else if (order.status === 'Completed') statusBadgeClass = 'status-completed';
-            else if (order.status === 'Cancelled') statusBadgeClass = 'status-cancelled';
+            else if (order.status === 'Cancelled' || order.status === 'Expired') statusBadgeClass = 'status-cancelled';
+            else if (order.status === 'No-show') statusBadgeClass = 'status-cancelled';
+
+            const isPaid = order.paymentStatus === 'Paid';
+            const isCounterPending = order.status === 'Awaiting Counter Payment' || (!isPaid && order.status === 'Pending' && order.paymentMethod === 'Counter Payment');
+            const isOnlinePending = !isPaid && order.status === 'Pending' && order.paymentMethod === 'Online Payment';
+
+            let paymentBadgeHTML = '';
+            if (isPaid) {
+              paymentBadgeHTML = `
+                <span class="v-payment-badge paid">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Paid &bull; ${order.paymentMethod || 'Online'}
+                </span>
+              `;
+            } else if (order.status === 'Expired') {
+              paymentBadgeHTML = `<span class="v-payment-badge expired">Expired &bull; Unpaid</span>`;
+            } else if (order.status === 'No-show') {
+              paymentBadgeHTML = `<span class="v-payment-badge noshow">Missed &bull; No-Show</span>`;
+            } else {
+              paymentBadgeHTML = `
+                <span class="v-payment-badge pending">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  Unpaid &bull; ${order.paymentMethod || 'Counter'}
+                </span>
+              `;
+            }
 
             let actionsHTML = '';
-            if (order.status === 'Pending') {
+            if (isCounterPending) {
+              actionsHTML = `
+                <div class="v-order-action-split">
+                  <button class="btn-primary-action v-action-primary-btn" data-action="vendor-verify-counter-payment" data-order-id="${order.id}" type="button">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Verify Payment (₱${order.totalAmount.toFixed(2)})</span>
+                  </button>
+                  <button class="btn-danger-outline v-action-decline-btn" data-action="vendor-expire-unpaid" data-order-id="${order.id}" type="button" title="Expire unpaid reservation and release portions">
+                    Expire Unpaid
+                  </button>
+                </div>
+              `;
+            } else if (isOnlinePending) {
+              actionsHTML = `
+                <div class="v-order-action-split">
+                  <span class="v-unpaid-gateway-hint">Awaiting Gateway Callback</span>
+                  <button class="btn-danger-outline v-action-decline-btn" data-action="vendor-decline-order" data-order-id="${order.id}" type="button">
+                    Decline
+                  </button>
+                </div>
+              `;
+            } else if (order.status === 'Pending') {
               actionsHTML = `
                 <div class="v-order-action-split">
                   <button class="btn-primary-action v-action-primary-btn" data-action="update-order-status" data-order-id="${order.id}" data-status="Confirmed" type="button">
@@ -132,14 +181,17 @@ export const vendorOrdersPage = {
               `;
             } else if (order.status === 'Ready for Pickup') {
               actionsHTML = `
-                <div class="v-order-action-split">
+                <div class="v-order-action-split" style="gap: 6px;">
                   <button class="btn-primary-action v-action-primary-btn" data-action="vendor-handover-order" data-order-id="${order.id}" type="button">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <span>Handover & Complete</span>
+                    <span>Handover</span>
                   </button>
                   <button class="btn-secondary-action v-action-scan-single" data-action="open-qr-scanner" type="button" title="Scan QR to verify">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><rect x="7" y="7" width="10" height="10"></rect></svg>
-                    <span>Verify QR</span>
+                    <span>Scan</span>
+                  </button>
+                  <button class="btn-danger-outline" style="padding: 0 8px; font-size: 11px; height: 34px; white-space: nowrap;" data-action="vendor-mark-noshow" data-order-id="${order.id}" type="button" title="Record uncollected meal as No-Show">
+                    No-Show
                   </button>
                 </div>
               `;
@@ -148,6 +200,18 @@ export const vendorOrdersPage = {
                 <div class="v-order-claimed-banner">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   <span>Handed Over & Completed</span>
+                </div>
+              `;
+            } else if (order.status === 'No-show') {
+              actionsHTML = `
+                <div class="v-order-cancelled-banner" style="background: #FEF2F2; color: #991B1B; border-color: #FECACA;">
+                  <span>Uncollected No-Show &bull; Logged to OSAS</span>
+                </div>
+              `;
+            } else if (order.status === 'Expired') {
+              actionsHTML = `
+                <div class="v-order-cancelled-banner">
+                  <span>Expired Unpaid &bull; Portions Restored</span>
                 </div>
               `;
             } else if (order.status === 'Cancelled') {
@@ -164,11 +228,14 @@ export const vendorOrdersPage = {
                 <div class="v-order-card-header">
                   <div class="v-order-ref-group">
                     <span class="v-order-ref-badge">#${order.id}</span>
-                    <span class="v-order-time-sub">${order.createdAt || 'Today'}</span>
+                    <span class="v-order-time-sub">${order.createdAt && order.createdAt.includes('T') ? order.createdAt.split('T')[0] : (order.createdAt || 'Today')}</span>
                   </div>
-                  <span class="order-status-badge ${statusBadgeClass}">
-                    ${order.status}
-                  </span>
+                  <div class="v-order-head-badges">
+                    ${paymentBadgeHTML}
+                    <span class="order-status-badge ${statusBadgeClass}">
+                      ${order.status}
+                    </span>
+                  </div>
                 </div>
 
                 <!-- Student & Slot Info -->
@@ -246,6 +313,58 @@ export const vendorOrdersPage = {
         return;
       }
 
+      // Verify counter payment
+      const verifyCounterBtn = e.target.closest('[data-action="vendor-verify-counter-payment"]');
+      if (verifyCounterBtn) {
+        const orderId = verifyCounterBtn.getAttribute('data-order-id');
+        if (orderId) {
+          const result = SapatStorage.verifyCounterPayment(orderId, 'Cash Counter Payment', `Verified at stall counter`);
+          if (result.success) {
+            showToast(`Payment verified for #${orderId}! Order is now Confirmed.`, 'success');
+            this.render(container);
+          } else {
+            showToast(result.message, 'error');
+          }
+        }
+        return;
+      }
+
+      // Expire unpaid reservation
+      const expireBtn = e.target.closest('[data-action="vendor-expire-unpaid"]');
+      if (expireBtn) {
+        const orderId = expireBtn.getAttribute('data-order-id');
+        if (orderId) {
+          if (confirm(`Expire unpaid reservation #${orderId} and release portions to kitchen inventory?`)) {
+            const result = SapatStorage.expireUnpaidReservation(orderId, 'Counter payment deadline reached at stall.');
+            if (result.success) {
+              showToast(`Reservation #${orderId} marked Expired. Portions restored.`, 'info');
+              this.render(container);
+            } else {
+              showToast(result.message, 'error');
+            }
+          }
+        }
+        return;
+      }
+
+      // Mark order as No-Show
+      const noShowBtn = e.target.closest('[data-action="vendor-mark-noshow"]');
+      if (noShowBtn) {
+        const orderId = noShowBtn.getAttribute('data-order-id');
+        if (orderId) {
+          if (confirm(`Mark pre-order #${orderId} as No-Show? The scheduled pickup window and grace period have ended.`)) {
+            const result = SapatStorage.markOrderNoShow(orderId, 'Uncollected order after pickup shift grace period.');
+            if (result.success) {
+              showToast(`Order #${orderId} marked as No-Show. Logged to student accountability.`, 'warning');
+              this.render(container);
+            } else {
+              showToast(result.message, 'error');
+            }
+          }
+        }
+        return;
+      }
+
       // Update order status transition
       const updateBtn = e.target.closest('[data-action="update-order-status"]');
       if (updateBtn) {
@@ -255,6 +374,12 @@ export const vendorOrdersPage = {
           const orders = SapatStorage.getOrders();
           const order = orders.find(o => o.id === orderId);
           if (order) {
+            // BLOCKING RULE: cannot advance to Confirmed, Preparing, or Ready for Pickup if unpaid!
+            if (['Confirmed', 'Preparing', 'Ready for Pickup'].includes(nextStatus) && order.paymentStatus !== 'Paid') {
+              showToast(`Cannot advance order #${order.id}: Verified payment is required first!`, 'error');
+              return;
+            }
+
             order.status = nextStatus;
             const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             if (Array.isArray(order.timeline)) {

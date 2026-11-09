@@ -215,6 +215,189 @@ export function initModals() {
       });
     }
   }
+
+  // Modal 7: Online Payment Gateway Simulation
+  const onlinePayModal = document.getElementById('modal-online-payment');
+  if (onlinePayModal) {
+    const closeBtns = onlinePayModal.querySelectorAll('[data-action="close-online-payment"], .close-modal-btn');
+    closeBtns.forEach(btn => btn.addEventListener('click', closeOnlinePaymentModal));
+
+    const providerBtns = onlinePayModal.querySelectorAll('.pay-provider-btn');
+    providerBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        providerBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const provider = btn.getAttribute('data-provider') || 'GCash';
+        const label = document.getElementById('btn-pay-label');
+        if (label && currentOnlinePaymentOrder) {
+          label.textContent = `Authorize & Pay ₱${(currentOnlinePaymentOrder.totalAmount || 0).toFixed(2)} via ${provider}`;
+        }
+      });
+    });
+
+    const successBtn = document.getElementById('btn-simulate-pay-success');
+    if (successBtn) {
+      successBtn.addEventListener('click', () => {
+        if (!currentOnlinePaymentOrder) return;
+        const activeBtn = onlinePayModal.querySelector('.pay-provider-btn.active');
+        const provider = activeBtn ? activeBtn.getAttribute('data-provider') : 'GCash';
+        const paymentMethod = `Online Payment (${provider})`;
+        const orderId = currentOnlinePaymentOrder.id;
+
+        const res = SapatStorage.recordOnlinePayment(orderId, paymentMethod);
+        if (res.success) {
+          showToast(`Payment of ₱${res.order.totalAmount} verified via ${provider}! Reservation #${res.order.id} confirmed.`, 'success');
+          closeOnlinePaymentModal();
+          openPickupPass(orderId);
+          window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'orders' } }));
+        } else {
+          showToast(res.message || 'Payment processing failed', 'error');
+        }
+      });
+    }
+
+    const failBtn = document.getElementById('btn-simulate-pay-fail');
+    if (failBtn) {
+      failBtn.addEventListener('click', () => {
+        if (!currentOnlinePaymentOrder) return;
+        const orderId = currentOnlinePaymentOrder.id;
+        SapatStorage.recordOnlinePaymentFailure(orderId, 'Simulated gateway card/wallet decline');
+        showToast('Payment declined: Simulated transaction failure.', 'error');
+        closeOnlinePaymentModal();
+        window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'orders' } }));
+      });
+    }
+
+    onlinePayModal.addEventListener('click', (e) => {
+      if (e.target === onlinePayModal) closeOnlinePaymentModal();
+    });
+  }
+
+  // Modal 8: No-Show Explanation
+  const noshowModal = document.getElementById('modal-noshow-explanation');
+  if (noshowModal) {
+    const closeBtns = noshowModal.querySelectorAll('[data-action="close-noshow-modal"], .close-modal-btn');
+    closeBtns.forEach(btn => btn.addEventListener('click', closeNoShowExplanationModal));
+
+    const textarea = document.getElementById('noshow-explanation-textarea');
+    const charCount = document.getElementById('noshow-char-count');
+    if (textarea && charCount) {
+      textarea.addEventListener('input', () => {
+        charCount.textContent = textarea.value.length;
+      });
+    }
+
+    const submitBtn = document.getElementById('btn-submit-noshow-explanation');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => {
+        if (!currentNoShowExplanationOrderId) return;
+        const text = textarea ? textarea.value.trim() : '';
+        if (!text) {
+          showToast('Please enter an explanation for the missed pickup.', 'warning');
+          return;
+        }
+
+        const res = SapatStorage.submitNoShowExplanation(currentNoShowExplanationOrderId, text);
+        if (res.success) {
+          showToast('Explanation recorded. Retained for institutional review.', 'success');
+          closeNoShowExplanationModal();
+          window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'orders' } }));
+        } else {
+          showToast(res.message || 'Failed to submit explanation', 'error');
+        }
+      });
+    }
+
+    noshowModal.addEventListener('click', (e) => {
+      if (e.target === noshowModal) closeNoShowExplanationModal();
+    });
+  }
+
+  // Modal 9: Student Meal Feedback & Rating
+  const feedbackModal = document.getElementById('modal-meal-feedback');
+  if (feedbackModal) {
+    const closeBtns = feedbackModal.querySelectorAll('[data-action="close-meal-feedback"], .close-modal-btn');
+    closeBtns.forEach(btn => btn.addEventListener('click', closeMealFeedbackModal));
+
+    const starBtns = feedbackModal.querySelectorAll('.star-btn');
+    const hintEl = document.getElementById('feedback-rating-hint');
+    const ratingHints = {
+      1: '1 - Needs Improvement (Too salty/small/cold)',
+      2: '2 - Fair (Could be better)',
+      3: '3 - Good (Satisfied with meal)',
+      4: '4 - Very Good (Tasty and satisfying)',
+      5: '5 - Excellent! Highly recommended'
+    };
+
+    starBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rating = parseInt(btn.getAttribute('data-rating') || '5', 10);
+        currentFeedbackRating = rating;
+        starBtns.forEach((b, idx) => {
+          if (idx < rating) {
+            b.classList.add('active');
+            const svg = b.querySelector('svg');
+            if (svg) {
+              svg.setAttribute('fill', '#FF8A24');
+              svg.setAttribute('stroke', '#FF8A24');
+            }
+          } else {
+            b.classList.remove('active');
+            const svg = b.querySelector('svg');
+            if (svg) {
+              svg.setAttribute('fill', 'none');
+              svg.setAttribute('stroke', 'currentColor');
+            }
+          }
+        });
+        if (hintEl) hintEl.textContent = ratingHints[rating] || '';
+      });
+    });
+
+    const tagChips = feedbackModal.querySelectorAll('.feedback-tag-chip');
+    tagChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('selected');
+      });
+    });
+
+    const commentTextarea = document.getElementById('feedback-comment-textarea');
+    const charCount = document.getElementById('feedback-char-count');
+    if (commentTextarea && charCount) {
+      commentTextarea.addEventListener('input', () => {
+        charCount.textContent = commentTextarea.value.length;
+      });
+    }
+
+    const submitBtn = document.getElementById('btn-submit-meal-feedback');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => {
+        if (!currentFeedbackOrderId) return;
+        const selectedTags = Array.from(feedbackModal.querySelectorAll('.feedback-tag-chip.selected')).map(c => c.getAttribute('data-tag'));
+        const comment = commentTextarea ? commentTextarea.value.trim() : '';
+
+        const res = SapatStorage.submitReview({
+          orderId: currentFeedbackOrderId,
+          rating: currentFeedbackRating,
+          tasteTag: selectedTags[0] || 'Perfect Flavor',
+          portionTag: selectedTags[1] || 'Just Right',
+          comment
+        });
+
+        if (res.success) {
+          showToast(`Salamat! Feedback submitted for ${res.review.dishName}.`, 'success');
+          closeMealFeedbackModal();
+          window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'reviews' } }));
+        } else {
+          showToast(res.message || 'Failed to submit review', 'error');
+        }
+      });
+    }
+
+    feedbackModal.addEventListener('click', (e) => {
+      if (e.target === feedbackModal) closeMealFeedbackModal();
+    });
+  }
 }
 
 // ==========================================
@@ -541,31 +724,66 @@ export function openPickupPass(orderId) {
   if (slotEl) slotEl.textContent = order.pickupTime;
 
   const passStallInfo = document.getElementById('pass-stall-info');
-  if (passStallInfo) {
-    passStallInfo.textContent = `Present at ${order.vendorStall || 'Stall Window'} (${order.vendorName || 'Canteen Counter'}) to claim.`;
+
+  // Verify payment status: Only verified paid orders receive an active QR pass
+  const isPaid = order.paymentStatus === 'Paid';
+  const qrFrame = document.getElementById('pass-qr-frame');
+  const unpaidNotice = document.getElementById('pass-unpaid-notice');
+  const badgeEl = document.getElementById('pass-payment-status-badge');
+  const unpaidDesc = document.getElementById('pass-unpaid-desc');
+  const unpaidDeadline = document.getElementById('pass-unpaid-deadline');
+
+  if (badgeEl) {
+    if (isPaid) {
+      badgeEl.innerHTML = `<span class="pass-verified-badge" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 9999px; font-size: 11px; font-weight: 800; color: #065F46;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>VERIFIED PAID &bull; ${order.paymentMethod || 'Online'}</span></span>`;
+    } else {
+      badgeEl.innerHTML = `<span class="pass-unpaid-badge" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 9999px; font-size: 11px; font-weight: 800; color: #92400E;"><span>AWAITING PAYMENT &bull; ${order.status}</span></span>`;
+    }
   }
 
-  // Ensure unique opaque pickup token exists without exposing personal data
-  if (!order.pickupToken) {
-    const cleanId = (order.id || 'SPT').toLowerCase().replace(/[^a-z0-9]/g, '');
-    order.pickupToken = `spt_tok_${cleanId}_${btoa(order.id).substring(0, 8).toLowerCase()}`;
-    SapatStorage.saveOrders(orders);
-  }
+  if (!isPaid) {
+    if (qrFrame) qrFrame.style.display = 'none';
+    if (unpaidNotice) {
+      unpaidNotice.style.display = 'block';
+      if (unpaidDesc) {
+        unpaidDesc.textContent = `Please settle ₱${order.totalAmount}.00 at ${order.vendorStall || 'Stall Counter'} (${order.counterWindow || 'Express Window'}) to confirm your reservation and activate your QR Pickup Pass.`;
+      }
+      if (unpaidDeadline) {
+        unpaidDeadline.textContent = `Payment Deadline: ${order.paymentDeadline || 'Within 20 minutes of ordering'}`;
+      }
+    }
+    if (passStallInfo) {
+      passStallInfo.innerHTML = `⚠️ <strong>Payment Required:</strong> Visit ${order.vendorStall || 'Stall Counter'} before preparation window to pay.`;
+    }
+  } else {
+    if (qrFrame) qrFrame.style.display = 'flex';
+    if (unpaidNotice) unpaidNotice.style.display = 'none';
+    if (passStallInfo) {
+      passStallInfo.textContent = `Present at ${order.vendorStall || 'Stall Window'} (${order.vendorName || 'Canteen Counter'}) to claim.`;
+    }
 
-  // Render actual QR code on canvas
-  const canvas = document.getElementById('pass-qr-canvas');
-  if (canvas) {
-    if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
-      window.QRCode.toCanvas(canvas, order.pickupToken, {
-        width: 128,
-        margin: 1,
-        color: {
-          dark: '#005B36',
-          light: '#FFFFFF'
-        }
-      }, (err) => {
-        if (err) console.error('QR code generation failed:', err);
-      });
+    // Ensure unique opaque pickup token exists without exposing personal data
+    if (!order.pickupToken) {
+      const cleanId = (order.id || 'SPT').toLowerCase().replace(/[^a-z0-9]/g, '');
+      order.pickupToken = `spt_tok_${cleanId}_${btoa(order.id).substring(0, 8).toLowerCase()}`;
+      SapatStorage.saveOrders(orders);
+    }
+
+    // Render actual QR code on canvas
+    const canvas = document.getElementById('pass-qr-canvas');
+    if (canvas) {
+      if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
+        window.QRCode.toCanvas(canvas, order.pickupToken, {
+          width: 128,
+          margin: 1,
+          color: {
+            dark: '#005B36',
+            light: '#FFFFFF'
+          }
+        }, (err) => {
+          if (err) console.error('QR code generation failed:', err);
+        });
+      }
     }
   }
 
@@ -576,6 +794,151 @@ export function openPickupPass(orderId) {
 export function closePickupPass() {
   const modal = document.getElementById('modal-pickup-pass');
   if (modal) modal.classList.remove('active');
+}
+
+// ==========================================
+// Online Payment Modal Methods (Simulated Gateway)
+// ==========================================
+let currentOnlinePaymentOrder = null;
+
+export function openOnlinePaymentModal(orderId) {
+  const orders = SapatStorage.getOrders();
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+
+  currentOnlinePaymentOrder = order;
+
+  const orderRefEl = document.getElementById('online-pay-order-ref');
+  if (orderRefEl) orderRefEl.textContent = `#${order.id}`;
+
+  const stallEl = document.getElementById('online-pay-stall-name');
+  if (stallEl) stallEl.textContent = `${order.vendorStall || 'Stall'} • ${order.vendorName || 'Canteen'}`;
+
+  const amountEl = document.getElementById('online-pay-amount');
+  if (amountEl) amountEl.textContent = `₱${(order.totalAmount || 0).toFixed(2)}`;
+
+  const btnPayLabel = document.getElementById('btn-pay-label');
+  if (btnPayLabel) btnPayLabel.textContent = `Authorize & Pay ₱${(order.totalAmount || 0).toFixed(2)} (Simulate Success)`;
+
+  const modal = document.getElementById('modal-online-payment');
+  if (modal) modal.classList.add('active');
+}
+
+export function closeOnlinePaymentModal() {
+  const modal = document.getElementById('modal-online-payment');
+  if (modal) modal.classList.remove('active');
+  currentOnlinePaymentOrder = null;
+}
+
+// ==========================================
+// Student No-Show Explanation Modal Methods
+// ==========================================
+let currentNoShowExplanationOrderId = null;
+
+export function openNoShowExplanationModal(orderId) {
+  const orders = SapatStorage.getOrders();
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+
+  currentNoShowExplanationOrderId = order.id;
+
+  const refEl = document.getElementById('noshow-modal-order-ref');
+  if (refEl) refEl.textContent = `Pre-order #${order.id} • ${order.vendorStall || 'Stall'}`;
+
+  const textarea = document.getElementById('noshow-explanation-textarea');
+  if (textarea) {
+    textarea.value = order.noShowExplanation || '';
+    const charCount = document.getElementById('noshow-char-count');
+    if (charCount) charCount.textContent = textarea.value.length;
+  }
+
+  const modal = document.getElementById('modal-noshow-explanation');
+  if (modal) modal.classList.add('active');
+}
+
+export function closeNoShowExplanationModal() {
+  const modal = document.getElementById('modal-noshow-explanation');
+  if (modal) modal.classList.remove('active');
+  currentNoShowExplanationOrderId = null;
+}
+
+// ==========================================
+// Student Meal Feedback & Rating Modal Methods
+// ==========================================
+let currentFeedbackOrderId = null;
+let currentFeedbackRating = 5;
+
+export function openMealFeedbackModal(orderId) {
+  const orders = SapatStorage.getOrders();
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+
+  currentFeedbackOrderId = order.id;
+  currentFeedbackRating = order.reviewRating || 5;
+
+  const modal = document.getElementById('modal-meal-feedback');
+  if (!modal) return;
+
+  const thumbImg = document.getElementById('feedback-dish-img');
+  const stallEl = document.getElementById('feedback-dish-stall');
+  const nameEl = document.getElementById('feedback-dish-name');
+  const refEl = document.getElementById('feedback-order-id');
+  const commentTextarea = document.getElementById('feedback-comment-textarea');
+  const charCount = document.getElementById('feedback-char-count');
+  const hintEl = document.getElementById('feedback-rating-hint');
+
+  const firstItem = order.items && order.items[0];
+  const dish = firstItem ? SapatStorage.getDishById(firstItem.id) : null;
+
+  if (thumbImg) {
+    thumbImg.src = (dish && dish.image) || (firstItem && firstItem.image) || 'assets/images/products/chicken-adobo.jpg';
+    thumbImg.onerror = () => { thumbImg.src = getImgFallback(); };
+  }
+  if (stallEl) stallEl.textContent = `${order.vendorStall || 'Stall'} • ${order.vendorName || 'Canteen'}`;
+  if (nameEl) nameEl.textContent = firstItem ? `${firstItem.quantity}x ${firstItem.name}` : 'Canteen Meal';
+  if (refEl) refEl.textContent = `Order #${order.id} • Claimed`;
+
+  if (commentTextarea) {
+    commentTextarea.value = order.reviewComment || '';
+    if (charCount) charCount.textContent = commentTextarea.value.length;
+  }
+
+  // Update stars to current rating
+  const starBtns = modal.querySelectorAll('.star-btn');
+  const ratingHints = {
+    1: '1 - Needs Improvement (Too salty/small/cold)',
+    2: '2 - Fair (Could be better)',
+    3: '3 - Good (Satisfied with meal)',
+    4: '4 - Very Good (Tasty and satisfying)',
+    5: '5 - Excellent! Highly recommended'
+  };
+
+  starBtns.forEach((b, idx) => {
+    const svg = b.querySelector('svg');
+    if (idx < currentFeedbackRating) {
+      b.classList.add('active');
+      if (svg) {
+        svg.setAttribute('fill', '#FF8A24');
+        svg.setAttribute('stroke', '#FF8A24');
+      }
+    } else {
+      b.classList.remove('active');
+      if (svg) {
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+      }
+    }
+  });
+
+  if (hintEl) hintEl.textContent = ratingHints[currentFeedbackRating] || '';
+
+  modal.classList.add('active');
+}
+
+export function closeMealFeedbackModal() {
+  const modal = document.getElementById('modal-meal-feedback');
+  if (modal) modal.classList.remove('active');
+  currentFeedbackOrderId = null;
 }
 
 // ==========================================

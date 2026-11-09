@@ -2,6 +2,7 @@ import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
 import { ForecastingService } from '../../services/forecasting.service.js';
+import { showToast } from '../../components/toast.js';
 
 export const adminAnalyticsPage = {
   _unsubscribe: null,
@@ -19,6 +20,15 @@ export const adminAnalyticsPage = {
     }
 
     const campusAnalytics = ForecastingService.getCampusWideAnalytics();
+    const payments = SapatStorage.getPayments();
+    const orders = SapatStorage.getOrders();
+    const auditLogs = SapatStorage.getAuditLogs();
+    const settings = SapatStorage.getSettings();
+
+    const totalPaidAmount = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const expiredUnpaidCount = orders.filter(o => o.status === 'Expired' || o.paymentStatus === 'Expired').length;
+    const noShowCount = orders.filter(o => o.status === 'No-show').length;
+    const osasReferredCount = auditLogs.filter(l => l.referredToOSAS).length;
 
     // AI demand sample data for key campus dishes
     const aiPredictions = [
@@ -284,6 +294,149 @@ export const adminAnalyticsPage = {
           </div>
         </div>
 
+        <!-- Payment Governance & Student Accountability -->
+        <div class="admin-section-header" style="margin-top: 32px;">
+          <div>
+            <h3 class="admin-section-title">Payment Governance & Student Accountability</h3>
+            <span class="admin-section-subtitle">Audit trail of verified settlements, expired counter pre-orders, and uncollected meal incidents</span>
+          </div>
+          <span class="admin-campus-pill" style="font-size: 11px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            ${settings.studentAffairsOffice || 'OSAS'} Oversight Active
+          </span>
+        </div>
+
+        <!-- Accountability KPI Grid -->
+        <div class="admin-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 20px;">
+          <div class="admin-kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">Verified Pre-order Revenue</span>
+              <span class="kpi-badge emerald">100% Verified</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-number">₱${totalPaidAmount.toFixed(0)}</span>
+              <span class="kpi-unit">settled</span>
+            </div>
+            <p class="kpi-caption" style="margin-top: 8px;">
+              Protected vendor capital against unclaimed food preparation.
+            </p>
+          </div>
+
+          <div class="admin-kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">Expired Counter Orders</span>
+              <span class="kpi-badge blue">Portions Released</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-number">${expiredUnpaidCount}</span>
+              <span class="kpi-denom">orders expired</span>
+            </div>
+            <p class="kpi-caption" style="margin-top: 8px;">
+              Unpaid counter requests safely returned to canteen inventory.
+            </p>
+          </div>
+
+          <div class="admin-kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">Uncollected No-Shows</span>
+              <span class="kpi-badge warning" style="background: #FEF2F2; color: #991B1B;">Waste Violations</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-number">${noShowCount}</span>
+              <span class="kpi-denom">missed pickups</span>
+            </div>
+            <p class="kpi-caption" style="margin-top: 8px;">
+              Confirmed orders prepared by vendors but not collected by students.
+            </p>
+          </div>
+
+          <div class="admin-kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">OSAS Referrals</span>
+              <span class="kpi-badge purple" style="background: #F3E8FF; color: #6B21A8;">Disciplinary Log</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-number">${osasReferredCount}</span>
+              <span class="kpi-denom">active review</span>
+            </div>
+            <p class="kpi-caption" style="margin-top: 8px;">
+              Logged under ${settings.studentAffairsOffice || 'Office of Student Affairs'}.
+            </p>
+          </div>
+        </div>
+
+        <!-- Student Accountability Incident Audit Table -->
+        <div class="admin-table-card">
+          <div class="admin-table-responsive">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Student & Account</th>
+                  <th>Order Ref</th>
+                  <th>Incident / Event</th>
+                  <th>Explanation / Details</th>
+                  <th>OSAS Disciplinary Status</th>
+                  <th style="text-align: right;">Administrative Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${auditLogs.length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-tertiary);">No accountability incidents or payment audit logs recorded yet.</td>
+                  </tr>
+                ` : auditLogs.slice(0, 10).map(log => {
+                  let badgeClass = 'table-confidence-badge';
+                  if (log.eventType.includes('NO_SHOW')) badgeClass = 'kpi-badge warning';
+                  else if (log.eventType.includes('EXPIRED')) badgeClass = 'kpi-badge blue';
+                  else if (log.eventType.includes('VERIFIED')) badgeClass = 'kpi-badge emerald';
+
+                  return `
+                    <tr>
+                      <td style="white-space: nowrap; font-size: 11px; color: var(--text-secondary);">${log.timestamp.includes('T') ? log.timestamp.split('T')[1].slice(0, 5) + ' ' + log.timestamp.split('T')[0] : log.timestamp}</td>
+                      <td>
+                        <strong>${log.studentName || 'Student'}</strong>
+                      </td>
+                      <td><span class="v-order-ref-badge" style="font-size: 11px;">#${log.reservationId || 'N/A'}</span></td>
+                      <td><span class="${badgeClass}">${log.eventType.replace(/_/g, ' ')}</span></td>
+                      <td style="max-width: 280px; font-size: 12px; line-height: 1.4;">
+                        ${log.studentExplanation ? `<strong style="display:block; color: var(--primary);">Student: "${log.studentExplanation}"</strong>` : ''}
+                        <span>${log.details || ''}</span>
+                        ${log.resolutionNote ? `<small style="display:block; color: var(--text-tertiary); margin-top: 2px;">Resolution: ${log.resolutionNote}</small>` : ''}
+                      </td>
+                      <td>
+                        ${log.referredToOSAS ? `
+                          <span class="settings-value-pill" style="color: #991B1B; background: #FEE2E2; border-color: #FECACA; font-size: 11px;">
+                            Referred to OSAS
+                          </span>
+                        ` : (log.resolved ? `
+                          <span class="settings-value-pill" style="color: #065F46; background: #D1FAE5; border-color: #A7F3D0; font-size: 11px;">
+                            Resolved
+                          </span>
+                        ` : `
+                          <span class="settings-value-pill" style="font-size: 11px;">Under Evaluation</span>
+                        `)}
+                      </td>
+                      <td style="text-align: right; white-space: nowrap;">
+                        ${(!log.referredToOSAS && !log.resolved && log.eventType === 'NO_SHOW_RECORDED') ? `
+                          <button class="btn-primary-action btn-sm" style="font-size: 11px; padding: 4px 8px; margin-right: 4px;" data-action="refer-to-osas" data-log-id="${log.id}">
+                            Refer to OSAS
+                          </button>
+                        ` : ''}
+                        ${(!log.resolved) ? `
+                          <button class="btn-secondary-action btn-sm" style="font-size: 11px; padding: 4px 8px;" data-action="resolve-incident" data-log-id="${log.id}">
+                            Resolve
+                          </button>
+                        ` : '<span style="font-size: 11px; color: var(--text-tertiary);">Case Closed</span>'}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </section>
     `;
 
@@ -299,6 +452,41 @@ export const adminAnalyticsPage = {
           router.navigate(route);
           return;
         }
+      }
+
+      // Refer incident to OSAS
+      const osasBtn = e.target.closest('[data-action="refer-to-osas"]');
+      if (osasBtn) {
+        const logId = osasBtn.getAttribute('data-log-id');
+        if (logId) {
+          const result = SapatStorage.referIncidentToOSAS(logId);
+          if (result.success) {
+            showToast('Incident referred to Office of Student Affairs and Services (OSAS).', 'warning');
+            this.render(container);
+          } else {
+            showToast(result.message, 'error');
+          }
+        }
+        return;
+      }
+
+      // Resolve incident
+      const resolveBtn = e.target.closest('[data-action="resolve-incident"]');
+      if (resolveBtn) {
+        const logId = resolveBtn.getAttribute('data-log-id');
+        if (logId) {
+          const note = prompt('Enter administrative resolution note (e.g., Valid medical excuse verified by school clinic):', 'Excuse verified with valid documentation.');
+          if (note !== null) {
+            const result = SapatStorage.resolveIncident(logId, note);
+            if (result.success) {
+              showToast('Incident marked as resolved in OSAS audit record.', 'success');
+              this.render(container);
+            } else {
+              showToast(result.message, 'error');
+            }
+          }
+        }
+        return;
       }
     });
   }

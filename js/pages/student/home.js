@@ -3,7 +3,7 @@ import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
 import { renderCanteenCard } from '../../components/vendor-card.js';
 import { renderFeaturedMealCard, renderSpotlightMealCard } from '../../components/food-card.js';
-import { openMealModal } from '../../components/modals.js';
+import { openMealModal, openMealFeedbackModal } from '../../components/modals.js';
 import { showToast } from '../../components/toast.js';
 
 export const studentHomePage = {
@@ -14,6 +14,9 @@ export const studentHomePage = {
     const totalDailyLimit = menu.reduce((s, d) => s + (d.isAvailable ? d.dailyLimit : 0), 0);
     const totalReserved = menu.reduce((s, d) => s + (d.isAvailable ? d.reservedServings : 0), 0);
     const reservedRate = totalDailyLimit > 0 ? Math.round((totalReserved / totalDailyLimit) * 100) : 68;
+
+    const completedOrders = SapatStorage.getOrders().filter(o => o.status === 'Completed');
+    const unreviewedOrder = completedOrders.find(o => !o.reviewed);
 
     const availableDishes = menu.filter(m => m.isAvailable);
     // Chef's Daily Spotlight dish: Ate Lita's Chicken Adobo or first dish
@@ -76,6 +79,23 @@ export const studentHomePage = {
             </button>
           `).join('')}
         </div>
+
+        <!-- Student Meal Feedback Prompt Banner -->
+        ${unreviewedOrder ? `
+          <div class="home-feedback-prompt-banner">
+            <div class="feedback-banner-info">
+              <span class="feedback-banner-kicker">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#FF8A24" stroke="#FF8A24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                Rate Your Recent Meal
+              </span>
+              <h4 class="feedback-banner-title">How was your ${unreviewedOrder.items && unreviewedOrder.items[0] ? unreviewedOrder.items[0].name : 'lunch'}?</h4>
+              <p class="feedback-banner-sub">${unreviewedOrder.vendorName} uses verified reviews to refine seasoning and portions.</p>
+            </div>
+            <button class="btn-home-feedback" data-action="open-meal-feedback" data-order-id="${unreviewedOrder.id}">
+              Rate Meal
+            </button>
+          </div>
+        ` : ''}
 
         <!-- Asymmetric Chef's Daily Spotlight Card -->
         ${spotlightDish ? `
@@ -207,6 +227,16 @@ export const studentHomePage = {
         const dishId = mealEl.getAttribute('data-dish-id');
         if (dishId) {
           openMealModal(dishId);
+          return;
+        }
+      }
+
+      // Open meal feedback modal
+      const feedbackBtn = e.target.closest('[data-action="open-meal-feedback"]');
+      if (feedbackBtn) {
+        const orderId = feedbackBtn.getAttribute('data-order-id');
+        if (orderId) {
+          openMealFeedbackModal(orderId);
           return;
         }
       }

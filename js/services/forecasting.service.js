@@ -191,13 +191,38 @@ export const ForecastingService = {
     const baseFeedback = MOCK_STUDENT_FEEDBACK[vendorId] || MOCK_STUDENT_FEEDBACK['vendor-lita'];
     const extraReviews = sim.extraReviews[vendorId] || [];
 
-    const allReviews = [...extraReviews, ...baseFeedback.recentReviews];
-    const avgScore = baseFeedback.sentimentScore;
+    let storedReviews = [];
+    try {
+      if (SapatStorage && typeof SapatStorage.getReviews === 'function') {
+        const raw = SapatStorage.getReviews(vendorId);
+        storedReviews = (raw || []).map(r => ({
+          id: r.id,
+          studentName: r.studentName || 'Student',
+          initials: (r.studentName || 'ST').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+          dept: 'Mindoro State University (MinSU)',
+          rating: r.rating || 5,
+          dishName: r.dishName || 'Canteen Meal',
+          comment: r.comment || '',
+          tags: [r.tasteTag, r.portionTag].filter(Boolean),
+          timestamp: 'Verified Student Pre-order',
+          tag: 'Verified Student Pre-order'
+        }));
+      }
+    } catch (e) {}
+
+    const seenIds = new Set();
+    const allReviews = [];
+    for (const rev of [...extraReviews, ...storedReviews, ...baseFeedback.recentReviews]) {
+      if (!seenIds.has(rev.id)) {
+        seenIds.add(rev.id);
+        allReviews.push(rev);
+      }
+    }
 
     return {
       vendorId,
-      sentimentScore: avgScore,
-      totalReviews: baseFeedback.totalReviews + extraReviews.length,
+      sentimentScore: baseFeedback.sentimentScore,
+      totalReviews: baseFeedback.totalReviews + storedReviews.length + extraReviews.length,
       flavorRatings: baseFeedback.flavorRatings,
       keyStrengths: baseFeedback.keyStrengths,
       improvementsNeeded: baseFeedback.improvementsNeeded,

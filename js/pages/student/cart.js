@@ -3,7 +3,7 @@ import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
 import { showToast } from '../../components/toast.js';
 import { renderFeaturedMealCard, getImgFallback } from '../../components/food-card.js';
-import { openMealModal } from '../../components/modals.js';
+import { openMealModal, openOnlinePaymentModal } from '../../components/modals.js';
 
 export const studentCartPage = {
   render(container) {
@@ -157,6 +157,49 @@ export const studentCartPage = {
               <input type="text" class="cart-note-input" id="cart-kitchen-note" placeholder="e.g. Less gravy, separate chili sauce, no onion..." maxlength="100">
             </div>
 
+            <!-- Payment Method Selection -->
+            <div class="checkout-block-card">
+              <div class="block-card-header">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                <h4 class="block-card-title">Payment Method & Settlement</h4>
+              </div>
+              <p class="block-card-desc">Reservations require verified payment before official confirmation.</p>
+              
+              <div class="payment-method-options-stack">
+                <label class="payment-select-card active">
+                  <input type="radio" name="payment-method" value="Online Payment" checked>
+                  <div class="payment-select-content">
+                    <div class="payment-select-info">
+                      <span class="payment-method-name">Online Payment</span>
+                      <span class="payment-method-desc">GCash &bull; Maya &bull; QR Ph (Instant Digital Pass)</span>
+                    </div>
+                    <span class="payment-select-tag instant">Instant Pass</span>
+                  </div>
+                </label>
+
+                <label class="payment-select-card">
+                  <input type="radio" name="payment-method" value="Counter Payment">
+                  <div class="payment-select-content">
+                    <div class="payment-select-info">
+                      <span class="payment-method-name">Pay at Canteen Counter</span>
+                      <span class="payment-method-desc">Cash/e-Wallet in person within 20 mins cutoff</span>
+                    </div>
+                    <span class="payment-select-tag counter">Stall Window</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Accountability & Cancellation Policy Acknowledgment -->
+            <div class="checkout-policy-card">
+              <label class="policy-checkbox-label">
+                <input type="checkbox" id="cart-policy-ack" checked>
+                <span class="policy-checkbox-text">
+                  I understand that pre-orders require verified payment. Unpaid counter reservations expire after the cutoff, and uncollected confirmed orders are logged under student accountability.
+                </span>
+              </label>
+            </div>
+
             <!-- Bill Breakdown Summary -->
             <div class="cart-breakdown-card">
               <div class="bill-row">
@@ -170,8 +213,8 @@ export const studentCartPage = {
               <div class="bill-divider"></div>
               <div class="bill-total-row">
                 <div>
-                  <strong>Total to Pay at Stall</strong>
-                  <small>Cash / e-Wallet upon claiming at stall window</small>
+                  <strong>Total Settlement</strong>
+                  <small id="bill-method-hint">Instant digital pass issued upon online payment</small>
                 </div>
                 <span class="bill-total-price">₱${subtotal}</span>
               </div>
@@ -280,12 +323,21 @@ export const studentCartPage = {
           return;
         }
 
+        const policyAck = container.querySelector('#cart-policy-ack')?.checked;
+        if (!policyAck) {
+          showToast('Please agree to the payment and reservation accountability policy.', 'error');
+          return;
+        }
+
         const selectedSlot = container.querySelector('input[name="pickup-slot"]:checked')?.value || '11:30 AM (Lunch Shift 1)';
+        const paymentMethod = container.querySelector('input[name="payment-method"]:checked')?.value || 'Online Payment';
         const note = container.querySelector('#cart-kitchen-note')?.value.trim() || '';
 
         // Generate orders grouped by vendor
         const currentOrders = SapatStorage.getOrders();
         const menu = SapatStorage.getMenu();
+        const settings = SapatStorage.getSettings();
+        const deadlineMin = settings.counterPaymentDeadlineMinutes || 20;
 
         // Group cart items by vendorId
         const vendorGroups = {};
@@ -303,6 +355,10 @@ export const studentCartPage = {
           const vendor = SapatStorage.getVendorById(vendorId);
 
           const orderId = 'SPT-' + Math.floor(1000 + Math.random() * 9000);
+          const paymentDeadline = paymentMethod === 'Counter Payment'
+            ? new Date(Date.now() + deadlineMin * 60000).toISOString()
+            : null;
+
           const newOrder = {
             id: orderId,
             pickupToken: 'spt_tok_' + orderId.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Math.random().toString(36).substring(2, 8),
@@ -321,17 +377,49 @@ export const studentCartPage = {
             totalServings: vServings,
             pickupTime: selectedSlot,
             specialInstructions: note,
-            status: 'Pending',
+            status: paymentMethod === 'Counter Payment' ? 'Awaiting Counter Payment' : 'Pending',
+            paymentMethod: paymentMethod,
+            paymentStatus: 'Pending',
+            paymentDeadline: paymentDeadline,
+            counterWindow: vendor ? vendor.stallNumber : 'Express Counter 1',
+            paidAt: null,
+            transactionReference: null,
             createdAt: new Date().toISOString()
           };
 
-          // Deduct portions from inventory
+          // Hold portions in kitchen inventory for this reservation
           for (const item of vItems) {
             const dish = menu.find(d => d.id === item.id);
             if (dish) {
               dish.reservedServings = (dish.reservedServings || 0) + item.quantity;
             }
           }
+
+          // Create payment audit record
+          SapatStorage.createPaymentRecord({
+            reservationId: newOrder.id,
+            studentName: newOrder.studentName,
+            gradeSection: newOrder.gradeSection,
+            vendorId: newOrder.vendorId,
+            vendorName: newOrder.vendorName,
+            vendorStall: newOrder.vendorStall,
+            amount: newOrder.totalAmount,
+            method: newOrder.paymentMethod,
+            status: 'Pending',
+            paymentDeadline: newOrder.paymentDeadline,
+            counterWindow: newOrder.counterWindow,
+            items: newOrder.items
+          });
+
+          // Log reservation creation audit event
+          SapatStorage.logAuditEvent({
+            eventType: paymentMethod === 'Counter Payment' ? 'COUNTER_PAYMENT_INITIATED' : 'ONLINE_PAYMENT_INITIATED',
+            reservationId: newOrder.id,
+            studentName: newOrder.studentName,
+            vendorId: newOrder.vendorId,
+            amount: newOrder.totalAmount,
+            details: `Pre-order created. Settlement method: ${paymentMethod}. Status: ${newOrder.status}.`
+          });
 
           createdOrders.push(newOrder);
           currentOrders.unshift(newOrder);
@@ -341,8 +429,13 @@ export const studentCartPage = {
         SapatStorage.saveOrders(currentOrders);
         state.clearCart();
 
-        showToast(`Pre-order #${createdOrders[0].id} placed successfully!`, 'success');
-        router.navigate('#/student/orders');
+        if (paymentMethod === 'Online Payment') {
+          showToast(`Order #${createdOrders[0].id} created! Complete payment below.`, 'info');
+          openOnlinePaymentModal(createdOrders[0].id);
+        } else {
+          showToast(`Order #${createdOrders[0].id} created! Pay at ${createdOrders[0].vendorStall} within ${deadlineMin} mins.`, 'success');
+          router.navigate('#/student/orders');
+        }
       }
     });
   }
