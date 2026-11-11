@@ -1,7 +1,7 @@
 import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
-import { openPickupPass, openOnlinePaymentModal, openNoShowExplanationModal, openMealFeedbackModal } from '../../components/modals.js';
+import { openPickupPass, openOnlinePaymentModal, openCheckoutModal, openNoShowExplanationModal, openMealFeedbackModal } from '../../components/modals.js';
 import { showToast } from '../../components/toast.js';
 
 export const studentOrdersPage = {
@@ -105,11 +105,18 @@ export const studentOrdersPage = {
               paymentBadgeHTML = `<span class="v-payment-badge expired">Expired &bull; Unpaid</span>`;
             } else if (isNoShow) {
               paymentBadgeHTML = `<span class="v-payment-badge noshow">Missed Pickup</span>`;
+            } else if (isAwaitingCounter) {
+              paymentBadgeHTML = `
+                <span class="v-payment-badge warning" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 700;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  Awaiting Counter Payment
+                </span>
+              `;
             } else {
               paymentBadgeHTML = `
                 <span class="v-payment-badge pending">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  Unpaid &bull; ${order.paymentMethod || 'Counter'}
+                  Unpaid &bull; ${order.paymentMethod || 'Online'}
                 </span>
               `;
             }

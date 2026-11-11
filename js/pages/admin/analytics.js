@@ -19,16 +19,62 @@ export const adminAnalyticsPage = {
       });
     }
 
-    const campusAnalytics = ForecastingService.getCampusWideAnalytics();
-    const payments = SapatStorage.getPayments();
-    const orders = SapatStorage.getOrders();
-    const auditLogs = SapatStorage.getAuditLogs();
-    const settings = SapatStorage.getSettings();
+    const campusAnalytics = ForecastingService.getCampusWideAnalytics() || {
+      totalCampusTarget: 0,
+      totalCampusReserved: 0,
+      totalCampusRemaining: 0,
+      totalWastePreventedKg: '0.0',
+      co2SavedKg: '0.0',
+      avgSatisfaction: 90,
+      avgAccuracy: '96.0',
+      canteenComparisons: [],
+      topCampusRequested: []
+    };
+    const payments = SapatStorage.getPayments() || [];
+    const orders = SapatStorage.getOrders() || [];
+    const auditLogs = SapatStorage.getAuditLogs() || [];
+    const settings = SapatStorage.getSettings() || {};
+    const vendors = SapatStorage.getVendors() || [];
 
-    const totalPaidAmount = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const todayDate = new Date().toISOString().split('T')[0];
+    const afterSalesByVendor = vendors.map(v => {
+      const summary = SapatStorage.getTodayAfterSalesSummary(v.id) || {};
+      return {
+        vendor: v,
+        summary
+      };
+    });
+
+    const totalPaidAmount = payments.filter(p => p.status === 'Paid' || p.paymentStatus === 'Paid').reduce((sum, p) => sum + (Number(p.amount) || Number(p.totalAmount) || 0), 0);
     const expiredUnpaidCount = orders.filter(o => o.status === 'Expired' || o.paymentStatus === 'Expired').length;
     const noShowCount = orders.filter(o => o.status === 'No-show').length;
-    const osasReferredCount = auditLogs.filter(l => l.referredToOSAS).length;
+    const osasReferredCount = auditLogs.filter(l => Boolean(l.referredToOSAS)).length;
+
+    // Shift distribution derived dynamically from actual order items and pickup shifts
+    const activeOrdersList = orders.filter(o => o.status !== 'Cancelled');
+    const shiftPortions = {
+      'shift-1': 0, // 11:30 AM Lunch Shift 1
+      'shift-2': 0, // 12:15 PM Lunch Shift 2
+      'shift-recess': 0 // Afternoon Recess
+    };
+
+    activeOrdersList.forEach(o => {
+      const orderPortions = (o.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+      const timeStr = (o.pickupTime || '').toLowerCase();
+      if (timeStr.includes('11:30') || timeStr.includes('shift 1')) {
+        shiftPortions['shift-1'] += orderPortions;
+      } else if (timeStr.includes('12:15') || timeStr.includes('shift 2')) {
+        shiftPortions['shift-2'] += orderPortions;
+      } else {
+        shiftPortions['shift-recess'] += orderPortions;
+      }
+    });
+
+    const totalDerivedPortions = shiftPortions['shift-1'] + shiftPortions['shift-2'] + shiftPortions['shift-recess'];
+    const safeTotal = totalDerivedPortions > 0 ? totalDerivedPortions : 1;
+    const shift1Pct = Math.round((shiftPortions['shift-1'] / safeTotal) * 100);
+    const shift2Pct = Math.round((shiftPortions['shift-2'] / safeTotal) * 100);
+    const shiftRecessPct = Math.max(0, 100 - shift1Pct - shift2Pct);
 
     // AI demand sample data for key campus dishes
     const aiPredictions = [
@@ -72,60 +118,60 @@ export const adminAnalyticsPage = {
         </div>
 
         <!-- 4 Top-Tier Campus Intelligence KPIs -->
-        <div class="admin-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+        <div class="admin-kpi-grid">
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
-              <span class="kpi-label">Campus Waste Avoided</span>
-              <span class="kpi-badge emerald">-96.2% vs baseline</span>
+              <span class="kpi-label">Food Waste Prevented</span>
+              <span class="kpi-badge emerald">Scenario Estimate</span>
             </div>
             <div class="kpi-value-row">
               <span class="kpi-number">${campusAnalytics.totalWastePreventedKg}</span>
               <span class="kpi-unit">kg</span>
             </div>
-            <p class="kpi-caption" style="margin-top: 8px;">
-              Eliminates ${campusAnalytics.co2SavedKg} kg of CO2 equivalent emissions weekly.
+            <p class="kpi-caption" style="margin-top: 6px;">
+              Avoided waste through exact pre-order batching across stalls.
             </p>
           </div>
 
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
-              <span class="kpi-label">Overall Student Satisfaction</span>
+              <span class="kpi-label">How Students Rate Meals</span>
               <span class="kpi-badge success">${campusAnalytics.avgSatisfaction}% Approval</span>
             </div>
             <div class="kpi-value-row">
               <span class="kpi-number">${campusAnalytics.avgSatisfaction}%</span>
-              <span class="kpi-denom">campus average</span>
+              <span class="kpi-denom">satisfaction</span>
             </div>
-            <p class="kpi-caption" style="margin-top: 8px;">
-              Aggregated across all verified student pre-order feedback ratings.
+            <p class="kpi-caption" style="margin-top: 6px;">
+              Aggregated student sentiment from verified reviews.
             </p>
           </div>
 
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
-              <span class="kpi-label">Forecasting Accuracy</span>
-              <span class="kpi-badge blue">${campusAnalytics.avgAccuracy}% Precise</span>
+              <span class="kpi-label">Preparation Performance</span>
+              <span class="kpi-badge blue">${campusAnalytics.avgAccuracy}% Average</span>
             </div>
             <div class="kpi-value-row">
               <span class="kpi-number">${campusAnalytics.avgAccuracy}%</span>
               <span class="kpi-denom">across 5 stalls</span>
             </div>
-            <p class="kpi-caption" style="margin-top: 8px;">
-              Algorithms adjust for class rosters, weather, and historical demand.
+            <p class="kpi-caption" style="margin-top: 6px;">
+              Fulfillment precision across recent operating shifts.
             </p>
           </div>
 
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
-              <span class="kpi-label">Total Campus Pre-orders</span>
+              <span class="kpi-label">Campus Reservations</span>
               <span class="kpi-badge success">${campusAnalytics.totalCampusReserved} Booked</span>
             </div>
             <div class="kpi-value-row">
               <span class="kpi-number">${campusAnalytics.totalCampusReserved}</span>
               <span class="kpi-denom">/ ${campusAnalytics.totalCampusTarget} portions</span>
             </div>
-            <p class="kpi-caption" style="margin-top: 8px;">
-              ${campusAnalytics.totalCampusRemaining} portions remaining for walk-in students.
+            <p class="kpi-caption" style="margin-top: 6px;">
+              ${campusAnalytics.totalCampusRemaining} unreserved portions remaining today.
             </p>
           </div>
         </div>
@@ -134,10 +180,10 @@ export const adminAnalyticsPage = {
         <div class="admin-chart-card">
           <div class="chart-header">
             <div>
-              <h3 class="chart-title">Food Waste Generation: Traditional Guesswork vs SAPAT Model</h3>
-              <p class="chart-subtitle">Average daily discarded food volume (kg) per campus canteen facility</p>
+              <h3 class="chart-title">Food Waste Reduction: Traditional Guesswork vs Exact Batching</h3>
+              <p class="chart-subtitle">Illustrative scenario comparing arbitrary food preparation vs pre-order batch control</p>
             </div>
-            <span class="chart-tag-badge">Empirical Comparison</span>
+            <span class="chart-tag-badge">Scenario Model</span>
           </div>
 
           <div class="waste-comparison-wrap">
@@ -251,11 +297,11 @@ export const adminAnalyticsPage = {
           </div>
         </div>
 
-        <!-- Peak Shifts Distribution -->
+        <!-- Peak Shifts Distribution (Reconciled from Actual Order Portions) -->
         <div class="admin-section-header" style="margin-top: 24px;">
           <div>
             <h3 class="admin-section-title">Pre-order Pickup Shift Distribution</h3>
-            <span class="admin-section-subtitle">Staggered student arrival schedule eliminating cafeteria queue bottlenecks</span>
+            <span class="admin-section-subtitle">Staggered student arrival schedule derived from confirmed reservations (${totalDerivedPortions} portions)</span>
           </div>
         </div>
 
@@ -265,9 +311,9 @@ export const adminAnalyticsPage = {
               <span class="shift-time">11:30 AM</span>
               <span class="shift-name">Lunch Shift 1</span>
             </div>
-            <strong class="shift-percentage">52%</strong>
-            <span class="shift-portions">204 portions reserved</span>
-            <div class="shift-track"><div class="shift-fill" style="width: 52%;"></div></div>
+            <strong class="shift-percentage">${shift1Pct}%</strong>
+            <span class="shift-portions">${shiftPortions['shift-1']} portions reserved</span>
+            <div class="shift-track"><div class="shift-fill" style="width: ${shift1Pct}%;"></div></div>
             <small class="shift-sub">Fresh Batch Cooked 11:00 AM</small>
           </div>
 
@@ -276,9 +322,9 @@ export const adminAnalyticsPage = {
               <span class="shift-time">12:15 PM</span>
               <span class="shift-name">Lunch Shift 2</span>
             </div>
-            <strong class="shift-percentage">34%</strong>
-            <span class="shift-portions">132 portions reserved</span>
-            <div class="shift-track"><div class="shift-fill" style="width: 34%;"></div></div>
+            <strong class="shift-percentage">${shift2Pct}%</strong>
+            <span class="shift-portions">${shiftPortions['shift-2']} portions reserved</span>
+            <div class="shift-track"><div class="shift-fill" style="width: ${shift2Pct}%;"></div></div>
             <small class="shift-sub">Fresh Batch Cooked 11:45 AM</small>
           </div>
 
@@ -287,22 +333,22 @@ export const adminAnalyticsPage = {
               <span class="shift-time">2:45 PM</span>
               <span class="shift-name">Afternoon Recess</span>
             </div>
-            <strong class="shift-percentage">14%</strong>
-            <span class="shift-portions">48 portions reserved</span>
-            <div class="shift-track"><div class="shift-fill" style="width: 14%;"></div></div>
+            <strong class="shift-percentage">${shiftRecessPct}%</strong>
+            <span class="shift-portions">${shiftPortions['shift-recess']} portions reserved</span>
+            <div class="shift-track"><div class="shift-fill" style="width: ${shiftRecessPct}%;"></div></div>
             <small class="shift-sub">Warm Snacks Cooked 2:15 PM</small>
           </div>
         </div>
 
-        <!-- Payment Governance & Student Accountability -->
+        <!-- Order & Payment Monitoring -->
         <div class="admin-section-header" style="margin-top: 32px;">
           <div>
-            <h3 class="admin-section-title">Payment Governance & Student Accountability</h3>
-            <span class="admin-section-subtitle">Audit trail of verified settlements, expired counter pre-orders, and uncollected meal incidents</span>
+            <h3 class="admin-section-title">Order &amp; Payment Monitoring</h3>
+            <span class="admin-section-subtitle">Operational overview of verified settlements, expired counter pre-orders, and uncollected orders</span>
           </div>
           <span class="admin-campus-pill" style="font-size: 11px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            ${settings.studentAffairsOffice || 'OSAS'} Oversight Active
+            Operational Visibility Active
           </span>
         </div>
 
@@ -387,29 +433,42 @@ export const adminAnalyticsPage = {
                   </tr>
                 ` : auditLogs.slice(0, 10).map(log => {
                   let badgeClass = 'table-confidence-badge';
-                  if (log.eventType.includes('NO_SHOW')) badgeClass = 'kpi-badge warning';
-                  else if (log.eventType.includes('EXPIRED')) badgeClass = 'kpi-badge blue';
-                  else if (log.eventType.includes('VERIFIED')) badgeClass = 'kpi-badge emerald';
+                  const evtType = String(log?.eventType || '');
+                  if (evtType.includes('NO_SHOW')) badgeClass = 'kpi-badge warning';
+                  else if (evtType.includes('EXPIRED')) badgeClass = 'kpi-badge blue';
+                  else if (evtType.includes('VERIFIED')) badgeClass = 'kpi-badge emerald';
+
+                  const rawTs = String(log?.timestamp || '');
+                  let formattedTs = 'Recent';
+                  if (rawTs.includes('T')) {
+                    const parts = rawTs.split('T');
+                    formattedTs = (parts[1] ? parts[1].slice(0, 5) : '') + ' ' + (parts[0] || '');
+                  } else if (rawTs) {
+                    formattedTs = rawTs;
+                  }
+
+                  const orderRef = log?.reservationId || log?.orderId || 'N/A';
+                  const eventDisplay = evtType ? evtType.replace(/_/g, ' ') : 'EVENT LOGGED';
 
                   return `
                     <tr>
-                      <td style="white-space: nowrap; font-size: 11px; color: var(--text-secondary);">${log.timestamp.includes('T') ? log.timestamp.split('T')[1].slice(0, 5) + ' ' + log.timestamp.split('T')[0] : log.timestamp}</td>
+                      <td style="white-space: nowrap; font-size: 11px; color: var(--text-secondary);">${formattedTs}</td>
                       <td>
-                        <strong>${log.studentName || 'Student'}</strong>
+                        <strong>${log?.studentName || 'Student'}</strong>
                       </td>
-                      <td><span class="v-order-ref-badge" style="font-size: 11px;">#${log.reservationId || 'N/A'}</span></td>
-                      <td><span class="${badgeClass}">${log.eventType.replace(/_/g, ' ')}</span></td>
+                      <td><span class="v-order-ref-badge" style="font-size: 11px;">#${orderRef}</span></td>
+                      <td><span class="${badgeClass}">${eventDisplay}</span></td>
                       <td style="max-width: 280px; font-size: 12px; line-height: 1.4;">
-                        ${log.studentExplanation ? `<strong style="display:block; color: var(--primary);">Student: "${log.studentExplanation}"</strong>` : ''}
-                        <span>${log.details || ''}</span>
-                        ${log.resolutionNote ? `<small style="display:block; color: var(--text-tertiary); margin-top: 2px;">Resolution: ${log.resolutionNote}</small>` : ''}
+                        ${log?.studentExplanation ? `<strong style="display:block; color: var(--primary);">Student: "${log.studentExplanation}"</strong>` : ''}
+                        <span>${log?.details || ''}</span>
+                        ${log?.resolutionNote ? `<small style="display:block; color: var(--text-tertiary); margin-top: 2px;">Resolution: ${log.resolutionNote}</small>` : ''}
                       </td>
                       <td>
-                        ${log.referredToOSAS ? `
+                        ${log?.referredToOSAS ? `
                           <span class="settings-value-pill" style="color: #991B1B; background: #FEE2E2; border-color: #FECACA; font-size: 11px;">
                             Referred to OSAS
                           </span>
-                        ` : (log.resolved ? `
+                        ` : (log?.resolved ? `
                           <span class="settings-value-pill" style="color: #065F46; background: #D1FAE5; border-color: #A7F3D0; font-size: 11px;">
                             Resolved
                           </span>
@@ -418,17 +477,91 @@ export const adminAnalyticsPage = {
                         `)}
                       </td>
                       <td style="text-align: right; white-space: nowrap;">
-                        ${(!log.referredToOSAS && !log.resolved && log.eventType === 'NO_SHOW_RECORDED') ? `
-                          <button class="btn-primary-action btn-sm" style="font-size: 11px; padding: 4px 8px; margin-right: 4px;" data-action="refer-to-osas" data-log-id="${log.id}">
+                        ${(!log?.referredToOSAS && !log?.resolved && evtType === 'NO_SHOW_RECORDED') ? `
+                          <button class="btn-primary-action btn-sm" style="font-size: 11px; padding: 4px 8px; margin-right: 4px;" data-action="refer-to-osas" data-log-id="${log?.id}">
                             Refer to OSAS
                           </button>
                         ` : ''}
-                        ${(!log.resolved) ? `
-                          <button class="btn-secondary-action btn-sm" style="font-size: 11px; padding: 4px 8px;" data-action="resolve-incident" data-log-id="${log.id}">
+                        ${(!log?.resolved) ? `
+                          <button class="btn-secondary-action btn-sm" style="font-size: 11px; padding: 4px 8px;" data-action="resolve-incident" data-log-id="${log?.id}">
                             Resolve
                           </button>
                         ` : '<span style="font-size: 11px; color: var(--text-tertiary);">Case Closed</span>'}
                       </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Campus Daily After-Sales & Walk-in Summary Across All Stalls -->
+        <div class="admin-table-card" style="margin-top: 24px;">
+          <div class="admin-card-header">
+            <div>
+              <span class="admin-card-eyebrow">Campus Multi-Vendor Reconciliation</span>
+              <h3 class="admin-card-title">Stall Daily After-Sales &amp; Physical Sales Audit</h3>
+            </div>
+            <span class="settings-value-pill" style="font-size: 11px;">Date: ${todayDate}</span>
+          </div>
+
+          <div class="admin-table-responsive">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th>Canteen Stall</th>
+                  <th>Claimed Pre-orders</th>
+                  <th>Walk-in Sold</th>
+                  <th>Walk-in Revenue</th>
+                  <th>Unclaimed Portions</th>
+                  <th>Reconciliation Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${afterSalesByVendor.map(({ vendor, summary }) => {
+                  const rep = summary ? summary.existingReport : null;
+                  const claimedCount = Number(rep ? rep.claimedReservations : summary?.claimedReservations) || 0;
+                  const walkInCount = Number(rep ? rep.walkInSold : summary?.walkInSold) || 0;
+                  const rawRev = rep && rep.walkInRevenue != null ? rep.walkInRevenue : summary?.walkInRevenue;
+                  const walkInRev = Number(rawRev) || 0;
+                  const unclaimedCount = Number(rep ? rep.unclaimedReservations : summary?.unclaimedReservations) || 0;
+
+                  let statusPill = '';
+                  if (rep) {
+                    if (rep.reconciled) {
+                      const totalSold = claimedCount + walkInCount;
+                      statusPill = `
+                        <span class="settings-value-pill" style="color: #065F46; background: #D1FAE5; border-color: #A7F3D0; font-size: 11px; font-weight: 700;">
+                          Submitted (${rep.totalPrepared || totalSold} prepared, ${totalSold} sold, ${rep.discardedPortions || 0} waste)
+                        </span>
+                      `;
+                    } else {
+                      statusPill = `
+                        <span class="settings-value-pill" style="color: #991B1B; background: #FEE2E2; border-color: #FECACA; font-size: 11px; font-weight: 700;">
+                          Incomplete
+                        </span>
+                      `;
+                    }
+                  } else {
+                    statusPill = `
+                      <span class="settings-value-pill" style="font-size: 11px; color: #92400E; background: #FEF3C7; border-color: #FDE68A; font-weight: 700;">
+                        Pending Report
+                      </span>
+                    `;
+                  }
+
+                  return `
+                    <tr>
+                      <td>
+                        <strong>${vendor?.name || 'Stall'}</strong>
+                        <span style="display: block; font-size: 11px; color: var(--text-secondary);">${vendor?.stallNumber || ''}</span>
+                      </td>
+                      <td>${claimedCount} portions</td>
+                      <td><strong style="color: var(--primary);">${walkInCount} portions</strong></td>
+                      <td>₱${walkInRev.toFixed(2)}</td>
+                      <td>${unclaimedCount} portions</td>
+                      <td>${statusPill}</td>
                     </tr>
                   `;
                 }).join('')}
@@ -444,9 +577,14 @@ export const adminAnalyticsPage = {
   },
 
   attachEvents(container) {
-    container.addEventListener('click', (e) => {
+    const screen = container.querySelector('#screen-admin-analytics');
+    if (!screen) return;
+
+    screen.addEventListener('click', (e) => {
       const routeEl = e.target.closest('[data-route]');
       if (routeEl) {
+        e.preventDefault();
+        e.stopPropagation();
         const route = routeEl.getAttribute('data-route');
         if (route) {
           router.navigate(route);
@@ -457,14 +595,18 @@ export const adminAnalyticsPage = {
       // Refer incident to OSAS
       const osasBtn = e.target.closest('[data-action="refer-to-osas"]');
       if (osasBtn) {
+        e.preventDefault();
+        e.stopPropagation();
         const logId = osasBtn.getAttribute('data-log-id');
         if (logId) {
+          osasBtn.disabled = true;
           const result = SapatStorage.referIncidentToOSAS(logId);
           if (result.success) {
             showToast('Incident referred to Office of Student Affairs and Services (OSAS).', 'warning');
             this.render(container);
           } else {
             showToast(result.message, 'error');
+            osasBtn.disabled = false;
           }
         }
         return;
@@ -473,8 +615,11 @@ export const adminAnalyticsPage = {
       // Resolve incident
       const resolveBtn = e.target.closest('[data-action="resolve-incident"]');
       if (resolveBtn) {
+        e.preventDefault();
+        e.stopPropagation();
         const logId = resolveBtn.getAttribute('data-log-id');
         if (logId) {
+          resolveBtn.disabled = true;
           const note = prompt('Enter administrative resolution note (e.g., Valid medical excuse verified by school clinic):', 'Excuse verified with valid documentation.');
           if (note !== null) {
             const result = SapatStorage.resolveIncident(logId, note);
@@ -483,7 +628,10 @@ export const adminAnalyticsPage = {
               this.render(container);
             } else {
               showToast(result.message, 'error');
+              resolveBtn.disabled = false;
             }
+          } else {
+            resolveBtn.disabled = false;
           }
         }
         return;

@@ -513,74 +513,202 @@
   </div>
 </div>
 
-<!-- 7. Online Payment Simulated Gateway Sheet -->
+<!-- 7. Student Checkout & Payment Modal Sheet -->
 <div class="modal-overlay" id="modal-online-payment">
-  <div class="bottom-sheet online-payment-sheet">
+  <div class="bottom-sheet online-payment-sheet checkout-modal-sheet">
     <div class="sheet-handle"></div>
-    <div class="modal-header-row">
-      <div>
-        <h3 style="font-size: 16.5px; font-weight: 800; color: var(--text-primary); margin: 0;">Online Pre-order Checkout</h3>
-        <span style="font-size: 11.5px; color: var(--text-secondary);">Secure E-Wallet &bull; Fast-Track Express Counter Pickup</span>
+
+    <!-- Main Checkout Flow Container -->
+    <div id="checkout-main-flow">
+      <div class="modal-header-row">
+        <div>
+          <h3 class="checkout-modal-title">Checkout</h3>
+          <span class="checkout-modal-subtitle">Review your order and choose how you want to pay.</span>
+        </div>
+        <button class="close-modal-btn" data-action="close-online-payment" aria-label="Close Checkout">&times;</button>
       </div>
-      <button class="close-modal-btn" data-action="close-online-payment">&times;</button>
-    </div>
 
-    <!-- Amount & Order Overview -->
-    <div class="payment-overview-banner">
-      <div class="payment-order-meta">
-        <span class="payment-order-ref" id="online-pay-order-ref">#SPT-XXXX</span>
-        <span class="payment-stall-target" id="online-pay-stall-name">Canteen Stall</span>
+      <!-- Amount & Order Overview -->
+      <div class="payment-overview-banner">
+        <div class="payment-order-meta">
+          <span class="payment-order-ref" id="online-pay-order-ref">#SPT-XXXX</span>
+          <span class="payment-stall-target" id="online-pay-stall-name">Canteen Stall</span>
+        </div>
+        <div class="payment-amount-box">
+          <span class="payment-amount-lbl">Total Amount</span>
+          <strong class="payment-amount-val" id="online-pay-amount">₱0.00</strong>
+        </div>
       </div>
-      <div class="payment-amount-box">
-        <span class="payment-amount-lbl">Total Payable</span>
-        <strong class="payment-amount-val" id="online-pay-amount">₱0.00</strong>
+
+      <!-- Choose Payment Method Section -->
+      <div class="checkout-method-section">
+        <span class="checkout-section-title">Choose Payment Method</span>
+        <div class="checkout-methods-stack">
+          <!-- Option 1: Digital Payment -->
+          <div class="checkout-method-card active" id="method-card-digital" data-method="Digital Payment">
+            <div class="checkout-method-left">
+              <span class="checkout-method-radio"></span>
+              <div class="checkout-method-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              </div>
+              <div>
+                <strong class="checkout-method-name">Digital Payment</strong>
+                <span class="checkout-method-sub">GCash &bull; Maya &bull; QRPh</span>
+              </div>
+            </div>
+            <span class="checkout-method-tag tag-instant">Instant Pass</span>
+          </div>
+
+          <!-- Option 2: Pay at the Counter -->
+          <div class="checkout-method-card" id="method-card-counter" data-method="Counter Payment">
+            <div class="checkout-method-left">
+              <span class="checkout-method-radio"></span>
+              <div class="checkout-method-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </div>
+              <div>
+                <strong class="checkout-method-name">Pay at the Counter</strong>
+                <span class="checkout-method-sub">Pay directly at your selected canteen stall.</span>
+              </div>
+            </div>
+            <span class="checkout-method-tag tag-counter">Stall Window</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 1: Digital Payment Flow -->
+      <div id="checkout-digital-panel">
+        <div class="payment-methods-tab-strip">
+          <button type="button" class="pay-provider-btn active" data-provider="GCash">
+            <span class="pay-provider-dot gcash"></span>
+            <span>GCash</span>
+          </button>
+          <button type="button" class="pay-provider-btn" data-provider="Maya">
+            <span class="pay-provider-dot maya"></span>
+            <span>Maya</span>
+          </button>
+          <button type="button" class="pay-provider-btn" data-provider="QR Ph">
+            <span class="pay-provider-dot qrph"></span>
+            <span>QR Ph</span>
+          </button>
+        </div>
+
+        <div class="payment-input-group">
+          <label for="online-pay-phone" class="payment-input-label">E-Wallet Account / Mobile Number</label>
+          <div class="payment-input-wrap">
+            <span class="payment-country-prefix">+63</span>
+            <input type="tel" id="online-pay-phone" class="form-input payment-phone-field" placeholder="917 123 4567" value="917 555 0891">
+          </div>
+          <small class="payment-input-hint">Simulates authenticated gateway authorization</small>
+        </div>
+
+        <div class="payment-sandbox-notice">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>Demo payment simulation. No actual money will be charged.</span>
+        </div>
+
+        <div class="payment-action-buttons-stack">
+          <button type="button" class="btn-primary-action btn-pay-confirm" id="btn-simulate-pay-success">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span id="btn-pay-label">Authorize &amp; Pay ₱0.00</span>
+          </button>
+
+          <button type="button" class="btn-danger-outline btn-pay-fail" id="btn-simulate-pay-fail">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            <span>Simulate Gateway Failure (Declined)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel 2: Pay at the Counter Flow -->
+      <div id="checkout-counter-panel" style="display: none;">
+        <div class="counter-details-card">
+          <div class="counter-card-header">
+            <div class="counter-header-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div>
+              <h4 class="counter-card-title">Pay at the Counter</h4>
+              <p class="counter-card-desc" id="counter-info-stall-text">Pay your order directly at your selected canteen stall.</p>
+            </div>
+          </div>
+
+          <div class="counter-detail-rows">
+            <div class="counter-detail-row">
+              <span class="counter-row-label">Amount Due</span>
+              <strong class="counter-row-val" id="counter-info-amount" style="color: var(--primary); font-size: 15px;">₱0.00</strong>
+            </div>
+            <div class="counter-detail-row">
+              <span class="counter-row-label">Payment Deadline</span>
+              <strong class="counter-row-val" id="counter-info-deadline">20 minutes after placing your reservation</strong>
+            </div>
+          </div>
+
+          <div class="counter-policy-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>Your reservation will be held temporarily while waiting for payment. Please complete payment at the selected stall before the deadline.</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-primary-action btn-counter-submit" id="btn-confirm-counter-pay" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Place Order — Pay at Counter</span>
+        </button>
       </div>
     </div>
 
-    <!-- E-Wallet Provider Selection -->
-    <div class="payment-methods-tab-strip">
-      <button type="button" class="pay-provider-btn active" data-provider="GCash">
-        <span class="pay-provider-dot gcash"></span>
-        <span>GCash</span>
-      </button>
-      <button type="button" class="pay-provider-btn" data-provider="Maya">
-        <span class="pay-provider-dot maya"></span>
-        <span>Maya</span>
-      </button>
-      <button type="button" class="pay-provider-btn" data-provider="QR Ph">
-        <span class="pay-provider-dot qrph"></span>
-        <span>QR Ph</span>
-      </button>
-    </div>
+    <!-- Panel 3: Counter Payment Success View (Section 5) -->
+    <div id="checkout-counter-success-view" style="display: none;">
+      <div class="counter-success-view">
+        <div class="counter-success-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h3 class="counter-success-title">Reservation Received!</h3>
+        <p class="counter-success-sub">Your order has been reserved. Please pay at your selected canteen.</p>
 
-    <!-- Mobile Number / Account Input -->
-    <div class="payment-input-group">
-      <label for="online-pay-phone" class="payment-input-label">E-Wallet Account / Mobile Number</label>
-      <div class="payment-input-wrap">
-        <span class="payment-country-prefix">+63</span>
-        <input type="tel" id="online-pay-phone" class="form-input payment-phone-field" placeholder="917 123 4567" value="917 555 0891">
+        <div class="counter-success-card">
+          <div class="counter-succ-row">
+            <span>Order Reference</span>
+            <strong id="counter-succ-order-id">#SPT-XXXX</strong>
+          </div>
+          <div class="counter-succ-row">
+            <span>Canteen</span>
+            <strong id="counter-succ-canteen">Ate Lita's Kitchen</strong>
+          </div>
+          <div class="counter-succ-row">
+            <span>Amount Due</span>
+            <strong id="counter-succ-amount" style="color: var(--primary);">₱0.00</strong>
+          </div>
+          <div class="counter-succ-row">
+            <span>Payment Deadline</span>
+            <strong id="counter-succ-deadline">20 minutes</strong>
+          </div>
+          <div class="counter-succ-row" style="padding-top: 8px; border-top: 1px dashed var(--border-color);">
+            <span>Status</span>
+            <span class="badge-status-warning" style="display: inline-block; padding: 3px 8px; border-radius: 9999px; background: #FEF3C7; color: #92400E; font-size: 10.5px; font-weight: 800;">Awaiting Counter Payment</span>
+          </div>
+        </div>
+
+        <div class="counter-succ-instructions">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>Show your order reference to the cashier and complete your payment before the deadline.</span>
+        </div>
+
+        <p class="counter-succ-qr-notice">
+          Digital QR pickup pass will be activated once the vendor confirms your payment.
+        </p>
+
+        <div class="counter-succ-actions">
+          <button type="button" class="btn-primary-action" id="btn-counter-view-orders" style="width: 100%; justify-content: center; padding: 11px;">
+            View My Orders
+          </button>
+          <button type="button" class="btn-secondary-action" id="btn-counter-return-menu" style="width: 100%; justify-content: center; padding: 11px; margin-top: 8px;">
+            Return to Menu
+          </button>
+        </div>
       </div>
-      <small class="payment-input-hint">Prototype Sandbox &bull; Simulates authenticated gateway authorization</small>
     </div>
 
-    <!-- Security & Prototype Sandbox Callout -->
-    <div class="payment-sandbox-notice">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-      <span>Production payments connect to authorized BSP-regulated gateway webhooks.</span>
-    </div>
-
-    <!-- Simulation Actions -->
-    <div class="payment-action-buttons-stack">
-      <button type="button" class="btn-primary-action btn-pay-confirm" id="btn-simulate-pay-success">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span id="btn-pay-label">Authorize &amp; Pay (Simulate Success)</span>
-      </button>
-
-      <button type="button" class="btn-danger-outline btn-pay-fail" id="btn-simulate-pay-fail" style="width: 100%; padding: 10px; font-weight: 700; border-radius: var(--radius-sm); border: 1.5px solid #FECACA; background: #FEF2F2; color: #DC2626; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-        <span>Simulate Gateway Failure (Declined)</span>
-      </button>
-    </div>
   </div>
 </div>
 
@@ -706,6 +834,106 @@
         </button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Student Suggest a Meal Modal -->
+<div class="modal-overlay" id="modal-suggest-meal">
+  <div class="bottom-sheet modal-suggest-meal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row" style="margin-bottom: 12px;">
+      <div>
+        <span class="modal-sheet-kicker" style="color: var(--primary);">Campus Wishlist</span>
+        <h3 class="modal-header-title" style="margin: 0; font-size: 17px; font-weight: 700;">Suggest a Meal for Campus</h3>
+      </div>
+      <button class="close-modal-btn" data-action="close-suggest-meal" aria-label="Close modal">&times;</button>
+    </div>
+
+    <form id="form-suggest-meal" class="feedback-modal-body" onsubmit="return false;">
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+        What comfort dish or healthy meal would you love to see on tomorrow's canteen menu? Fellow students can vote on your idea.
+      </p>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="suggest-dish-name" style="display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Meal Name *</label>
+        <input type="text" id="suggest-dish-name" class="sapat-form-input" placeholder="e.g. Bicol Express, Lugaw with Egg, Mango Sago" required maxlength="60" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 14px; background: var(--bg-card); color: var(--text-primary);">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="suggest-vendor-target" style="display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Suggested Canteen Stall</label>
+        <select id="suggest-vendor-target" class="sapat-form-select" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 13px; background: var(--bg-card); color: var(--text-primary);">
+          <option value="all">Any Campus Canteen Stall</option>
+          <option value="vendor-lita">Ate Lita's Kitchen (Stall #3)</option>
+          <option value="vendor-ben">Kuya Ben's Silog Meals (Stall #1)</option>
+          <option value="vendor-cora">Nanay Cora's Lutong Bahay (Stall #2)</option>
+          <option value="vendor-green">Green Bowl Express (Stall #4)</option>
+          <option value="vendor-tess">Merienda ni Aling Tess (Stall #5)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label for="suggest-dish-desc" style="display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Why would students love this? (Optional)</label>
+        <textarea id="suggest-dish-desc" class="feedback-textarea" rows="2" placeholder="e.g. Perfect comfort food during rainy afternoons or after long lab classes..." maxlength="200"></textarea>
+      </div>
+
+      <div class="feedback-modal-actions">
+        <button type="button" class="btn-filter-reset" data-action="close-suggest-meal">Cancel</button>
+        <button type="submit" class="btn-primary-action" id="btn-submit-meal-suggestion" style="flex: 2;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Submit Suggestion</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Vendor Walk-in Sale Recording Modal -->
+<div class="modal-overlay" id="modal-walkin-sale">
+  <div class="bottom-sheet modal-walkin-sale-sheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-header-row" style="margin-bottom: 12px;">
+      <div>
+        <span class="modal-sheet-kicker" style="color: var(--primary);">Physical Counter Sale</span>
+        <h3 class="modal-header-title" style="margin: 0; font-size: 17px; font-weight: 700;">Record Walk-in Sale</h3>
+      </div>
+      <button class="close-modal-btn" data-action="close-walkin-sale" aria-label="Close modal">&times;</button>
+    </div>
+
+    <form id="form-walkin-sale" class="feedback-modal-body" onsubmit="return false;">
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+        Directly record portions sold over the physical counter to deduct inventory and keep online availability strictly accurate.
+      </p>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="walkin-dish-select" style="display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Select Dish *</label>
+        <select id="walkin-dish-select" class="sapat-form-select" required style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 13px; background: var(--bg-card); color: var(--text-primary);">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+
+      <div class="walkin-dish-preview" style="background: var(--bg-main, #f8f9fa); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; display: flex; justify-content: space-between;">
+        <span>Available in Kitchen: <strong id="walkin-avail-preview" style="color: var(--primary);">0 portions</strong></span>
+        <span>Unit Price: <strong id="walkin-price-preview">₱0.00</strong></span>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label for="walkin-qty-input" style="display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Portions Sold *</label>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="number" id="walkin-qty-input" min="1" max="50" value="1" required style="width: 100px; padding: 10px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 15px; font-weight: 700; text-align: center; background: var(--bg-card); color: var(--text-primary);">
+          <div style="flex: 1; text-align: right; font-size: 13px; color: var(--text-secondary);">
+            Total Sale: <strong id="walkin-total-preview" style="font-size: 16px; color: var(--primary);">₱0.00</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="feedback-modal-actions">
+        <button type="button" class="btn-filter-reset" data-action="close-walkin-sale">Cancel</button>
+        <button type="submit" class="btn-primary-action" id="btn-save-walkin-sale" style="flex: 2;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Record Counter Sale</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 <!-- Dynamic Toast Notification Container -->

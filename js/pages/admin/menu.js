@@ -50,10 +50,10 @@ export const adminMenuPage = {
           <div class="admin-header-left">
             <div class="admin-campus-pill">
               <span class="admin-live-dot"></span>
-              <span>Catalog & Prep Limits &bull; All Canteens</span>
+              <span>Campus Catalog &amp; Oversight &bull; All Canteens</span>
             </div>
-            <h2 class="admin-main-title">Campus Menu & Preparation Quotas</h2>
-            <p class="admin-main-sub">Centrally manage dishes, pricing, and maximum daily cooking thresholds</p>
+            <h2 class="admin-main-title">Campus Menu Catalog &amp; Oversight</h2>
+            <p class="admin-main-sub">Campus-level visibility over stall offerings, pricing, and vendor daily cooking thresholds</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-admin-action primary" data-action="admin-add-dish">
@@ -107,7 +107,7 @@ export const adminMenuPage = {
                     </td>
                   </tr>
                 ` : filtered.map(dish => {
-                  const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
+                  const remaining = SapatStorage.getDishAvailablePortions ? SapatStorage.getDishAvailablePortions(dish.id) : Math.max(0, dish.dailyLimit - dish.reservedServings);
                   const isSoldOut = remaining <= 0;
                   const pct = Math.min(100, Math.round((dish.reservedServings / dish.dailyLimit) * 100));
 

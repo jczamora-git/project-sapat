@@ -1,7 +1,7 @@
 import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
 import { showToast } from '../../components/toast.js';
-import { openVendorScannerModal } from '../../components/modals.js';
+import { openVendorScannerModal, openWalkinSaleModal } from '../../components/modals.js';
 
 export const vendorOrdersPage = {
   _unsubscribe: null,
@@ -50,10 +50,16 @@ export const vendorOrdersPage = {
             <h2 class="page-main-heading">${currentVendor.name} Pre-orders</h2>
             <p class="page-main-sub">${currentVendor.stallNumber} &bull; ${counts.all - counts.Completed} active reservations requiring kitchen fulfillment</p>
           </div>
-          <button class="btn-primary-action v-scan-pickup-btn" data-action="open-qr-scanner" type="button" title="Scan student pickup pass using camera">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><rect x="7" y="7" width="10" height="10"></rect></svg>
-            <span>Scan Pickup Pass</span>
-          </button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-filter-reset" data-action="open-walkin-sale" type="button" title="Record direct walk-in physical sale" style="padding: 8px 12px; font-size: 13px; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Walk-in Sale</span>
+            </button>
+            <button class="btn-primary-action v-scan-pickup-btn" data-action="open-qr-scanner" type="button" title="Scan student pickup pass using camera">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><rect x="7" y="7" width="10" height="10"></rect></svg>
+              <span>Scan Pickup Pass</span>
+            </button>
+          </div>
         </div>
 
         <!-- Status Filter Tabs Strip -->
@@ -122,11 +128,18 @@ export const vendorOrdersPage = {
               paymentBadgeHTML = `<span class="v-payment-badge expired">Expired &bull; Unpaid</span>`;
             } else if (order.status === 'No-show') {
               paymentBadgeHTML = `<span class="v-payment-badge noshow">Missed &bull; No-Show</span>`;
+            } else if (isCounterPending) {
+              paymentBadgeHTML = `
+                <span class="v-payment-badge warning" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 700;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  Awaiting Counter Payment
+                </span>
+              `;
             } else {
               paymentBadgeHTML = `
                 <span class="v-payment-badge pending">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  Unpaid &bull; ${order.paymentMethod || 'Counter'}
+                  Unpaid &bull; ${order.paymentMethod || 'Online'}
                 </span>
               `;
             }
@@ -137,7 +150,7 @@ export const vendorOrdersPage = {
                 <div class="v-order-action-split">
                   <button class="btn-primary-action v-action-primary-btn" data-action="vendor-verify-counter-payment" data-order-id="${order.id}" type="button">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <span>Verify Payment (₱${order.totalAmount.toFixed(2)})</span>
+                    <span>Confirm Counter Payment</span>
                   </button>
                   <button class="btn-danger-outline v-action-decline-btn" data-action="vendor-expire-unpaid" data-order-id="${order.id}" type="button" title="Expire unpaid reservation and release portions">
                     Expire Unpaid
@@ -264,6 +277,19 @@ export const vendorOrdersPage = {
                   `).join('')}
                 </div>
 
+                <!-- Counter Payment Details & Deadline (if awaiting counter payment) -->
+                ${isCounterPending ? `
+                  <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 11.5px; color: #92400E;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700;">
+                      <span>Method: Pay at Counter</span>
+                      <span>Amount Due: ₱${order.totalAmount.toFixed(2)}</span>
+                    </div>
+                    <span style="display: block; font-size: 11px; margin-top: 2px; color: #78350F;">
+                      ${order.paymentDeadline ? `Payment Deadline: ${new Date(order.paymentDeadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Cutoff: 20 mins from order'}
+                    </span>
+                  </div>
+                ` : ''}
+
                 <!-- Kitchen Special Instructions (if any) -->
                 ${order.specialInstructions && order.specialInstructions.trim() ? `
                   <div class="v-order-note-block">
@@ -294,10 +320,15 @@ export const vendorOrdersPage = {
   },
 
   attachEvents(container) {
-    container.addEventListener('click', (e) => {
+    const screen = container.querySelector('#screen-vendor-orders');
+    if (!screen) return;
+
+    screen.addEventListener('click', (e) => {
       // Open QR scanner modal
       const scanBtn = e.target.closest('[data-action="open-qr-scanner"]');
       if (scanBtn) {
+        e.preventDefault();
+        e.stopPropagation();
         openVendorScannerModal();
         return;
       }
@@ -305,6 +336,8 @@ export const vendorOrdersPage = {
       // Filter tabs
       const filterBtn = e.target.closest('[data-action="filter-orders"]');
       if (filterBtn) {
+        e.preventDefault();
+        e.stopPropagation();
         const status = filterBtn.getAttribute('data-status');
         if (status) {
           state.vendorOrdersFilter = status;
@@ -316,14 +349,26 @@ export const vendorOrdersPage = {
       // Verify counter payment
       const verifyCounterBtn = e.target.closest('[data-action="vendor-verify-counter-payment"]');
       if (verifyCounterBtn) {
+        e.preventDefault();
+        e.stopPropagation();
         const orderId = verifyCounterBtn.getAttribute('data-order-id');
         if (orderId) {
-          const result = SapatStorage.verifyCounterPayment(orderId, 'Cash Counter Payment', `Verified at stall counter`);
+          const orders = SapatStorage.getOrders();
+          const targetOrder = orders.find(o => o.id === orderId);
+          if (targetOrder && targetOrder.vendorId !== state.currentVendorId) {
+            showToast('You can only confirm counter payments for your own stall.', 'error');
+            return;
+          }
+          verifyCounterBtn.disabled = true;
+          const currentVendor = SapatStorage.getVendorById(state.currentVendorId);
+          const vendorName = currentVendor ? currentVendor.name : 'Vendor';
+          const result = SapatStorage.verifyCounterPayment(orderId, `Verified by ${vendorName}`);
           if (result.success) {
-            showToast(`Payment verified for #${orderId}! Order is now Confirmed.`, 'success');
+            showToast(`Counter payment confirmed for #${orderId}! Order is now Confirmed.`, 'success');
             this.render(container);
           } else {
             showToast(result.message, 'error');
+            verifyCounterBtn.disabled = false;
           }
         }
         return;
@@ -332,8 +377,16 @@ export const vendorOrdersPage = {
       // Expire unpaid reservation
       const expireBtn = e.target.closest('[data-action="vendor-expire-unpaid"]');
       if (expireBtn) {
+        e.preventDefault();
+        e.stopPropagation();
         const orderId = expireBtn.getAttribute('data-order-id');
         if (orderId) {
+          const orders = SapatStorage.getOrders();
+          const existingOrder = orders.find(o => o.id === orderId);
+          if (!existingOrder || existingOrder.status === 'Cancelled' || existingOrder.status === 'Expired') {
+            return;
+          }
+          expireBtn.disabled = true;
           if (confirm(`Expire unpaid reservation #${orderId} and release portions to kitchen inventory?`)) {
             const result = SapatStorage.expireUnpaidReservation(orderId, 'Counter payment deadline reached at stall.');
             if (result.success) {
@@ -341,7 +394,10 @@ export const vendorOrdersPage = {
               this.render(container);
             } else {
               showToast(result.message, 'error');
+              expireBtn.disabled = false;
             }
+          } else {
+            expireBtn.disabled = false;
           }
         }
         return;
@@ -350,8 +406,27 @@ export const vendorOrdersPage = {
       // Mark order as No-Show
       const noShowBtn = e.target.closest('[data-action="vendor-mark-noshow"]');
       if (noShowBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         const orderId = noShowBtn.getAttribute('data-order-id');
         if (orderId) {
+          const orders = SapatStorage.getOrders();
+          const targetOrder = orders.find(o => o.id === orderId);
+          if (!targetOrder) {
+            showToast(`Order #${orderId} not found.`, 'error');
+            return;
+          }
+          if (targetOrder.status === 'No-show') {
+            showToast(`Order #${orderId} is already marked as No-Show.`, 'info');
+            return;
+          }
+          if (['Completed', 'Cancelled', 'Claimed', 'Expired'].includes(targetOrder.status)) {
+            showToast(`Order #${orderId} cannot be marked as No-Show because it is already ${targetOrder.status}.`, 'warning');
+            return;
+          }
+
+          noShowBtn.disabled = true;
           if (confirm(`Mark pre-order #${orderId} as No-Show? The scheduled pickup window and grace period have ended.`)) {
             const result = SapatStorage.markOrderNoShow(orderId, 'Uncollected order after pickup shift grace period.');
             if (result.success) {
@@ -359,7 +434,10 @@ export const vendorOrdersPage = {
               this.render(container);
             } else {
               showToast(result.message, 'error');
+              noShowBtn.disabled = false;
             }
+          } else {
+            noShowBtn.disabled = false;
           }
         }
         return;
@@ -368,6 +446,8 @@ export const vendorOrdersPage = {
       // Update order status transition
       const updateBtn = e.target.closest('[data-action="update-order-status"]');
       if (updateBtn) {
+        e.preventDefault();
+        e.stopPropagation();
         const orderId = updateBtn.getAttribute('data-order-id');
         const nextStatus = updateBtn.getAttribute('data-status');
         if (orderId && nextStatus) {
@@ -400,14 +480,18 @@ export const vendorOrdersPage = {
       // Vendor manual handover completion
       const handoverBtn = e.target.closest('[data-action="vendor-handover-order"]');
       if (handoverBtn) {
+        e.preventDefault();
+        e.stopPropagation();
         const orderId = handoverBtn.getAttribute('data-order-id');
         if (orderId) {
+          handoverBtn.disabled = true;
           const result = SapatStorage.claimOrder(orderId, state.currentVendorId);
           if (result.success) {
             showToast(`Pre-order #${orderId} handed over successfully!`, 'success');
             this.render(container);
           } else {
             showToast(result.message, 'error');
+            handoverBtn.disabled = false;
           }
         }
         return;
@@ -416,8 +500,11 @@ export const vendorOrdersPage = {
       // Vendor decline order
       const declineBtn = e.target.closest('[data-action="vendor-decline-order"]');
       if (declineBtn) {
+        e.preventDefault();
+        e.stopPropagation();
         const orderId = declineBtn.getAttribute('data-order-id');
         if (orderId) {
+          declineBtn.disabled = true;
           const orders = SapatStorage.getOrders();
           const order = orders.find(o => o.id === orderId);
           if (order) {
@@ -437,6 +524,15 @@ export const vendorOrdersPage = {
             this.render(container);
           }
         }
+        return;
+      }
+
+      // Open Walk-in Sale Modal
+      const walkinBtn = e.target.closest('[data-action="open-walkin-sale"]');
+      if (walkinBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        openWalkinSaleModal(state.currentVendorId);
         return;
       }
     });

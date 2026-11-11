@@ -3,7 +3,7 @@ import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
 import { showToast } from '../../components/toast.js';
 import { renderFeaturedMealCard, getImgFallback } from '../../components/food-card.js';
-import { openMealModal, openOnlinePaymentModal } from '../../components/modals.js';
+import { openMealModal, openOnlinePaymentModal, openCheckoutModal } from '../../components/modals.js';
 
 export const studentCartPage = {
   render(container) {
@@ -22,7 +22,7 @@ export const studentCartPage = {
 
     if (items.length === 0) {
       const menu = SapatStorage.getMenu();
-      const suggestions = menu.filter(d => d.isAvailable && (d.dailyLimit - d.reservedServings) > 0).slice(0, 4);
+      const suggestions = menu.filter(d => d.isAvailable && SapatStorage.getDishAvailablePortions(d.id) > 0).slice(0, 4);
 
       container.innerHTML = `
         <section class="screen active" id="screen-student-cart">
@@ -194,8 +194,8 @@ export const studentCartPage = {
                   <input type="radio" name="payment-method" value="Online Payment" ${(!preserved || preserved.paymentMethod === 'Online Payment') ? 'checked' : ''}>
                   <div class="payment-select-content">
                     <div class="payment-select-info">
-                      <span class="payment-method-name">Online Payment</span>
-                      <span class="payment-method-desc">GCash &bull; Maya &bull; QR Ph (Instant Digital Pass)</span>
+                      <span class="payment-method-name">Digital Payment</span>
+                      <span class="payment-method-desc">GCash &bull; Maya &bull; QRPh (Instant Digital Pass)</span>
                     </div>
                     <span class="payment-select-tag instant">Instant Pass</span>
                   </div>
@@ -205,8 +205,8 @@ export const studentCartPage = {
                   <input type="radio" name="payment-method" value="Counter Payment" ${preserved?.paymentMethod === 'Counter Payment' ? 'checked' : ''}>
                   <div class="payment-select-content">
                     <div class="payment-select-info">
-                      <span class="payment-method-name">Pay at Canteen Counter</span>
-                      <span class="payment-method-desc">Cash/e-Wallet in person within 20 mins cutoff</span>
+                      <span class="payment-method-name">Pay at the Counter</span>
+                      <span class="payment-method-desc">Pay directly at your selected canteen stall</span>
                     </div>
                     <span class="payment-select-tag counter">Stall Window</span>
                   </div>
@@ -392,7 +392,7 @@ export const studentCartPage = {
         const menu = SapatStorage.getMenu();
         for (const item of state.cart) {
           const dish = menu.find(d => d.id === item.id);
-          const remaining = dish ? (dish.dailyLimit - (dish.reservedServings || 0)) : 0;
+          const remaining = dish ? SapatStorage.getDishAvailablePortions(dish.id) : 0;
           if (!dish || !dish.isAvailable || remaining < item.quantity) {
             showToast(`"${item.name}" has only ${Math.max(0, remaining)} portions remaining today. Please adjust tray.`, 'error');
             return;
@@ -498,13 +498,8 @@ export const studentCartPage = {
           sessionStorage.removeItem('sapat_preserved_checkout');
         }
 
-        if (paymentMethod === 'Online Payment') {
-          showToast(`Order #${createdOrders[0].id} created! Complete payment below.`, 'info');
-          openOnlinePaymentModal(createdOrders[0].id);
-        } else {
-          showToast(`Order #${createdOrders[0].id} created! Pay at ${createdOrders[0].vendorStall} within ${deadlineMin} mins.`, 'success');
-          router.navigate('#/student/orders');
-        }
+        showToast(`Order #${createdOrders[0].id} created! Review and select your payment method.`, 'info');
+        openCheckoutModal(createdOrders[0].id, paymentMethod);
       }
     });
   }

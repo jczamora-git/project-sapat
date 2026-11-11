@@ -15,39 +15,39 @@ export const MOCK_ACADEMIC_CALENDAR = [
 
 export const MOCK_HISTORICAL_LOGS = {
   'vendor-lita': [
-    { date: '2026-11-02', day: 'Monday', prepared: 95, preordered: 78, claimed: 78, walkIn: 15, unsold: 2, accuracy: 97.9, wasteSavedKg: 21.8 },
-    { date: '2026-11-03', day: 'Tuesday', prepared: 110, preordered: 92, claimed: 91, walkIn: 18, unsold: 1, accuracy: 99.1, wasteSavedKg: 25.7 },
-    { date: '2026-11-04', day: 'Wednesday', prepared: 105, preordered: 88, claimed: 87, walkIn: 16, unsold: 2, accuracy: 98.1, wasteSavedKg: 24.6 },
-    { date: '2026-11-05', day: 'Thursday', prepared: 100, preordered: 82, claimed: 82, walkIn: 16, unsold: 2, accuracy: 98.0, wasteSavedKg: 22.9 },
-    { date: '2026-11-06', day: 'Friday', prepared: 115, preordered: 96, claimed: 95, walkIn: 18, unsold: 2, accuracy: 98.3, wasteSavedKg: 26.8 }
+    { date: '2026-11-02', day: 'Monday', predictedDemand: 96, prepared: 95, preordered: 78, claimed: 93, walkIn: 15, cancelledNoShow: 1, unsold: 1, accuracy: 97.9, wasteSavedKg: 26.0 },
+    { date: '2026-11-03', day: 'Tuesday', predictedDemand: 112, prepared: 110, preordered: 92, claimed: 108, walkIn: 17, cancelledNoShow: 1, unsold: 1, accuracy: 98.2, wasteSavedKg: 30.2 },
+    { date: '2026-11-04', day: 'Wednesday', predictedDemand: 106, prepared: 105, preordered: 88, claimed: 102, walkIn: 15, cancelledNoShow: 1, unsold: 2, accuracy: 97.1, wasteSavedKg: 28.6 },
+    { date: '2026-11-05', day: 'Thursday', predictedDemand: 100, prepared: 100, preordered: 82, claimed: 97, walkIn: 15, cancelledNoShow: 1, unsold: 2, accuracy: 97.0, wasteSavedKg: 27.2 },
+    { date: '2026-11-06', day: 'Friday', predictedDemand: 116, prepared: 115, preordered: 96, claimed: 112, walkIn: 17, cancelledNoShow: 1, unsold: 2, accuracy: 97.4, wasteSavedKg: 31.4 }
   ],
   'vendor-ben': [
-    { date: '2026-11-02', day: 'Monday', prepared: 85, preordered: 70, claimed: 70, walkIn: 13, unsold: 2, accuracy: 97.6, wasteSavedKg: 19.6 },
-    { date: '2026-11-03', day: 'Tuesday', prepared: 95, preordered: 80, claimed: 79, walkIn: 14, unsold: 2, accuracy: 97.9, wasteSavedKg: 22.4 },
-    { date: '2026-11-04', day: 'Wednesday', prepared: 90, preordered: 75, claimed: 75, walkIn: 13, unsold: 2, accuracy: 97.8, wasteSavedKg: 21.0 },
-    { date: '2026-11-05', day: 'Thursday', prepared: 90, preordered: 74, claimed: 73, walkIn: 15, unsold: 2, accuracy: 97.8, wasteSavedKg: 20.7 },
-    { date: '2026-11-06', day: 'Friday', prepared: 100, preordered: 85, claimed: 84, walkIn: 14, unsold: 2, accuracy: 98.0, wasteSavedKg: 23.8 }
+    { date: '2026-11-02', day: 'Monday', predictedDemand: 86, prepared: 85, preordered: 70, claimed: 82, walkIn: 12, cancelledNoShow: 1, unsold: 2, accuracy: 96.5, wasteSavedKg: 23.0 },
+    { date: '2026-11-03', day: 'Tuesday', predictedDemand: 96, prepared: 95, preordered: 80, claimed: 92, walkIn: 13, cancelledNoShow: 1, unsold: 2, accuracy: 96.8, wasteSavedKg: 25.8 },
+    { date: '2026-11-04', day: 'Wednesday', predictedDemand: 91, prepared: 90, preordered: 75, claimed: 87, walkIn: 12, cancelledNoShow: 1, unsold: 2, accuracy: 96.7, wasteSavedKg: 24.4 },
+    { date: '2026-11-05', day: 'Thursday', predictedDemand: 90, prepared: 90, preordered: 74, claimed: 87, walkIn: 14, cancelledNoShow: 1, unsold: 2, accuracy: 96.7, wasteSavedKg: 24.4 },
+    { date: '2026-11-06', day: 'Friday', predictedDemand: 102, prepared: 100, preordered: 85, claimed: 97, walkIn: 13, cancelledNoShow: 1, unsold: 2, accuracy: 97.0, wasteSavedKg: 27.2 }
   ],
   'vendor-cora': [
-    { date: '2026-11-02', day: 'Monday', prepared: 75, preordered: 62, claimed: 62, walkIn: 11, unsold: 2, accuracy: 97.3, wasteSavedKg: 17.3 },
-    { date: '2026-11-03', day: 'Tuesday', prepared: 85, preordered: 71, claimed: 70, walkIn: 12, unsold: 3, accuracy: 96.5, wasteSavedKg: 19.8 },
-    { date: '2026-11-04', day: 'Wednesday', prepared: 80, preordered: 66, claimed: 66, walkIn: 12, unsold: 2, accuracy: 97.5, wasteSavedKg: 18.4 },
-    { date: '2026-11-05', day: 'Thursday', prepared: 80, preordered: 65, claimed: 65, walkIn: 13, unsold: 2, accuracy: 97.5, wasteSavedKg: 18.2 },
-    { date: '2026-11-06', day: 'Friday', prepared: 85, preordered: 72, claimed: 71, walkIn: 12, unsold: 2, accuracy: 97.6, wasteSavedKg: 20.1 }
+    { date: '2026-11-02', day: 'Monday', predictedDemand: 76, prepared: 75, preordered: 62, claimed: 72, walkIn: 11, cancelledNoShow: 1, unsold: 2, accuracy: 96.0, wasteSavedKg: 20.2 },
+    { date: '2026-11-03', day: 'Tuesday', predictedDemand: 86, prepared: 85, preordered: 71, claimed: 81, walkIn: 11, cancelledNoShow: 1, unsold: 3, accuracy: 95.3, wasteSavedKg: 22.7 },
+    { date: '2026-11-04', day: 'Wednesday', predictedDemand: 81, prepared: 80, preordered: 66, claimed: 77, walkIn: 12, cancelledNoShow: 1, unsold: 2, accuracy: 96.3, wasteSavedKg: 21.6 },
+    { date: '2026-11-05', day: 'Thursday', predictedDemand: 80, prepared: 80, preordered: 65, claimed: 77, walkIn: 13, cancelledNoShow: 1, unsold: 2, accuracy: 96.3, wasteSavedKg: 21.6 },
+    { date: '2026-11-06', day: 'Friday', predictedDemand: 87, prepared: 85, preordered: 72, claimed: 82, walkIn: 11, cancelledNoShow: 1, unsold: 2, accuracy: 96.5, wasteSavedKg: 23.0 }
   ],
   'vendor-green': [
-    { date: '2026-11-02', day: 'Monday', prepared: 70, preordered: 58, claimed: 58, walkIn: 10, unsold: 2, accuracy: 97.1, wasteSavedKg: 16.2 },
-    { date: '2026-11-03', day: 'Tuesday', prepared: 80, preordered: 68, claimed: 67, walkIn: 11, unsold: 2, accuracy: 97.5, wasteSavedKg: 19.0 },
-    { date: '2026-11-04', day: 'Wednesday', prepared: 75, preordered: 63, claimed: 63, walkIn: 10, unsold: 2, accuracy: 97.3, wasteSavedKg: 17.6 },
-    { date: '2026-11-05', day: 'Thursday', prepared: 75, preordered: 61, claimed: 61, walkIn: 12, unsold: 2, accuracy: 97.3, wasteSavedKg: 17.0 },
-    { date: '2026-11-06', day: 'Friday', prepared: 80, preordered: 69, claimed: 68, walkIn: 10, unsold: 2, accuracy: 97.5, wasteSavedKg: 19.3 }
+    { date: '2026-11-02', day: 'Monday', predictedDemand: 71, prepared: 70, preordered: 58, claimed: 67, walkIn: 10, cancelledNoShow: 1, unsold: 2, accuracy: 95.7, wasteSavedKg: 18.8 },
+    { date: '2026-11-03', day: 'Tuesday', predictedDemand: 82, prepared: 80, preordered: 68, claimed: 77, walkIn: 10, cancelledNoShow: 1, unsold: 2, accuracy: 96.3, wasteSavedKg: 21.6 },
+    { date: '2026-11-04', day: 'Wednesday', predictedDemand: 76, prepared: 75, preordered: 63, claimed: 72, walkIn: 10, cancelledNoShow: 1, unsold: 2, accuracy: 96.0, wasteSavedKg: 20.2 },
+    { date: '2026-11-05', day: 'Thursday', predictedDemand: 76, prepared: 75, preordered: 61, claimed: 72, walkIn: 12, cancelledNoShow: 1, unsold: 2, accuracy: 96.0, wasteSavedKg: 20.2 },
+    { date: '2026-11-06', day: 'Friday', predictedDemand: 81, prepared: 80, preordered: 69, claimed: 77, walkIn: 9, cancelledNoShow: 1, unsold: 2, accuracy: 96.3, wasteSavedKg: 21.6 }
   ],
   'vendor-tess': [
-    { date: '2026-11-02', day: 'Monday', prepared: 120, preordered: 98, claimed: 98, walkIn: 20, unsold: 2, accuracy: 98.3, wasteSavedKg: 27.4 },
-    { date: '2026-11-03', day: 'Tuesday', prepared: 135, preordered: 112, claimed: 111, walkIn: 22, unsold: 2, accuracy: 98.5, wasteSavedKg: 31.3 },
-    { date: '2026-11-04', day: 'Wednesday', prepared: 130, preordered: 106, claimed: 106, walkIn: 21, unsold: 3, accuracy: 97.7, wasteSavedKg: 29.6 },
-    { date: '2026-11-05', day: 'Thursday', prepared: 140, preordered: 115, claimed: 114, walkIn: 23, unsold: 3, accuracy: 97.9, wasteSavedKg: 32.2 },
-    { date: '2026-11-06', day: 'Friday', prepared: 145, preordered: 122, claimed: 121, walkIn: 22, unsold: 2, accuracy: 98.6, wasteSavedKg: 34.1 }
+    { date: '2026-11-02', day: 'Monday', predictedDemand: 122, prepared: 120, preordered: 98, claimed: 117, walkIn: 20, cancelledNoShow: 1, unsold: 2, accuracy: 97.5, wasteSavedKg: 32.8 },
+    { date: '2026-11-03', day: 'Tuesday', predictedDemand: 137, prepared: 135, preordered: 112, claimed: 132, walkIn: 21, cancelledNoShow: 1, unsold: 2, accuracy: 97.8, wasteSavedKg: 37.0 },
+    { date: '2026-11-04', day: 'Wednesday', predictedDemand: 132, prepared: 130, preordered: 106, claimed: 126, walkIn: 21, cancelledNoShow: 1, unsold: 3, accuracy: 96.9, wasteSavedKg: 35.3 },
+    { date: '2026-11-05', day: 'Thursday', predictedDemand: 142, prepared: 140, preordered: 115, claimed: 136, walkIn: 22, cancelledNoShow: 1, unsold: 3, accuracy: 97.1, wasteSavedKg: 38.1 },
+    { date: '2026-11-06', day: 'Friday', predictedDemand: 147, prepared: 145, preordered: 122, claimed: 142, walkIn: 21, cancelledNoShow: 1, unsold: 2, accuracy: 97.9, wasteSavedKg: 39.8 }
   ]
 };
 

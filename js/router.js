@@ -134,14 +134,20 @@ class AppRouter {
     // Release any active camera streams on route transition
     stopScannerCamera();
 
-    const page = this.routes[hash];
+    const cleanHash = hash.split('?')[0];
+    const page = this.routes[cleanHash] || this.routes[hash];
 
     if (!this.container) {
       this.container = document.getElementById('screens-viewport');
     }
 
     if (page && typeof page.render === 'function') {
-      page.render(this.container);
+      try {
+        page.render(this.container);
+      } catch (err) {
+        console.error(`Error rendering page for ${hash}:`, err);
+        this.renderError(this.container, hash, err);
+      }
     } else {
       // 404 Fallback page
       this.renderNotFound(this.container, hash);
@@ -174,6 +180,30 @@ class AppRouter {
     `;
 
     const homeBtn = container.querySelector('#btn-fallback-home');
+    if (homeBtn) {
+      homeBtn.addEventListener('click', () => {
+        this.navigateHome();
+      });
+    }
+  }
+
+  renderError(container, requestedPath, err) {
+    container.innerHTML = `
+      <section class="screen active" style="padding: 40px 16px; text-align: center;">
+        <div class="empty-state-icon" style="color: #dc2626;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <h3 style="margin-top: 14px;">Error Loading Screen</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; margin: 6px 0 18px;">
+          An error occurred while loading <code>${requestedPath}</code>: ${err?.message || 'Unknown error'}
+        </p>
+        <button class="btn-primary-action" id="btn-fallback-error-home" style="max-width: 200px; margin: 0 auto;">
+          Return to Dashboard
+        </button>
+      </section>
+    `;
+
+    const homeBtn = container.querySelector('#btn-fallback-error-home');
     if (homeBtn) {
       homeBtn.addEventListener('click', () => {
         this.navigateHome();

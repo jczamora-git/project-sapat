@@ -1,13 +1,47 @@
 import { state } from '../../state.js';
 import { SapatStorage } from '../../storage.js';
 import { router } from '../../router.js';
+import { studentMenuPage } from './menu.js';
 import { renderCanteenCard } from '../../components/vendor-card.js';
 import { renderFeaturedMealCard, renderSpotlightMealCard } from '../../components/food-card.js';
-import { openMealModal, openMealFeedbackModal } from '../../components/modals.js';
+import { openMealModal, openMealFeedbackModal, openSuggestMealModal } from '../../components/modals.js';
 import { showToast } from '../../components/toast.js';
+import { ForecastingService } from '../../services/forecasting.service.js';
 
 export const studentHomePage = {
+  _unsubscribe: null,
+  _dataListenerAdded: false,
+
   render(container) {
+    if (!this._unsubscribe) {
+      this._unsubscribe = state.subscribe((event) => {
+        if (event === 'role-changed' || event === 'data-reset') {
+          const currentScreen = document.getElementById('screen-student-home');
+          if (currentScreen && container.contains(currentScreen)) {
+            this.render(container);
+          }
+        }
+      });
+    }
+
+    if (!this._dataListenerAdded && typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      this._dataListenerAdded = true;
+      window.addEventListener('sapat:data-updated', (e) => {
+        if (e?.detail?.type === 'meal-suggestions' || e?.detail?.type === 'suggestion-votes') {
+          const currentScreen = document.getElementById('screen-student-home');
+          if (currentScreen && container.contains(currentScreen)) {
+            this.render(container);
+          }
+        }
+      });
+      window.addEventListener('sapat:student-auth-changed', () => {
+        const currentScreen = document.getElementById('screen-student-home');
+        if (currentScreen && container.contains(currentScreen)) {
+          this.render(container);
+        }
+      });
+    }
+
     const vendors = SapatStorage.getVendors();
     const menu = SapatStorage.getMenu();
 
@@ -21,6 +55,52 @@ export const studentHomePage = {
     const availableDishes = menu.filter(m => m.isAvailable);
     // Chef's Daily Spotlight dish: Ate Lita's Chicken Adobo or first dish
     const spotlightDish = menu.find(d => d.id === 'dish-lita-1') || availableDishes[0];
+
+    // Student Suggestions and Campus Wishlist
+    const currentStudent = SapatStorage.getCurrentStudent();
+    const studentDisplayName = currentStudent ? (currentStudent.fullName ? currentStudent.fullName.split(' ')[0] : 'Maria') : 'Student';
+    const votedList = currentStudent ? SapatStorage.getStudentVotes(currentStudent.schoolId) : [];
+    const rawSuggestions = SapatStorage.getMealSuggestions();
+    
+    // Seed default suggestions if empty so student always sees interactive voting
+    if (!rawSuggestions || rawSuggestions.length === 0) {
+      SapatStorage.saveMealSuggestions([
+        {
+          id: 'SUG-SEED-01',
+          studentId: '2026-0002',
+          studentName: 'Juan Dela Cruz',
+          dishName: 'Bicol Express Pork Rice Bowl',
+          description: 'Spicy coconut chili comfort meal for rainy days and exam week',
+          vendorId: 'vendor-lita',
+          votes: 68,
+          voterIds: ['2026-0002'],
+          createdAt: '2026-11-09T08:00:00.000Z'
+        },
+        {
+          id: 'SUG-SEED-02',
+          studentId: '2024-0551',
+          studentName: 'Paolo Reyes',
+          dishName: 'Warm Ginataang Bilo-Bilo with Langka',
+          description: 'Sweet afternoon merienda dessert paired with cold sago',
+          vendorId: 'vendor-tess',
+          votes: 94,
+          voterIds: ['2024-0551'],
+          createdAt: '2026-11-09T09:30:00.000Z'
+        },
+        {
+          id: 'SUG-SEED-03',
+          studentId: '2024-0891',
+          studentName: 'Maria Santos',
+          dishName: 'Sizzling Spicy Sisilog with Calamansi',
+          description: 'Crispy savory pork sisig with garlic rice and egg',
+          vendorId: 'vendor-ben',
+          votes: 112,
+          voterIds: ['2024-0891'],
+          createdAt: '2026-11-09T07:15:00.000Z'
+        }
+      ]);
+    }
+    const campusSuggestions = SapatStorage.getMealSuggestions().sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
     const quickCategories = [
       { id: 'all', label: 'All Specials', icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5' },
@@ -39,7 +119,7 @@ export const studentHomePage = {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
               <span>Main Canteen Hall &bull; Open Now</span>
             </span>
-            <h2 class="home-greeting-heading">Good morning, Maria</h2>
+            <h2 class="home-greeting-heading">Good morning, ${studentDisplayName}</h2>
             <p class="home-greeting-sub">Pre-order hot portions early. Skip the long midday queues.</p>
           </div>
         </div>
@@ -51,6 +131,28 @@ export const studentHomePage = {
             <input type="text" class="home-search-input" id="home-search-input" placeholder="Search dishes, stalls, or ulam..." autocomplete="off">
             <button class="home-search-filter-btn" data-route="#/student/menu" title="Search Menu">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Campus Meal Wishlist Quick Access Shortcut -->
+        <div class="home-wishlist-quick-card">
+          <div class="wishlist-quick-main">
+            <div class="wishlist-quick-badge-row">
+              <span class="wishlist-quick-pill">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                Campus Meal Wishlist
+              </span>
+              <span class="wishlist-quick-count">${campusSuggestions.length} student suggestions</span>
+            </div>
+            <p class="wishlist-quick-desc">Vote for meals you'd like your canteen to offer.</p>
+          </div>
+          <div class="wishlist-quick-actions">
+            <button type="button" class="btn-wishlist-quick primary" data-action="open-wishlist-tab">
+              View &amp; Vote
+            </button>
+            <button type="button" class="btn-wishlist-quick secondary" data-action="open-suggest-modal">
+              Suggest a Meal
             </button>
           </div>
         </div>
@@ -132,6 +234,24 @@ export const studentHomePage = {
         </div>
         <div class="meals-grid-2col" id="home-meals-grid">
           ${availableDishes.slice(0, 6).map(d => renderFeaturedMealCard(d)).join('')}
+        </div>
+
+        <!-- Campus Meal Wishlist Summary Callout Banner -->
+        <div class="home-wishlist-teaser-card" data-action="open-wishlist-tab">
+          <div class="wishlist-teaser-icon-col">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+          </div>
+          <div class="wishlist-teaser-body">
+            <div class="wishlist-teaser-kicker-row">
+              <span class="wishlist-teaser-kicker">Campus Meal Wishlist</span>
+              <span class="wishlist-teaser-badge">${campusSuggestions.length} dishes in voting</span>
+            </div>
+            <h4 class="wishlist-teaser-title">Help decide what meals cooks prepare next</h4>
+            <p class="wishlist-teaser-desc">Top-voted student suggestions are sent straight to canteen cooks for kitchen prep planning.</p>
+          </div>
+          <button type="button" class="btn-wishlist-teaser-action" data-action="open-wishlist-tab">
+            View All &rarr;
+          </button>
         </div>
 
         <!-- Sustainability & Zero-Waste Impact Banner -->
@@ -239,6 +359,49 @@ export const studentHomePage = {
           openMealFeedbackModal(orderId);
           return;
         }
+      }
+
+      // Open Wishlist tab on Menu page
+      const openWishlistBtn = e.target.closest('[data-action="open-wishlist-tab"]');
+      if (openWishlistBtn) {
+        studentMenuPage.activeTab = 'wishlist';
+        router.navigate('#/student/menu?tab=wishlist');
+        return;
+      }
+
+      // Open suggest meal modal
+      const suggestBtn = e.target.closest('[data-action="open-suggest-modal"]');
+      if (suggestBtn) {
+        const student = SapatStorage.getCurrentStudent();
+        if (!student) {
+          showToast('Please sign in with your School ID to suggest a meal.', 'info');
+          router.navigate('#/auth/login');
+          return;
+        }
+        openSuggestMealModal();
+        return;
+      }
+
+      // Vote on suggestion
+      const voteBtn = e.target.closest('[data-action="vote-suggestion"]');
+      if (voteBtn) {
+        const suggestionId = voteBtn.getAttribute('data-suggestion-id');
+        if (suggestionId) {
+          const student = SapatStorage.getCurrentStudent();
+          if (!student) {
+            showToast('Please sign in with your School ID to vote on meal suggestions.', 'info');
+            router.navigate('#/auth/login');
+            return;
+          }
+          const res = SapatStorage.voteMealSuggestion(suggestionId, student.schoolId);
+          if (res.success) {
+            showToast('Vote counted! Thanks for supporting campus comfort food.', 'success');
+            this.render(container);
+          } else {
+            showToast(res.message || 'Already voted for this dish', 'info');
+          }
+        }
+        return;
       }
     });
   }

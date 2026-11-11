@@ -11,6 +11,11 @@ const SAPAT_STORAGE_KEY_AUDIT_LOGS = 'sapat_audit_logs_v2';
 const SAPAT_STORAGE_KEY_REVIEWS = 'sapat_reviews_v2';
 const SAPAT_STORAGE_KEY_STUDENTS = 'sapat_student_accounts_v2';
 const SAPAT_STORAGE_KEY_CURRENT_STUDENT = 'sapat_current_student_v2';
+const SAPAT_STORAGE_KEY_WALKIN_SALES = 'sapat_walkin_sales_v2';
+const SAPAT_STORAGE_KEY_AFTER_SALES = 'sapat_after_sales_reports_v2';
+const SAPAT_STORAGE_KEY_SUGGESTIONS = 'sapat_meal_suggestions_v2';
+const SAPAT_STORAGE_KEY_SUGGESTION_VOTES = 'sapat_suggestion_votes_v2';
+const SAPAT_STORAGE_KEY_FORECAST_CONTEXT = 'sapat_forecast_context_v2';
 
 function safeBtoa(str) {
   if (typeof btoa === 'function') {
@@ -1006,10 +1011,546 @@ class SapatStorage {
     const menu = this.getMenu();
     const dish = menu.find(d => d.id === dishId);
     if (!dish) return { success: false, error: 'Dish not found' };
-    const minVal = dish.reservedCount || 0;
+    const minVal = Math.max(dish.reservedServings || 0, dish.reservedCount || 0);
+    if (Number(newLimit) < minVal) {
+      return { success: false, message: `Cannot adjust limit below locked reservations (${minVal} portions)` };
+    }
     dish.dailyLimit = Math.max(minVal, Math.min(250, Number(newLimit) || minVal));
     this.saveMenu(menu);
     return { success: true, dish };
+  }
+
+  /**
+   * Returns remaining portions available for sale:
+   * Available = max(dailyLimit - reservedServings - walkInSold, 0)
+   */
+  static getDishAvailablePortions(dishId, dateStr = null) {
+    const dish = this.getDishById(dishId);
+    if (!dish) return 0;
+    const reserved = Number(dish.reservedServings) || 0;
+    const limit = Number(dish.dailyLimit) || 0;
+    
+    // Find walk-in sales for today
+    const sales = this.getWalkInSales(dish.vendorId, dateStr);
+    const walkInSold = sales
+      .filter(s => s.dishId === dishId)
+      .reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+      
+    return Math.max(0, limit - reserved - walkInSold);
+  }
+
+  // =========================================================================
+  // WALK-IN SALES TRACKING
+  // =========================================================================
+
+  static getWalkInSales(vendorId = null, dateStr = null) {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_WALKIN_SALES);
+      let sales = [];
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) sales = parsed;
+        } catch (e) {
+          console.error('Failed reading walkin sales', e);
+        }
+      }
+      
+      const targetDate = dateStr || new Date().toISOString().split('T')[0];
+      let filtered = sales.filter(s => {
+        const sDate = (s.timestamp || s.createdAt || '').split('T')[0];
+        return !dateStr || sDate === targetDate;
+      });
+      
+      if (vendorId) {
+        filtered = filtered.filter(s => s.vendorId === vendorId);
+      }
+      return filtered;
+    } catch (e) {
+      console.error('Error in getWalkInSales', e);
+      return [];
+    }
+  }
+
+  static saveWalkInSales(sales) {
+    try {
+      localStorage.setItem(SAPAT_STORAGE_KEY_WALKIN_SALES, JSON.stringify(sales));
+      window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'walkin-sales' } }));
+    } catch (e) {
+      console.error('Failed to save walkin sales', e);
+    }
+  }
+
+  static recordWalkInSale({ vendorId, dishId, quantity }) {
+    if (!vendorId || !dishId) {
+      return { success: false, message: 'Vendor and dish selection are required' };
+    }
+    const qty = parseInt(quantity, 10);
+    if (isNaN(qty) || qty <= 0) {
+      return { success: false, message: 'Quantity must be a positive whole number' };
+    }
+
+    const dish = this.getDishById(dishId);
+    if (!dish) {
+      return { success: false, message: 'Dish not found' };
+    }
+    if (dish.vendorId !== vendorId) {
+      return { success: false, message: 'Selected dish does not belong to your canteen stall' };
+    }
+    if (!dish.isAvailable) {
+      return { success: false, message: 'Selected dish is marked unavailable' };
+    }
+
+    const available = this.getDishAvailablePortions(dishId);
+    if (qty > available) {
+      return {
+        success: false,
+        message: `Cannot record ${qty} portion(s). Only ${available} available in kitchen inventory.`
+      };
+    }
+
+    const now = new Date();
+    const saleId = 'WS-' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 100);
+    const saleRecord = {
+      id: saleId,
+      vendorId,
+      dishId,
+      dishName: dish.name,
+      unitPrice: Number(dish.price) || 0,
+      quantity: qty,
+      totalAmount: (Number(dish.price) || 0) * qty,
+      timestamp: now.toISOString(),
+      createdAt: now.toISOString()
+    };
+
+    const allSales = this.getWalkInSales();
+    allSales.unshift(saleRecord);
+    this.saveWalkInSales(allSales);
+
+    this.logAuditEvent('WALK_IN_SALE_RECORDED', {
+      vendorId,
+      dishId,
+      dishName: dish.name,
+      quantity: qty,
+      totalAmount: saleRecord.totalAmount,
+      details: `Direct walk-in counter sale of ${qty}x ${dish.name} recorded for ₱${saleRecord.totalAmount.toFixed(2)}.`
+    });
+
+    return { success: true, sale: saleRecord };
+  }
+
+  // =========================================================================
+  // DAILY AFTER-SALES RECONCILIATION REPORT
+  // =========================================================================
+
+  static getAfterSalesReports(vendorId = null) {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_AFTER_SALES);
+      let reports = [];
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) reports = parsed;
+        } catch (e) {
+          console.error('Failed reading after sales reports', e);
+        }
+      }
+      if (vendorId) {
+        return reports.filter(r => r.vendorId === vendorId);
+      }
+      return reports;
+    } catch (e) {
+      console.error('Error in getAfterSalesReports', e);
+      return [];
+    }
+  }
+
+  static saveAfterSalesReports(reports) {
+    try {
+      localStorage.setItem(SAPAT_STORAGE_KEY_AFTER_SALES, JSON.stringify(reports));
+      window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'after-sales' } }));
+    } catch (e) {
+      console.error('Failed to save after sales reports', e);
+    }
+  }
+
+  /**
+   * Auto-derives today's claimed reservations, unclaimed reservations, and walk-in sales
+   * for a vendor's daily closing reconciliation.
+   */
+  static getTodayAfterSalesSummary(vendorId) {
+    const today = new Date().toISOString().split('T')[0];
+    const orders = this.getOrders().filter(o => o.vendorId === vendorId);
+
+    // Sum portions from Paid & Completed orders
+    let claimedReservations = 0;
+    // Sum portions from Paid or Confirmed orders that are not Completed (uncollected/no-show/ready)
+    let unclaimedReservations = 0;
+
+    orders.forEach(o => {
+      const orderPortions = (o.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+      if (o.status === 'Completed') {
+        claimedReservations += orderPortions;
+      } else if (o.status === 'No-show' || o.status === 'Ready for Pickup' || o.status === 'Confirmed' || o.status === 'Preparing') {
+        unclaimedReservations += orderPortions;
+      }
+    });
+
+    const walkInSales = this.getWalkInSales(vendorId, today);
+    const walkInSold = walkInSales.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+    const walkInRevenue = walkInSales.reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+
+    const existingReports = this.getAfterSalesReports(vendorId);
+    const existingReport = existingReports.find(r => r.reportDate === today) || null;
+
+    // Per-dish auto-derived breakdown for the current vendor
+    const allDishes = this.getMenu().filter(d => d.vendorId === vendorId);
+    const dishBreakdown = allDishes.map(dish => {
+      let dishClaimed = 0;
+      let dishUnclaimed = 0;
+
+      orders.forEach(o => {
+        (o.items || []).forEach(item => {
+          const dId = item.dishId || item.id;
+          if (dId === dish.id) {
+            const qty = Number(item.quantity) || 1;
+            if (o.status === 'Completed') {
+              dishClaimed += qty;
+            } else if (o.status === 'No-show' || o.status === 'Ready for Pickup' || o.status === 'Confirmed' || o.status === 'Preparing') {
+              dishUnclaimed += qty;
+            }
+          }
+        });
+      });
+
+      const dishWalkInSales = walkInSales.filter(s => s.dishId === dish.id);
+      const dishWalkInSold = dishWalkInSales.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+      const dishWalkInRevenue = dishWalkInSales.reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+
+      const savedDish = (existingReport && Array.isArray(existingReport.dishBreakdown))
+        ? existingReport.dishBreakdown.find(sd => sd.dishId === dish.id)
+        : null;
+
+      const preparedVal = savedDish ? Number(savedDish.prepared) : (dishClaimed + dishWalkInSold);
+      const remainingVal = savedDish ? Number(savedDish.remaining) : 0;
+      const discardedVal = savedDish ? Number(savedDish.discarded) : 0;
+
+      return {
+        dishId: dish.id,
+        name: dish.name,
+        category: dish.category || 'Meal',
+        dailyLimit: Number(dish.dailyLimit) || 30,
+        claimed: dishClaimed,
+        unclaimed: dishUnclaimed,
+        walkInSold: dishWalkInSold,
+        walkInRevenue: dishWalkInRevenue,
+        prepared: preparedVal,
+        remaining: remainingVal,
+        discarded: discardedVal
+      };
+    });
+
+    return {
+      reportDate: today,
+      claimedReservations,
+      unclaimedReservations,
+      walkInSold,
+      walkInRevenue,
+      existingReport,
+      dishBreakdown
+    };
+  }
+
+  static saveAfterSalesReport({
+    vendorId,
+    reportDate,
+    totalPrepared,
+    claimedReservations,
+    unclaimedReservations = 0,
+    walkInSold,
+    walkInRevenue = 0,
+    remainingPortions,
+    discardedPortions,
+    notes = '',
+    dishBreakdown = []
+  }) {
+    if (!vendorId) return { success: false, message: 'Vendor is required' };
+    const date = reportDate || new Date().toISOString().split('T')[0];
+
+    const prepared = parseInt(totalPrepared, 10);
+    const claimed = parseInt(claimedReservations, 10);
+    const walkIn = parseInt(walkInSold, 10);
+    const remaining = parseInt(remainingPortions, 10);
+    const discarded = parseInt(discardedPortions, 10);
+
+    if ([prepared, claimed, walkIn, remaining, discarded].some(v => isNaN(v) || v < 0)) {
+      return { success: false, message: 'All portion fields must be non-negative whole numbers' };
+    }
+
+    // Physical portion sold constraint: Total Prepared cannot be less than portions actually sold
+    if (prepared < (claimed + walkIn)) {
+      return {
+        success: false,
+        message: `Invalid portion count: Total Prepared (${prepared}) cannot be less than portions already sold (Claimed: ${claimed} + Walk-in: ${walkIn} = ${claimed + walkIn}).`
+      };
+    }
+
+    // Strict physical portion reconciliation rule:
+    // Total Prepared = Claimed Reservations + Walk-in Sales + Remaining + Discarded
+    const accounted = claimed + walkIn + remaining + discarded;
+    if (prepared !== accounted) {
+      const diff = prepared - accounted;
+      return {
+        success: false,
+        message: `Portion reconciliation discrepancy: Total Prepared (${prepared}) does not equal Claimed (${claimed}) + Walk-in (${walkIn}) + Remaining (${remaining}) + Discarded (${discarded}) [Sum = ${accounted}, Discrepancy = ${diff > 0 ? `+${diff}` : diff} portions].`
+      };
+    }
+
+    const reports = this.getAfterSalesReports();
+    const existingIndex = reports.findIndex(r => r.vendorId === vendorId && r.reportDate === date);
+
+    const now = new Date().toISOString();
+    const reportData = {
+      id: existingIndex >= 0 ? reports[existingIndex].id : 'ASR-' + Date.now().toString().slice(-6),
+      vendorId,
+      reportDate: date,
+      totalPrepared: prepared,
+      claimedReservations: claimed,
+      unclaimedReservations: parseInt(unclaimedReservations, 10) || 0,
+      walkInSold: walkIn,
+      walkInRevenue: Number(walkInRevenue) || 0,
+      remainingPortions: remaining,
+      discardedPortions: discarded,
+      notes: String(notes || '').trim().slice(0, 500),
+      reconciled: true,
+      dishBreakdown: Array.isArray(dishBreakdown) ? dishBreakdown : [],
+      updatedAt: now,
+      createdAt: existingIndex >= 0 ? reports[existingIndex].createdAt : now
+    };
+
+    if (existingIndex >= 0) {
+      reports[existingIndex] = reportData;
+    } else {
+      reports.unshift(reportData);
+    }
+    this.saveAfterSalesReports(reports);
+
+    this.logAuditEvent('AFTER_SALES_REPORT_SAVED', {
+      vendorId,
+      reportDate: date,
+      totalPrepared: prepared,
+      claimedReservations: claimed,
+      walkInSold: walkIn,
+      remainingPortions: remaining,
+      discardedPortions: discarded,
+      details: `Daily after-sales reconciliation report for ${date} saved successfully. Total prepared: ${prepared}, accounted: ${accounted}.`
+    });
+
+    return { success: true, report: reportData };
+  }
+
+  // =========================================================================
+  // STUDENT MEAL SUGGESTIONS & VOTING
+  // =========================================================================
+
+  static getMealSuggestions(vendorId = null) {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_SUGGESTIONS);
+      let suggestions = [];
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) suggestions = parsed;
+        } catch (e) {
+          console.error('Failed reading suggestions', e);
+        }
+      }
+      if (vendorId) {
+        return suggestions.filter(s => !s.vendorId || s.vendorId === vendorId || s.vendorId === 'all');
+      }
+      return suggestions;
+    } catch (e) {
+      console.error('Error in getMealSuggestions', e);
+      return [];
+    }
+  }
+
+  static saveMealSuggestions(suggestions) {
+    try {
+      localStorage.setItem(SAPAT_STORAGE_KEY_SUGGESTIONS, JSON.stringify(suggestions));
+      window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'meal-suggestions' } }));
+    } catch (e) {
+      console.error('Failed to save meal suggestions', e);
+    }
+  }
+
+  static getStudentVotes(studentId = null) {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_SUGGESTION_VOTES);
+      let votes = {};
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (typeof parsed === 'object' && parsed !== null) votes = parsed;
+        } catch (e) {
+          console.error('Failed reading suggestion votes', e);
+        }
+      }
+      if (studentId) {
+        return votes[studentId] || [];
+      }
+      return votes;
+    } catch (e) {
+      return studentId ? [] : {};
+    }
+  }
+
+  static saveStudentVotes(votes) {
+    try {
+      localStorage.setItem(SAPAT_STORAGE_KEY_SUGGESTION_VOTES, JSON.stringify(votes));
+      window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'suggestion-votes' } }));
+    } catch (e) {
+      console.error('Failed to save student votes', e);
+    }
+  }
+
+  static submitMealSuggestion({ studentId, studentName, dishName, description = '', vendorId = 'all' }) {
+    const cleanDish = String(dishName || '').trim();
+    if (!cleanDish || cleanDish.length < 3) {
+      return { success: false, message: 'Dish name must be at least 3 characters long' };
+    }
+    const cleanDesc = String(description || '').trim().slice(0, 300);
+    const sid = studentId || (this.getCurrentStudent() ? this.getCurrentStudent().schoolId : '2026-0001');
+    const sname = studentName || (this.getCurrentStudent() ? this.getCurrentStudent().fullName : 'Student');
+
+    const suggestions = this.getMealSuggestions();
+    // Check if similar dish already suggested for vendor
+    const existing = suggestions.find(s => 
+      s.dishName.toLowerCase() === cleanDish.toLowerCase() && 
+      (s.vendorId === vendorId || vendorId === 'all')
+    );
+    if (existing) {
+      return { success: false, message: `"${cleanDish}" has already been suggested! You can upvote it below.` };
+    }
+
+    const newSuggestion = {
+      id: 'SUG-' + Date.now().toString().slice(-6),
+      studentId: sid,
+      studentName: sname,
+      dishName: cleanDish,
+      description: cleanDesc,
+      vendorId: vendorId || 'all',
+      votes: 1, // Author automatically gets first vote
+      voterIds: [sid],
+      createdAt: new Date().toISOString()
+    };
+
+    suggestions.unshift(newSuggestion);
+    this.saveMealSuggestions(suggestions);
+
+    // Record author's vote
+    const allVotes = this.getStudentVotes();
+    if (!allVotes[sid]) allVotes[sid] = [];
+    if (!allVotes[sid].includes(newSuggestion.id)) {
+      allVotes[sid].push(newSuggestion.id);
+      this.saveStudentVotes(allVotes);
+    }
+
+    this.logAuditEvent('MEAL_SUGGESTION_SUBMITTED', {
+      studentId: sid,
+      studentName: sname,
+      vendorId,
+      dishName: cleanDish,
+      details: `Student ${sname} suggested new menu idea "${cleanDish}".`
+    });
+
+    return { success: true, suggestion: newSuggestion };
+  }
+
+  static voteMealSuggestion(suggestionId, studentId = null) {
+    if (!suggestionId) return { success: false, message: 'Suggestion ID required' };
+    const sid = studentId || (this.getCurrentStudent() ? this.getCurrentStudent().schoolId : '2026-0001');
+
+    const allVotes = this.getStudentVotes();
+    const studentVotedList = allVotes[sid] || [];
+    const hasVoted = studentVotedList.includes(suggestionId);
+
+    const suggestions = this.getMealSuggestions();
+    const suggestion = suggestions.find(s => s.id === suggestionId);
+
+    // Also support voting on seeded wishlist items if prefixed with wish-seed-
+    if (!suggestion) {
+      if (suggestionId.startsWith('wish-seed-')) {
+        // Record vote in simulation / student vote registry
+        if (hasVoted) {
+          return { success: false, message: 'You have already voted for this dish' };
+        }
+        if (!allVotes[sid]) allVotes[sid] = [];
+        allVotes[sid].push(suggestionId);
+        this.saveStudentVotes(allVotes);
+        return { success: true, hasVoted: true };
+      }
+      return { success: false, message: 'Suggestion not found' };
+    }
+
+    if (hasVoted) {
+      // Toggle off / prevent duplicate vote
+      return { success: false, message: 'You have already voted for this suggested meal' };
+    }
+
+    // Cast vote
+    if (!Array.isArray(suggestion.voterIds)) suggestion.voterIds = [];
+    suggestion.voterIds.push(sid);
+    suggestion.votes = (Number(suggestion.votes) || 0) + 1;
+    this.saveMealSuggestions(suggestions);
+
+    if (!allVotes[sid]) allVotes[sid] = [];
+    allVotes[sid].push(suggestionId);
+    this.saveStudentVotes(allVotes);
+
+    return { success: true, votes: suggestion.votes, hasVoted: true };
+  }
+
+  // =========================================================================
+  // FORECAST SIMULATION CONTEXT
+  // =========================================================================
+
+  static getForecastContext(vendorId) {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_FORECAST_CONTEXT);
+      if (data) {
+        const contexts = JSON.parse(data);
+        if (contexts && contexts[vendorId]) {
+          return contexts[vendorId];
+        }
+      }
+    } catch (e) {
+      console.error('Failed reading forecast context', e);
+    }
+    // Default context
+    return {
+      academicSchedule: 'Regular Academic Schedule',
+      weatherCondition: 'Rainy' // Baseline defaults to match benchmark (Rainy + Exam/Reviews)
+    };
+  }
+
+  static saveForecastContext(vendorId, context) {
+    try {
+      const data = localStorage.getItem(SAPAT_STORAGE_KEY_FORECAST_CONTEXT);
+      let contexts = {};
+      if (data) {
+        try { contexts = JSON.parse(data) || {}; } catch (e) {}
+      }
+      contexts[vendorId] = {
+        ...contexts[vendorId],
+        ...context,
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem(SAPAT_STORAGE_KEY_FORECAST_CONTEXT, JSON.stringify(contexts));
+      window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'forecast-context', vendorId } }));
+    } catch (e) {
+      console.error('Failed saving forecast context', e);
+    }
   }
 
   static getOrders() {
@@ -1524,6 +2065,35 @@ class SapatStorage {
   }
 
   /**
+   * Sweeps and expires all overdue unpaid counter reservations whose payment deadline has passed.
+   * Ensures portions are released back to kitchen inventory and prevents duplicate expiration.
+   */
+  static expireOverduePayments() {
+    const orders = this.getOrders();
+    const now = Date.now();
+    let expiredCount = 0;
+
+    for (const order of orders) {
+      if (
+        (order.status === 'Awaiting Counter Payment' || order.status === 'Pending') &&
+        order.paymentStatus !== 'Paid' &&
+        order.paymentStatus !== 'Expired' &&
+        order.paymentDeadline
+      ) {
+        const deadlineTime = new Date(order.paymentDeadline).getTime();
+        if (!isNaN(deadlineTime) && now > deadlineTime) {
+          const res = this.expireUnpaidReservation(order.id, 'Counter payment cutoff deadline reached at stall.');
+          if (res.success) {
+            expiredCount++;
+          }
+        }
+      }
+    }
+
+    return expiredCount;
+  }
+
+  /**
    * Marks a confirmed ready order as an uncollected No-show.
    */
   static markOrderNoShow(orderId, vendorId = null) {
@@ -1952,6 +2522,11 @@ class SapatStorage {
     localStorage.removeItem(SAPAT_STORAGE_KEY_CURRENT_STUDENT);
     localStorage.removeItem(SAPAT_STORAGE_KEY_CURRENT_VENDOR);
     localStorage.removeItem(SAPAT_STORAGE_KEY_STUDENT_VENDOR);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_WALKIN_SALES);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_AFTER_SALES);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_SUGGESTIONS);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_SUGGESTION_VOTES);
+    localStorage.removeItem(SAPAT_STORAGE_KEY_FORECAST_CONTEXT);
     this.saveVendors(INITIAL_VENDORS);
     this.saveMenu(INITIAL_MENU);
     this.saveOrders(INITIAL_ORDERS);

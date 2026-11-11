@@ -6,6 +6,11 @@ import { showToast } from '../../components/toast.js';
 
 export const adminSettingsPage = {
   render(container) {
+    const currentContext = SapatStorage.getForecastContext('vendor-lita') || {
+      academicSchedule: 'Regular Academic Schedule',
+      weatherCondition: 'Rainy'
+    };
+
     container.innerHTML = `
       <section class="screen active admin-screen" id="screen-admin-settings">
         
@@ -25,14 +30,14 @@ export const adminSettingsPage = {
         <div class="admin-settings-card">
           <div class="settings-card-head">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            <h3 class="settings-card-title">Pre-order & Cooking Cutoff Policies</h3>
+            <h3 class="settings-card-title">Pre-order &amp; Cooking Cutoff Policies</h3>
           </div>
           
           <div class="settings-options-list">
             <div class="settings-option-row">
               <div class="option-info">
                 <strong>Shift Cutoff Window</strong>
-                <p>Pre-orders lock 30 minutes before each pickup shift so canteen cooks can prepare exact portions.</p>
+                <p>Locks pre-orders 30 mins before pickup so cooks prepare exact portions.</p>
               </div>
               <span class="settings-value-pill">30 Minutes</span>
             </div>
@@ -40,7 +45,7 @@ export const adminSettingsPage = {
             <div class="settings-option-row">
               <div class="option-info">
                 <strong>Strict Daily Limit Ceiling</strong>
-                <p>Prevents student orders from exceeding verified cooking limits. Automatically sets dish to Sold Out.</p>
+                <p>Prevents student orders from exceeding verified cooking thresholds.</p>
               </div>
               <span class="settings-badge-active">Enabled (Strict)</span>
             </div>
@@ -48,7 +53,7 @@ export const adminSettingsPage = {
             <div class="settings-option-row">
               <div class="option-info">
                 <strong>Instant Portion Return</strong>
-                <p>When student cancels a pre-order, servings are immediately released back to fellow students.</p>
+                <p>Cancelled pre-orders are restored immediately to canteen inventory.</p>
               </div>
               <span class="settings-badge-active">Active</span>
             </div>
@@ -59,14 +64,14 @@ export const adminSettingsPage = {
         <div class="admin-settings-card">
           <div class="settings-card-head">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            <h3 class="settings-card-title">Payment Governance & OSAS Accountability Policies</h3>
+            <h3 class="settings-card-title">Payment Governance &amp; OSAS Accountability Policies</h3>
           </div>
           
           <div class="settings-options-list">
             <div class="settings-option-row">
               <div class="option-info">
-                <strong>Institution & Student Affairs Office</strong>
-                <p>Official body receiving disciplinary referrals for uncollected meals and food waste violations.</p>
+                <strong>Institution &amp; Student Affairs Office</strong>
+                <p>Receiving office for uncollected meals and food waste infractions.</p>
               </div>
               <span class="settings-value-pill">MinSU &bull; OSAS</span>
             </div>
@@ -74,7 +79,7 @@ export const adminSettingsPage = {
             <div class="settings-option-row">
               <div class="option-info">
                 <strong>Direct Counter Payment Cutoff</strong>
-                <p>Time allowed for students to complete payment in-person at the canteen stall before automatic cancellation.</p>
+                <p>Time allowed for in-person counter settlement before auto-release.</p>
               </div>
               <span class="settings-value-pill">20 Minutes</span>
             </div>
@@ -82,7 +87,7 @@ export const adminSettingsPage = {
             <div class="settings-option-row">
               <div class="option-info">
                 <strong>Pickup Shift Grace Period</strong>
-                <p>Window after scheduled shift ends before uncollected orders are permanently marked as No-Show.</p>
+                <p>Post-shift window before uncollected orders are logged as No-Show.</p>
               </div>
               <span class="settings-value-pill">15 Minutes</span>
             </div>
@@ -90,7 +95,7 @@ export const adminSettingsPage = {
             <div class="settings-option-row">
               <div class="option-info">
                 <strong>Disciplinary Review Threshold</strong>
-                <p>Number of unexcused no-show incidents triggering mandatory referral to student affairs.</p>
+                <p>Unexcused no-show incidents triggering mandatory OSAS referral.</p>
               </div>
               <span class="settings-badge-active" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A;">2 Incidents (Flagged)</span>
             </div>
@@ -108,7 +113,7 @@ export const adminSettingsPage = {
             <div class="settings-option-row">
               <div class="option-info">
                 <strong>Lunch Shift 1 (Early Lunch)</strong>
-                <p>Optimal freshness for Senior High School & College morning sections.</p>
+                <p>Fresh batch pickup for Senior High &amp; morning sections.</p>
               </div>
               <span class="settings-value-pill">11:30 AM &ndash; 12:15 PM</span>
             </div>
@@ -116,7 +121,7 @@ export const adminSettingsPage = {
             <div class="settings-option-row">
               <div class="option-info">
                 <strong>Lunch Shift 2 (Peak Lunch)</strong>
-                <p>Staggered second wave for Junior High School & College midday sections.</p>
+                <p>Staggered wave for Junior High &amp; midday sections.</p>
               </div>
               <span class="settings-value-pill">12:15 PM &ndash; 1:00 PM</span>
             </div>
@@ -124,9 +129,47 @@ export const adminSettingsPage = {
             <div class="settings-option-row">
               <div class="option-info">
                 <strong>Afternoon Recess Shift</strong>
-                <p>Warm merienda & snack pickup window.</p>
+                <p>Fresh merienda &amp; snack pickup window.</p>
               </div>
               <span class="settings-value-pill">2:45 PM &ndash; 3:30 PM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Campus Academic & Event Schedule Context -->
+        <div class="admin-settings-card">
+          <div class="settings-card-head">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <h3 class="settings-card-title">Campus Events &amp; Academic Schedule (Slide 7 Oversight)</h3>
+          </div>
+          <p class="settings-lead-desc">
+            Campus-wide calendar and event context. Aligns demand forecasting across all 5 canteen stall terminals.
+          </p>
+          
+          <div class="settings-options-list">
+            <div class="settings-option-row settings-select-row">
+              <div class="option-info">
+                <strong>Campus Academic Calendar Scenario</strong>
+                <p>Adjusts expected walk-in volume based on class schedules.</p>
+              </div>
+              <select id="admin-setting-academic-schedule" class="sapat-form-select admin-select-control">
+                <option value="Regular Academic Schedule" ${currentContext.academicSchedule === 'Regular Academic Schedule' ? 'selected' : ''}>Regular Academic Schedule (Baseline)</option>
+                <option value="Examination Week" ${currentContext.academicSchedule === 'Examination Week' ? 'selected' : ''}>Examination Week (+25% Volume)</option>
+                <option value="Campus Event" ${currentContext.academicSchedule === 'Campus Event' ? 'selected' : ''}>Campus Event (+25% Dwell & Merienda)</option>
+                <option value="No Classes" ${currentContext.academicSchedule === 'No Classes' ? 'selected' : ''}>Holiday / No Classes (-50% Volume)</option>
+              </select>
+            </div>
+
+            <div class="settings-option-row settings-select-row">
+              <div class="option-info">
+                <strong>Weather Simulation Context</strong>
+                <p>Simulates hot soup vs cold beverage demand.</p>
+              </div>
+              <select id="admin-setting-weather" class="sapat-form-select admin-select-control">
+                <option value="Rainy" ${currentContext.weatherCondition === 'Rainy' ? 'selected' : ''}>Rainy (+18% Soup / Warm Broth)</option>
+                <option value="Sunny" ${currentContext.weatherCondition === 'Sunny' ? 'selected' : ''}>Sunny (Standard Baseline Traffic)</option>
+                <option value="Cloudy" ${currentContext.weatherCondition === 'Cloudy' ? 'selected' : ''}>Cloudy / Overcast (Normal Velocity)</option>
+              </select>
             </div>
           </div>
         </div>
@@ -159,10 +202,10 @@ export const adminSettingsPage = {
             </button>
           </div>
 
-          <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-            <div>
+          <div class="admin-reset-data-row">
+            <div class="reset-data-info">
               <strong style="color: var(--error); font-size: 12.5px;">Reset Demo Prototype Data</strong>
-              <p style="font-size: 11px; color: var(--text-muted);">Restores all 5 stalls, default dishes, pre-orders and inventory limits.</p>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Restores all 5 stalls, default dishes, pre-orders and inventory limits.</p>
             </div>
             <button class="btn-admin-danger" data-action="reset-app-data">
               Reset Data
@@ -177,6 +220,23 @@ export const adminSettingsPage = {
   },
 
   attachEvents(container) {
+    // Academic & Weather context settings
+    const acadSelect = container.querySelector('#admin-setting-academic-schedule');
+    if (acadSelect) {
+      acadSelect.addEventListener('change', (e) => {
+        SapatStorage.saveForecastContext('vendor-lita', { academicSchedule: e.target.value });
+        showToast(`Campus schedule context updated: ${e.target.value}`, 'success');
+      });
+    }
+
+    const weatherSelect = container.querySelector('#admin-setting-weather');
+    if (weatherSelect) {
+      weatherSelect.addEventListener('change', (e) => {
+        SapatStorage.saveForecastContext('vendor-lita', { weatherCondition: e.target.value });
+        showToast(`Campus weather simulation updated: ${e.target.value}`, 'success');
+      });
+    }
+
     container.addEventListener('click', (e) => {
       // Switch to Student
       const studentBtn = e.target.closest('[data-action="switch-to-student"]');

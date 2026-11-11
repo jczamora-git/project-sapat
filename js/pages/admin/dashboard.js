@@ -22,17 +22,44 @@ export const adminDashboardPage = {
     const vendors = SapatStorage.getVendors();
     const menu = SapatStorage.getMenu();
     const orders = SapatStorage.getOrders();
+    const payments = SapatStorage.getPayments ? SapatStorage.getPayments() : [];
 
     const activeOrders = orders.filter(o => o.status !== 'Cancelled');
-    const totalServingsTarget = menu.reduce((s, d) => s + d.dailyLimit, 0);
-    const totalServingsReserved = menu.reduce((s, d) => s + d.reservedServings, 0);
+    const totalServingsTarget = menu.reduce((s, d) => s + (Number(d.dailyLimit) || 0), 0);
+    const totalServingsReserved = menu.reduce((s, d) => s + (Number(d.reservedServings) || 0), 0);
     const totalServingsRemaining = Math.max(0, totalServingsTarget - totalServingsReserved);
     const reservationRate = totalServingsTarget > 0 ? Math.round((totalServingsReserved / totalServingsTarget) * 100) : 0;
-    const totalRevenue = activeOrders.reduce((s, o) => s + o.totalAmount, 0);
+    
+    // Revenue calculations: separate total order value, verified paid revenue, and claimed/completed order value
+    const totalOrderValue = activeOrders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+    const paidOrders = activeOrders.filter(o => o.paymentStatus === 'Paid' || o.status === 'Completed');
+    const verifiedRevenue = paidOrders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+    const completedOrders = activeOrders.filter(o => o.status === 'Completed');
+    const completedRevenue = completedOrders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
 
-    // Food waste saved computation: average school cafeteria wastes ~18-24% of unprepared excess food.
-    // Sapat limits production to locked orders, saving approx ~0.05kg per exact-prepared portion.
+    // Food waste saved computation:
+    // Sapat limits production to locked orders, saving approx ~0.052kg per exact-prepared portion.
     const wastePreventedKg = (totalServingsReserved * 0.052).toFixed(1);
+
+    // Vendor open/closed breakdown
+    const openVendorsCount = vendors.filter(v => v.isOpen).length;
+    const closedVendorsCount = vendors.length - openVendorsCount;
+
+    // Derive context-aware campus insights for the administrator
+    const forecastContext = SapatStorage.getForecastContext ? SapatStorage.getForecastContext('vendor-lita') : {
+      academicSchedule: 'Regular Academic Schedule',
+      weatherCondition: 'Rainy'
+    };
+
+    // Stalls nearing preparation capacity (>= 75% booked)
+    const nearingCapacityStalls = vendors.filter(v => {
+      const vDishes = menu.filter(d => d.vendorId === v.id);
+      const target = vDishes.reduce((s, d) => s + (Number(d.dailyLimit) || 0), 0);
+      const res = vDishes.reduce((s, d) => s + (Number(d.reservedServings) || 0), 0);
+      return target > 0 && (res / target) >= 0.75;
+    });
+
+    const pendingPaymentCount = activeOrders.filter(o => o.paymentStatus === 'Pending' || o.status === 'Awaiting Counter Payment').length;
 
     container.innerHTML = `
       <section class="screen active admin-screen" id="screen-admin-dashboard">
@@ -64,7 +91,7 @@ export const adminDashboardPage = {
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
               <span class="kpi-label">Pre-order Reservations</span>
-              <span class="kpi-badge success">${reservationRate}% Locked</span>
+              <span class="kpi-badge success">${reservationRate}% Reserved</span>
             </div>
             <div class="kpi-value-row">
               <span class="kpi-number">${totalServingsReserved}</span>
@@ -73,13 +100,13 @@ export const adminDashboardPage = {
             <div class="kpi-progress-bar">
               <div class="kpi-progress-fill green" style="width: ${reservationRate}%;"></div>
             </div>
-            <span class="kpi-caption">${totalServingsRemaining} portions remaining for walk-ins & late cutoff</span>
+            <span class="kpi-caption">${totalServingsRemaining} portions remaining today across all stalls</span>
           </div>
 
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
               <span class="kpi-label">Food Waste Prevented</span>
-              <span class="kpi-badge emerald">-96.2% vs baseline</span>
+              <span class="kpi-badge emerald">Demo Estimate</span>
             </div>
             <div class="kpi-value-row">
               <span class="kpi-number">${wastePreventedKg}</span>
@@ -88,55 +115,60 @@ export const adminDashboardPage = {
             <div class="kpi-progress-bar">
               <div class="kpi-progress-fill orange" style="width: 96%;"></div>
             </div>
-            <span class="kpi-caption">Saved by cooking to exact pre-order quotas across all 5 stalls</span>
+            <span class="kpi-caption">Avoided waste from locked pre-order batching</span>
           </div>
 
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
               <span class="kpi-label">Campus Kitchen Revenue</span>
-              <span class="kpi-badge blue">${activeOrders.length} pre-orders</span>
+              <span class="kpi-badge blue">₱${verifiedRevenue.toLocaleString()} Verified</span>
             </div>
             <div class="kpi-value-row">
-              <span class="kpi-number">₱${totalRevenue.toLocaleString()}</span>
+              <span class="kpi-number">₱${verifiedRevenue.toLocaleString()}</span>
             </div>
             <div class="kpi-progress-bar">
-              <div class="kpi-progress-fill blue" style="width: 82%;"></div>
+              <div class="kpi-progress-fill blue" style="width: ${totalOrderValue > 0 ? Math.round((verifiedRevenue / totalOrderValue) * 100) : 100}%;"></div>
             </div>
-            <span class="kpi-caption">Pre-ordered gross volume claimed at express counters</span>
+            <span class="kpi-caption">₱${totalOrderValue.toLocaleString()} gross booked (${pendingPaymentCount} pending)</span>
           </div>
 
           <div class="admin-kpi-card">
             <div class="kpi-card-header">
               <span class="kpi-label">Active Canteen Stalls</span>
-              <span class="kpi-badge success">${vendors.filter(v => v.isOpen).length} of ${vendors.length} Open</span>
+              <span class="kpi-badge success">${openVendorsCount} of ${vendors.length} Open</span>
             </div>
             <div class="kpi-value-row">
               <span class="kpi-number">${vendors.length}</span>
-              <span class="kpi-denom">Licensed Canteens</span>
+              <span class="kpi-denom">Licensed Stalls</span>
             </div>
             <div class="kpi-progress-bar">
               <div class="kpi-progress-fill green" style="width: 100%;"></div>
             </div>
-            <span class="kpi-caption">All 5 kitchen prep stations reporting live IoT quota targets</span>
+            <span class="kpi-caption">${openVendorsCount} of ${vendors.length} stalls active and prepping</span>
           </div>
         </div>
 
-        <!-- AI Demand Forecasting Callout Banner -->
+        <!-- Campus Insights & Recommended Actions (Simplified AI Summary) -->
         <div class="admin-ai-banner">
           <div class="ai-banner-icon-col">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
           </div>
           <div class="ai-banner-content">
             <div class="ai-badge-row">
-              <span class="ai-pill-tag">AI Demand Forecasting &bull; Active Model v2.4</span>
-              <span class="ai-pill-accuracy">94.8% Forecast Accuracy</span>
+              <span class="ai-pill-tag">Campus Operations Assistant</span>
+              <span class="ai-pill-accuracy">Demand Insights</span>
             </div>
-            <h3 class="ai-banner-heading">Recommended Preparation Adjustments for Next Shift</h3>
+            <h3 class="ai-banner-heading">Campus Insights &amp; Recommended Actions</h3>
             <p class="ai-banner-desc">
-              Thursday class attendance (+18% in West Wing) and sunny weather forecast predict heightened demand for <strong>Rice Meals (+14%)</strong> and <strong>Cold Beverages (+28%)</strong>. Recommended kitchen prep limits have been dispatched to stall tablets.
+              ${nearingCapacityStalls.length > 0 ? `
+                <strong>Capacity Watch:</strong> ${nearingCapacityStalls.map(s => s.name).join(', ')} are over 75% booked. Review extra portion capacity before cutoff.
+              ` : `
+                <strong>Kitchen Pacing:</strong> All stalls are pacing smoothly within scheduled limits.
+              `}
+              ${forecastContext.weatherCondition === 'Rainy' ? `Rainy weather is boosting demand for hot soups and warm broths (+18%).` : `Weather conditions support standard baseline lunch attendance.`}
             </p>
           </div>
-          <button class="btn-ai-details" data-route="#/admin/analytics">Inspect Models &rarr;</button>
+          <button class="btn-ai-details" data-route="#/admin/analytics">View Analytics &rarr;</button>
         </div>
 
         <!-- Canteen Stalls Live Operational Matrix -->
@@ -151,8 +183,8 @@ export const adminDashboardPage = {
         <div class="admin-stalls-grid">
           ${vendors.map(v => {
             const vDishes = menu.filter(d => d.vendorId === v.id);
-            const vTarget = vDishes.reduce((s, d) => s + d.dailyLimit, 0);
-            const vReserved = vDishes.reduce((s, d) => s + d.reservedServings, 0);
+            const vTarget = vDishes.reduce((s, d) => s + (Number(d.dailyLimit) || 0), 0);
+            const vReserved = vDishes.reduce((s, d) => s + (Number(d.reservedServings) || 0), 0);
             const vRemaining = Math.max(0, vTarget - vReserved);
             const vPct = vTarget > 0 ? Math.round((vReserved / vTarget) * 100) : 0;
             const isHigh = vPct >= 75;
@@ -172,15 +204,15 @@ export const adminDashboardPage = {
 
                 <div class="stall-card-metrics">
                   <div class="stall-metric-item">
-                    <span class="metric-label">Cooked Target</span>
+                    <span class="metric-label">Prep Target</span>
                     <strong class="metric-val">${vTarget}</strong>
                   </div>
                   <div class="stall-metric-item">
-                    <span class="metric-label">Pre-ordered</span>
+                    <span class="metric-label">Reserved</span>
                     <strong class="metric-val ${isHigh ? 'text-primary' : ''}">${vReserved}</strong>
                   </div>
                   <div class="stall-metric-item">
-                    <span class="metric-label">Remaining</span>
+                    <span class="metric-label">Available</span>
                     <strong class="metric-val ${vRemaining <= 10 ? 'text-orange' : ''}">${vRemaining}</strong>
                   </div>
                 </div>
@@ -201,10 +233,10 @@ export const adminDashboardPage = {
         <!-- Recent Campus Pre-orders Stream -->
         <div class="admin-section-header" style="margin-top: 24px;">
           <div>
-            <h3 class="admin-section-title">Live Campus Reservation Feed</h3>
-            <span class="admin-section-subtitle">Real-time incoming pre-orders across all main canteen pickup windows</span>
+            <h3 class="admin-section-title">Campus Reservation Feed</h3>
+            <span class="admin-section-subtitle">Real-time incoming pre-orders across all main canteen pickup windows (Demo Data)</span>
           </div>
-          <span class="admin-feed-counter">${orders.length} total today</span>
+          <span class="admin-feed-counter">${orders.length} total demo reservations</span>
         </div>
 
         <div class="admin-table-card">
@@ -218,6 +250,7 @@ export const adminDashboardPage = {
                   <th>Dishes</th>
                   <th>Pickup Slot</th>
                   <th>Total</th>
+                  <th>Payment</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -227,9 +260,10 @@ export const adminDashboardPage = {
                   if (o.status === 'Confirmed' || o.status === 'Ready for Pickup') badgeClass = 'status-confirmed';
                   else if (o.status === 'Preparing') badgeClass = 'status-preparing';
                   else if (o.status === 'Completed') badgeClass = 'status-completed';
-                  else if (o.status === 'Cancelled') badgeClass = 'status-cancelled';
+                  else if (o.status === 'Cancelled' || o.status === 'Expired') badgeClass = 'status-cancelled';
 
                   const dishesText = o.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
+                  const isPaid = o.paymentStatus === 'Paid';
 
                   return `
                     <tr>
@@ -244,6 +278,11 @@ export const adminDashboardPage = {
                       <td class="table-dish-col" title="${dishesText}">${dishesText}</td>
                       <td><span class="table-slot-text">${o.pickupTime}</span></td>
                       <td><strong class="table-price-text">₱${o.totalAmount}</strong></td>
+                      <td>
+                        <span class="settings-value-pill" style="font-size: 10.5px; padding: 2px 6px; ${isPaid ? 'color: #065F46; background: #D1FAE5; border-color: #A7F3D0;' : 'color: #92400E; background: #FEF3C7; border-color: #FDE68A;'}">
+                          ${isPaid ? 'Paid' : 'Pending'}
+                        </span>
+                      </td>
                       <td><span class="order-status-badge ${badgeClass}">${o.status}</span></td>
                     </tr>
                   `;

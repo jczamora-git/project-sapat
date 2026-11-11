@@ -216,12 +216,33 @@ export function initModals() {
     }
   }
 
-  // Modal 7: Online Payment Gateway Simulation
+  // Modal 7: Student Checkout & Payment Modal (Digital & Counter)
   const onlinePayModal = document.getElementById('modal-online-payment');
   if (onlinePayModal) {
     const closeBtns = onlinePayModal.querySelectorAll('[data-action="close-online-payment"], .close-modal-btn');
     closeBtns.forEach(btn => btn.addEventListener('click', closeOnlinePaymentModal));
 
+    // Method selection cards toggling
+    const methodCards = onlinePayModal.querySelectorAll('.checkout-method-card');
+    const digitalPanel = document.getElementById('checkout-digital-panel');
+    const counterPanel = document.getElementById('checkout-counter-panel');
+
+    methodCards.forEach(card => {
+      card.addEventListener('click', () => {
+        methodCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        const method = card.getAttribute('data-method');
+        if (method === 'Counter Payment') {
+          if (digitalPanel) digitalPanel.style.display = 'none';
+          if (counterPanel) counterPanel.style.display = 'block';
+        } else {
+          if (counterPanel) counterPanel.style.display = 'none';
+          if (digitalPanel) digitalPanel.style.display = 'block';
+        }
+      });
+    });
+
+    // E-wallet provider switching
     const providerBtns = onlinePayModal.querySelectorAll('.pay-provider-btn');
     providerBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -235,10 +256,20 @@ export function initModals() {
       });
     });
 
+    // Digital Payment authorization
     const successBtn = document.getElementById('btn-simulate-pay-success');
     if (successBtn) {
       successBtn.addEventListener('click', () => {
         if (!currentOnlinePaymentOrder) return;
+        const phoneInput = document.getElementById('online-pay-phone');
+        const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+        const digits = phoneVal.replace(/\D/g, '');
+        if (digits.length < 7) {
+          showToast('Please enter a valid mobile number for digital payment authorization.', 'error');
+          if (phoneInput) phoneInput.focus();
+          return;
+        }
+
         const activeBtn = onlinePayModal.querySelector('.pay-provider-btn.active');
         const provider = activeBtn ? activeBtn.getAttribute('data-provider') : 'GCash';
         const paymentMethod = `Online Payment (${provider})`;
@@ -256,6 +287,7 @@ export function initModals() {
       });
     }
 
+    // Digital Payment failure simulation
     const failBtn = document.getElementById('btn-simulate-pay-fail');
     if (failBtn) {
       failBtn.addEventListener('click', () => {
@@ -265,6 +297,85 @@ export function initModals() {
         showToast('Payment declined: Simulated transaction failure.', 'error');
         closeOnlinePaymentModal();
         window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'orders' } }));
+      });
+    }
+
+    // Counter Payment confirmation
+    const counterConfirmBtn = document.getElementById('btn-confirm-counter-pay');
+    if (counterConfirmBtn) {
+      counterConfirmBtn.addEventListener('click', () => {
+        if (!currentOnlinePaymentOrder) return;
+        const orderId = currentOnlinePaymentOrder.id;
+        const orders = SapatStorage.getOrders();
+        const order = orders.find(o => o.id === orderId);
+        if (!order) return;
+
+        const settings = SapatStorage.getSettings();
+        const deadlineMins = settings.counterPaymentDeadlineMinutes || 20;
+
+        order.paymentMethod = 'Counter Payment';
+        order.status = 'Awaiting Counter Payment';
+        order.paymentStatus = 'Pending';
+        order.paymentDeadline = new Date(Date.now() + deadlineMins * 60000).toISOString();
+        order.counterWindow = order.vendorStall || 'Stall Counter';
+        SapatStorage.saveOrders(orders);
+
+        const payments = SapatStorage.getPayments();
+        let payment = payments.find(p => p.reservationId === order.id);
+        if (payment) {
+          payment.method = 'Counter Payment';
+          payment.status = 'Pending';
+          payment.paymentDeadline = order.paymentDeadline;
+          payment.counterWindow = order.counterWindow;
+          SapatStorage.savePayments(payments);
+        }
+
+        SapatStorage.logAuditEvent('COUNTER_PAYMENT_INITIATED', {
+          orderId: order.id,
+          studentName: order.studentName,
+          vendorId: order.vendorId,
+          amount: order.totalAmount,
+          details: `Direct counter payment selected for #${order.id}. Must pay at ${order.counterWindow} within ${deadlineMins} mins.`
+        });
+
+        // Switch to Section 5: Counter Payment Success Screen
+        const mainFlow = document.getElementById('checkout-main-flow');
+        const successView = document.getElementById('checkout-counter-success-view');
+
+        const succOrderId = document.getElementById('counter-succ-order-id');
+        if (succOrderId) succOrderId.textContent = `#${order.id}`;
+
+        const succCanteen = document.getElementById('counter-succ-canteen');
+        if (succCanteen) succCanteen.textContent = `${order.vendorName || 'Canteen'} (${order.vendorStall || 'Stall'})`;
+
+        const succAmount = document.getElementById('counter-succ-amount');
+        if (succAmount) succAmount.textContent = `₱${(order.totalAmount || 0).toFixed(2)}`;
+
+        const succDeadline = document.getElementById('counter-succ-deadline');
+        if (succDeadline) succDeadline.textContent = `${deadlineMins} minutes`;
+
+        if (mainFlow) mainFlow.style.display = 'none';
+        if (successView) successView.style.display = 'block';
+
+        showToast(`Reservation #${order.id} received! Settle payment at ${order.vendorStall}.`, 'success');
+        window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'orders' } }));
+      });
+    }
+
+    // Counter Success Screen Actions
+    const viewOrdersBtn = document.getElementById('btn-counter-view-orders');
+    if (viewOrdersBtn) {
+      viewOrdersBtn.addEventListener('click', () => {
+        closeOnlinePaymentModal();
+        router.navigate('#/student/orders');
+      });
+    }
+
+    const returnMenuBtn = document.getElementById('btn-counter-return-menu');
+    if (returnMenuBtn) {
+      returnMenuBtn.addEventListener('click', () => {
+        closeOnlinePaymentModal();
+        router.navigate('#/student/menu');
       });
     }
 
@@ -398,6 +509,46 @@ export function initModals() {
       if (e.target === feedbackModal) closeMealFeedbackModal();
     });
   }
+
+  // Modal 10: Suggest a Meal
+  const suggestModal = document.getElementById('modal-suggest-meal');
+  if (suggestModal) {
+    const closeBtns = suggestModal.querySelectorAll('[data-action="close-suggest-meal"], .close-modal-btn');
+    closeBtns.forEach(btn => btn.addEventListener('click', closeSuggestMealModal));
+
+    const form = document.getElementById('form-suggest-meal');
+    if (form) {
+      form.addEventListener('submit', handleSaveMealSuggestion);
+    }
+
+    suggestModal.addEventListener('click', (e) => {
+      if (e.target === suggestModal) closeSuggestMealModal();
+    });
+  }
+
+  // Modal 11: Vendor Walk-in Sale
+  const walkinModal = document.getElementById('modal-walkin-sale');
+  if (walkinModal) {
+    const closeBtns = walkinModal.querySelectorAll('[data-action="close-walkin-sale"], .close-modal-btn');
+    closeBtns.forEach(btn => btn.addEventListener('click', closeWalkinSaleModal));
+
+    const dishSelect = document.getElementById('walkin-dish-select');
+    const qtyInput = document.getElementById('walkin-qty-input');
+    if (dishSelect) dishSelect.addEventListener('change', updateWalkinPreview);
+    if (qtyInput) {
+      qtyInput.addEventListener('input', updateWalkinPreview);
+      qtyInput.addEventListener('change', updateWalkinPreview);
+    }
+
+    const form = document.getElementById('form-walkin-sale');
+    if (form) {
+      form.addEventListener('submit', handleSaveWalkinSale);
+    }
+
+    walkinModal.addEventListener('click', (e) => {
+      if (e.target === walkinModal) closeWalkinSaleModal();
+    });
+  }
 }
 
 // ==========================================
@@ -433,7 +584,7 @@ export function openMealModal(dishId) {
   state.selectedMealForModal = dish;
   state.modalMealQty = 1;
 
-  const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
+  const remaining = SapatStorage.getDishAvailablePortions(dish.id);
   const isSoldOut = remaining <= 0;
   const percentFilled = Math.min(100, Math.round((dish.reservedServings / dish.dailyLimit) * 100));
 
@@ -530,7 +681,7 @@ export function closeMealModal() {
 export function modalAdjustQty(delta) {
   if (!state.selectedMealForModal) return;
   const dish = state.selectedMealForModal;
-  const remaining = Math.max(0, dish.dailyLimit - dish.reservedServings);
+  const remaining = SapatStorage.getDishAvailablePortions(dish.id);
 
   const existingInCart = state.cart.find(i => i.id === dish.id);
   const inCartQty = existingInCart ? existingInCart.quantity : 0;
@@ -563,7 +714,7 @@ export function modalAdjustQty(delta) {
 
 export function modalConfirmAddToCart() {
   if (!state.selectedMealForModal) return;
-  const remaining = Math.max(0, state.selectedMealForModal.dailyLimit - state.selectedMealForModal.reservedServings);
+  const remaining = SapatStorage.getDishAvailablePortions(state.selectedMealForModal.id);
 
   if (remaining <= 0) {
     showToast(`${state.selectedMealForModal.name} is SOLD OUT today!`, 'error');
@@ -797,16 +948,18 @@ export function closePickupPass() {
 }
 
 // ==========================================
-// Online Payment Modal Methods (Simulated Gateway)
+// Student Checkout & Payment Modal Methods
 // ==========================================
 let currentOnlinePaymentOrder = null;
 
-export function openOnlinePaymentModal(orderId) {
+export function openCheckoutModal(orderId, preferredMethod = null) {
   const orders = SapatStorage.getOrders();
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
 
   currentOnlinePaymentOrder = order;
+  const settings = SapatStorage.getSettings();
+  const deadlineMins = settings.counterPaymentDeadlineMinutes || 20;
 
   const orderRefEl = document.getElementById('online-pay-order-ref');
   if (orderRefEl) orderRefEl.textContent = `#${order.id}`;
@@ -817,16 +970,67 @@ export function openOnlinePaymentModal(orderId) {
   const amountEl = document.getElementById('online-pay-amount');
   if (amountEl) amountEl.textContent = `₱${(order.totalAmount || 0).toFixed(2)}`;
 
-  const btnPayLabel = document.getElementById('btn-pay-label');
-  if (btnPayLabel) btnPayLabel.textContent = `Authorize & Pay ₱${(order.totalAmount || 0).toFixed(2)} (Simulate Success)`;
-
+  // Determine active provider for digital label
   const modal = document.getElementById('modal-online-payment');
+  const activeProviderBtn = modal ? modal.querySelector('.pay-provider-btn.active') : null;
+  const provider = activeProviderBtn ? activeProviderBtn.getAttribute('data-provider') : 'GCash';
+
+  const btnPayLabel = document.getElementById('btn-pay-label');
+  if (btnPayLabel) btnPayLabel.textContent = `Authorize & Pay ₱${(order.totalAmount || 0).toFixed(2)} via ${provider}`;
+
+  // Counter details setup
+  const counterStallText = document.getElementById('counter-info-stall-text');
+  if (counterStallText) {
+    counterStallText.innerHTML = `Pay your order directly at <strong>${order.vendorName || 'your canteen'} (${order.vendorStall || 'Stall Counter'})</strong>.`;
+  }
+
+  const counterAmount = document.getElementById('counter-info-amount');
+  if (counterAmount) counterAmount.textContent = `₱${(order.totalAmount || 0).toFixed(2)}`;
+
+  const counterDeadline = document.getElementById('counter-info-deadline');
+  if (counterDeadline) counterDeadline.textContent = `${deadlineMins} minutes after placing your reservation`;
+
+  // Reset panels view: show main checkout flow, hide success view
+  const mainFlow = document.getElementById('checkout-main-flow');
+  const successView = document.getElementById('checkout-counter-success-view');
+  if (mainFlow) mainFlow.style.display = 'block';
+  if (successView) successView.style.display = 'none';
+
+  // Toggle active payment method
+  const isCounter = preferredMethod === 'Counter Payment' || order.paymentMethod === 'Counter Payment';
+  const methodCardDigital = document.getElementById('method-card-digital');
+  const methodCardCounter = document.getElementById('method-card-counter');
+  const digitalPanel = document.getElementById('checkout-digital-panel');
+  const counterPanel = document.getElementById('checkout-counter-panel');
+
+  if (isCounter) {
+    if (methodCardCounter) methodCardCounter.classList.add('active');
+    if (methodCardDigital) methodCardDigital.classList.remove('active');
+    if (digitalPanel) digitalPanel.style.display = 'none';
+    if (counterPanel) counterPanel.style.display = 'block';
+  } else {
+    if (methodCardDigital) methodCardDigital.classList.add('active');
+    if (methodCardCounter) methodCardCounter.classList.remove('active');
+    if (counterPanel) counterPanel.style.display = 'none';
+    if (digitalPanel) digitalPanel.style.display = 'block';
+  }
+
   if (modal) modal.classList.add('active');
+}
+
+export function openOnlinePaymentModal(orderId) {
+  openCheckoutModal(orderId, 'Online Payment');
 }
 
 export function closeOnlinePaymentModal() {
   const modal = document.getElementById('modal-online-payment');
   if (modal) modal.classList.remove('active');
+
+  const mainFlow = document.getElementById('checkout-main-flow');
+  const successView = document.getElementById('checkout-counter-success-view');
+  if (mainFlow) mainFlow.style.display = 'block';
+  if (successView) successView.style.display = 'none';
+
   currentOnlinePaymentOrder = null;
 }
 
@@ -1229,6 +1433,161 @@ function populateFilterModal() {
         ${cat.label}
       </button>
     `).join('');
+  }
+}
+
+// ==========================================
+// Suggest a Meal Modal Methods
+// ==========================================
+export function openSuggestMealModal() {
+  const modal = document.getElementById('modal-suggest-meal');
+  if (!modal) return;
+  const nameInput = document.getElementById('suggest-dish-name');
+  const descInput = document.getElementById('suggest-dish-desc');
+  if (nameInput) nameInput.value = '';
+  if (descInput) descInput.value = '';
+  modal.classList.add('active');
+}
+
+export function closeSuggestMealModal() {
+  const modal = document.getElementById('modal-suggest-meal');
+  if (modal) modal.classList.remove('active');
+}
+
+export function handleSaveMealSuggestion(e) {
+  if (e) e.preventDefault();
+  const nameInput = document.getElementById('suggest-dish-name');
+  const vendorSelect = document.getElementById('suggest-vendor-target');
+  const descInput = document.getElementById('suggest-dish-desc');
+
+  const dishName = nameInput ? nameInput.value.trim() : '';
+  const vendorId = vendorSelect ? vendorSelect.value : 'all';
+  const description = descInput ? descInput.value.trim() : '';
+
+  if (!dishName || dishName.length < 3) {
+    showToast('Please enter a meal name (at least 3 characters)', 'error');
+    return;
+  }
+
+  const student = SapatStorage.getCurrentStudent();
+  if (!student) {
+    showToast('Please sign in with your School ID to submit a meal suggestion.', 'info');
+    closeSuggestMealModal();
+    router.navigate('#/auth/login');
+    return;
+  }
+
+  const res = SapatStorage.submitMealSuggestion({
+    studentId: student.schoolId,
+    studentName: student.fullName,
+    dishName,
+    description,
+    vendorId
+  });
+
+  if (res.success) {
+    showToast(`Meal suggestion "${dishName}" submitted with your vote!`, 'success');
+    closeSuggestMealModal();
+    window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'meal-suggestions' } }));
+  } else {
+    showToast(res.message || 'Failed to submit suggestion', 'error');
+  }
+}
+
+// ==========================================
+// Walk-in Sale Modal Methods
+// ==========================================
+export function openWalkinSaleModal(vendorId = null) {
+  const modal = document.getElementById('modal-walkin-sale');
+  if (!modal) return;
+
+  const vId = vendorId || state.currentVendorId;
+  const menu = SapatStorage.getMenu();
+  const vendorDishes = menu.filter(d => d.vendorId === vId && d.isAvailable);
+
+  const select = document.getElementById('walkin-dish-select');
+  if (select) {
+    if (!vendorDishes.length) {
+      select.innerHTML = '<option value="">No available dishes configured</option>';
+    } else {
+      select.innerHTML = vendorDishes.map(d => {
+        const avail = SapatStorage.getDishAvailablePortions(d.id);
+        return `<option value="${d.id}" data-price="${d.price}" data-avail="${avail}">${d.name} (₱${d.price} &bull; ${avail} left)</option>`;
+      }).join('');
+    }
+  }
+
+  const qtyInput = document.getElementById('walkin-qty-input');
+  if (qtyInput) qtyInput.value = '1';
+
+  updateWalkinPreview();
+  modal.classList.add('active');
+}
+
+export function closeWalkinSaleModal() {
+  const modal = document.getElementById('modal-walkin-sale');
+  if (modal) modal.classList.remove('active');
+}
+
+function updateWalkinPreview() {
+  const select = document.getElementById('walkin-dish-select');
+  const qtyInput = document.getElementById('walkin-qty-input');
+  const availEl = document.getElementById('walkin-avail-preview');
+  const priceEl = document.getElementById('walkin-price-preview');
+  const totalEl = document.getElementById('walkin-total-preview');
+
+  if (!select || !select.value) {
+    if (availEl) availEl.textContent = '0 portions';
+    if (priceEl) priceEl.textContent = '₱0.00';
+    if (totalEl) totalEl.textContent = '₱0.00';
+    return;
+  }
+
+  const opt = select.options[select.selectedIndex];
+  const price = Number(opt?.getAttribute('data-price')) || 0;
+  const avail = Number(opt?.getAttribute('data-avail')) || 0;
+  const qty = parseInt(qtyInput?.value || '1', 10) || 1;
+
+  if (availEl) availEl.textContent = `${avail} portion${avail === 1 ? '' : 's'}`;
+  if (priceEl) priceEl.textContent = `₱${price.toFixed(2)}`;
+  if (totalEl) totalEl.textContent = `₱${(price * qty).toFixed(2)}`;
+}
+
+export function handleSaveWalkinSale(e) {
+  if (e) e.preventDefault();
+  const select = document.getElementById('walkin-dish-select');
+  const qtyInput = document.getElementById('walkin-qty-input');
+
+  const dishId = select ? select.value : null;
+  const qty = parseInt(qtyInput ? qtyInput.value : '1', 10);
+
+  if (!dishId) {
+    showToast('Please select a dish', 'error');
+    return;
+  }
+  if (isNaN(qty) || qty <= 0) {
+    showToast('Please enter a valid positive quantity', 'error');
+    return;
+  }
+
+  const dish = SapatStorage.getDishById(dishId);
+  if (!dish) {
+    showToast('Dish not found', 'error');
+    return;
+  }
+
+  const res = SapatStorage.recordWalkInSale({
+    vendorId: dish.vendorId,
+    dishId,
+    quantity: qty
+  });
+
+  if (res.success) {
+    showToast(`Recorded walk-in sale: ${qty}x ${dish.name} (₱${res.sale.totalAmount.toFixed(2)})`, 'success');
+    closeWalkinSaleModal();
+    window.dispatchEvent(new CustomEvent('sapat:data-updated', { detail: { type: 'walkin-sales' } }));
+  } else {
+    showToast(res.message || 'Failed to record walk-in sale', 'error');
   }
 }
 

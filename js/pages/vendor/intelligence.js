@@ -7,6 +7,63 @@ import { getImgFallback } from '../../components/food-card.js';
 import { getCanteenBrandMark } from '../../components/vendor-card.js';
 import { ForecastingService } from '../../services/forecasting.service.js';
 
+// Helper for simple, conversational kitchen recommendation states
+function getRecommendationState(d) {
+  if (d.confirmedPreorders >= d.currentLimit && d.currentLimit > 0) {
+    return {
+      state: 'capacity-reached',
+      headline: 'All Portions Reserved',
+      badge: 'Capacity Reached',
+      badgeClass: 'v-assistant-badge-capacity',
+      cardClass: 'v-assistant-card-capacity',
+      message: 'All available portions have been reserved. Your current preparation limit has been reached.',
+      hasAction: d.additionalNeeded > 0
+    };
+  }
+  if (d.additionalNeeded > 0) {
+    if (d.bookingRatePct >= 70) {
+      return {
+        state: 'increase',
+        headline: `Increase Preparation by ${d.additionalNeeded}`,
+        badge: `+${d.additionalNeeded} Extra Recommended`,
+        badgeClass: 'v-assistant-badge-increase',
+        cardClass: 'v-assistant-card-increase',
+        message: `More students are ordering this meal. We recommend preparing ${d.additionalNeeded} additional portions.`,
+        hasAction: true
+      };
+    }
+    return {
+      state: 'high-demand',
+      headline: 'High Demand Expected',
+      badge: `+${d.additionalNeeded} Extra Recommended`,
+      badgeClass: 'v-assistant-badge-increase',
+      cardClass: 'v-assistant-card-increase',
+      message: 'This meal is almost fully reserved. Consider increasing your preparation limit.',
+      hasAction: true
+    };
+  }
+  if (d.bookingRatePct < 25 && d.currentLimit > 20) {
+    return {
+      state: 'low-demand',
+      headline: 'Low Demand Today',
+      badge: 'Low Demand',
+      badgeClass: 'v-assistant-badge-neutral',
+      cardClass: 'v-assistant-card-neutral',
+      message: 'Fewer students are ordering this meal today. Avoid preparing too many portions.',
+      hasAction: false
+    };
+  }
+  return {
+    state: 'enough',
+    headline: 'Preparation is Enough',
+    badge: 'Preparation is Enough',
+    badgeClass: 'v-assistant-badge-optimal',
+    cardClass: 'v-assistant-card-optimal',
+    message: "Your current preparation should be enough for today's expected orders.",
+    hasAction: false
+  };
+}
+
 export const vendorIntelligencePage = {
   _unsubscribe: null,
   _activePillar: 'forecast',
@@ -38,13 +95,14 @@ export const vendorIntelligencePage = {
     const requestedMeals = ForecastingService.getRequestedMeals(state.currentVendorId);
     const tomorrow = ForecastingService.getTomorrowForecast(state.currentVendorId);
     const historyLogs = ForecastingService.getHistoricalLogs(state.currentVendorId);
+    const currentContext = SapatStorage.getForecastContext(state.currentVendorId);
 
     const activePillar = this._activePillar || 'forecast';
 
     container.innerHTML = `
       <section class="screen active" id="screen-vendor-intelligence">
         
-        <!-- 1. Full-Width Responsive Header Card (No Competing Switch Button) -->
+        <!-- 1. Full-Width Responsive Header Card -->
         <div class="v-ai-hub-header-card">
           <div class="v-hub-header-brand-row">
             <div class="v-hub-brand-badge">
@@ -64,25 +122,25 @@ export const vendorIntelligencePage = {
             </div>
           </div>
 
-          <!-- Quick KPI Pill Strip -->
+          <!-- Quick KPI Pill Strip (Synchronized from Single Source of Truth) -->
           <div class="v-hub-quick-kpis">
             <div class="v-hub-kpi-chip">
-              <span class="v-chip-lbl">Forecast Accuracy</span>
-              <strong class="v-chip-val">${forecast.sustainability.prepAccuracyPct}%</strong>
-              <span class="v-chip-sub">Demo Model Precision</span>
+              <span class="v-chip-lbl">How Close Our Estimates Were</span>
+              <strong class="v-chip-val">${forecast.sustainability.prepAccuracyPct !== null ? `${forecast.sustainability.prepAccuracyPct}%` : 'Pending Logs'}</strong>
+              <span class="v-chip-sub">${forecast.sustainability.prepAccuracyPct !== null ? 'Historical Audit Precision' : 'Awaiting Completed Shifts'}</span>
             </div>
             <div class="v-hub-kpi-chip">
-              <span class="v-chip-lbl">Food Waste Avoided</span>
+              <span class="v-chip-lbl">Estimated Food Waste Prevented</span>
               <strong class="v-chip-val text-primary">${forecast.sustainability.wastePreventedKg} kg</strong>
-              <span class="v-chip-sub">Predicted Surplus Saved</span>
+              <span class="v-chip-sub">Simulated Estimate &bull; 280g/meal</span>
             </div>
             <div class="v-hub-kpi-chip">
-              <span class="v-chip-lbl">Student Satisfaction</span>
+              <span class="v-chip-lbl">Student Meal Satisfaction</span>
               <strong class="v-chip-val">${taste.sentimentScore}%</strong>
-              <span class="v-chip-sub">${taste.totalReviews} Verified Reviews</span>
+              <span class="v-chip-sub">${taste.totalReviews} Verified Student Reviews</span>
             </div>
             <div class="v-hub-kpi-chip">
-              <span class="v-chip-lbl">Unmet Meal Requests</span>
+              <span class="v-chip-lbl">Meals Students Are Requesting</span>
               <strong class="v-chip-val text-orange">${requestedMeals.reduce((s, m) => s + m.votes, 0)}</strong>
               <span class="v-chip-sub">Campus Student Votes</span>
             </div>
@@ -101,11 +159,11 @@ export const vendorIntelligencePage = {
           </button>
           <button class="v-pillar-btn ${activePillar === 'taste' ? 'active' : ''}" data-pillar="taste" type="button">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-            <span>Customer Taste AI</span>
+            <span>What Students Like</span>
           </button>
           <button class="v-pillar-btn ${activePillar === 'wishlist' ? 'active' : ''}" data-pillar="wishlist" type="button">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            <span>Requested Meals</span>
+            <span>Meals Students Want</span>
           </button>
           <button class="v-pillar-btn ${activePillar === 'performance' ? 'active' : ''}" data-pillar="performance" type="button">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -120,14 +178,67 @@ export const vendorIntelligencePage = {
         <!-- 3. Pillar Views -->
 
         ${activePillar === 'forecast' ? `
-          <!-- PILLAR A: DEMAND FORECASTING (TODAY & TOMORROW) -->
+          <!-- PILLAR A: TOMORROW'S EXPECTED ORDERS & DEMAND -->
           <div class="v-hub-section-block">
             <div class="v-hub-block-head">
               <div>
-                <h3 class="v-hub-block-title">Adaptive Demand Forecasting</h3>
+                <h3 class="v-hub-block-title">Tomorrow's Expected Orders</h3>
                 <span class="v-hub-block-subtitle">Predicting reservation volume before shifts begin with real-time continuous recalibration</span>
               </div>
               <span class="v-hub-badge-live">Live Recalibrating</span>
+            </div>
+
+            <!-- Environmental & Academic Schedule Simulation Selectors -->
+            <div class="v-sim-controls-card" style="background: var(--bg-card); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between;">
+              <div style="flex: 1; min-width: 220px;">
+                <label for="select-academic-context" style="font-size: 11px; font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 4px;">Academic Schedule Context</label>
+                <select id="select-academic-context" class="sapat-form-select" style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; font-weight: 600; background: var(--bg-main, #fff); color: var(--text-primary);">
+                  <option value="Regular Academic Schedule" ${currentContext.academicSchedule === 'Regular Academic Schedule' ? 'selected' : ''}>Regular Academic Schedule (Baseline)</option>
+                  <option value="Examination Week" ${currentContext.academicSchedule === 'Examination Week' ? 'selected' : ''}>Examination Week (+25% Fast Express Rush)</option>
+                  <option value="Campus Event" ${currentContext.academicSchedule === 'Campus Event' ? 'selected' : ''}>Campus Event (+25% Dwell & Merienda)</option>
+                  <option value="No Classes" ${currentContext.academicSchedule === 'No Classes' ? 'selected' : ''}>Holiday / No Classes (-50% Volume)</option>
+                </select>
+              </div>
+
+              <div style="flex: 1; min-width: 200px;">
+                <label for="select-weather-context" style="font-size: 11px; font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 4px;">Weather Simulation</label>
+                <select id="select-weather-context" class="sapat-form-select" style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; font-weight: 600; background: var(--bg-main, #fff); color: var(--text-primary);">
+                  <option value="Rainy" ${currentContext.weatherCondition === 'Rainy' ? 'selected' : ''}>Rainy (+18% Warm Broth & Comfort Soup)</option>
+                  <option value="Sunny" ${currentContext.weatherCondition === 'Sunny' ? 'selected' : ''}>Sunny (Baseline Outdoor Traffic)</option>
+                  <option value="Cloudy" ${currentContext.weatherCondition === 'Cloudy' ? 'selected' : ''}>Cloudy / Overcast (Normal Velocity)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Why We Expect This Demand (Forecast Confidence & Evidence Drivers) -->
+            <div class="v-confidence-container" style="margin-bottom: 16px;">
+              <div class="v-conf-head-row">
+                <div class="v-conf-title-wrap">
+                  <span class="v-conf-main-title">Why We Expect This Demand</span>
+                  <span class="v-conf-sub-title">Calculated from historical audit depth, reservation pace, and campus schedule</span>
+                </div>
+                <span class="v-conf-badge ${forecast.confidence.levelClass}">
+                  <span class="v-ai-badge-pulse" style="background: currentColor;"></span>
+                  ${forecast.confidence.level} Reliability (${forecast.confidence.score}%)
+                </span>
+              </div>
+
+              <div class="v-conf-factors-grid">
+                ${forecast.confidence.factors.map(f => `
+                  <div class="v-conf-factor-item">
+                    <span class="v-factor-dot ${f.status === 'verified' ? '' : 'neutral'}"></span>
+                    <div class="v-factor-content">
+                      <strong class="v-factor-name">${f.name}</strong>
+                      <p class="v-factor-desc">${f.summary}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div class="v-conf-disclaimer">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>${forecast.confidence.prototypeNotice}</span>
+              </div>
             </div>
 
             <!-- Tomorrow Predictive Weather & Schedule Correlation -->
@@ -165,9 +276,9 @@ export const vendorIntelligencePage = {
                       <small>${d.recommendation}</small>
                     </div>
                     <div class="v-tmr-metrics-col">
-                      <span class="v-tmr-cur">Limit: <strong>${d.currentLimit}</strong></span>
+                      <span class="v-tmr-cur">Current Target: <strong>${d.currentLimit}</strong></span>
                       <span class="v-tmr-arrow">&rarr;</span>
-                      <span class="v-tmr-suggested">AI Suggested: <strong class="text-primary">${d.recommendedTarget}</strong></span>
+                      <span class="v-tmr-suggested">AI Recommended Target: <strong class="text-primary">${d.recommendedTarget}</strong></span>
                     </div>
                   </div>
                   <p class="v-tmr-rationale-text">${d.rationale}</p>
@@ -175,107 +286,182 @@ export const vendorIntelligencePage = {
               </div>
             </div>
 
-            <!-- Demand Distribution by Pickup Window -->
-            <div class="v-hub-block-head" style="margin-top: 18px;">
-              <div>
-                <h4 class="v-hub-subhead-title">Pickup Window Surge Distribution</h4>
-                <span class="v-hub-block-subtitle">Staggered rush schedule preventing counter bottlenecks</span>
+            <!-- Expected Orders by Pickup Time (Unified Data Source) -->
+            <div class="v-shift-forecast-deck" style="margin-top: 18px;">
+              <div class="v-ai-block-heading">
+                <span class="v-block-title">Expected Orders by Pickup Time</span>
+                <span class="v-block-sub">Derived mathematically from confirmed order tickets and arrival velocity &bull; Zero double-counting</span>
               </div>
-            </div>
 
-            <div class="v-pickup-windows-deck">
-              ${forecast.pickupWindows.map(w => `
-                <div class="v-window-item">
-                  <span class="v-win-time">${w.time}</span>
-                  <div class="v-win-bar-wrap">
-                    <div class="v-win-bar ${w.pct >= 45 ? 'peak' : ''}" style="width: ${w.pct}%;"></div>
+              <div class="v-shift-deck-list">
+                ${forecast.pickupWindows.map(w => `
+                  <div class="v-shift-item-card">
+                    <div class="v-shift-item-head">
+                      <div class="v-shift-title-box">
+                        <strong class="v-shift-name">${w.slot}</strong>
+                        <span class="v-shift-hours">${w.time}</span>
+                      </div>
+                      ${w.isPeak ? '<span class="v-shift-badge-peak">Peak Rush Shift</span>' : ''}
+                    </div>
+
+                    <!-- 4 Shift Metrics -->
+                    <div class="v-shift-metrics-strip">
+                      <div class="v-shift-metric-cell">
+                        <span class="v-shift-metric-lbl">Confirmed Orders</span>
+                        <strong class="v-shift-metric-val text-primary">${w.confirmedPreorders} meals</strong>
+                      </div>
+                      <div class="v-shift-metric-cell">
+                        <span class="v-shift-metric-lbl">Predicted Additional Demand</span>
+                        <strong class="v-shift-metric-val text-orange">+${w.predictedAdditional} meals</strong>
+                      </div>
+                      <div class="v-shift-metric-cell">
+                        <span class="v-shift-metric-lbl">Total Expected Demand</span>
+                        <strong class="v-shift-metric-val">${w.totalExpectedDemand} meals</strong>
+                      </div>
+                      <div class="v-shift-metric-cell">
+                        <span class="v-shift-metric-lbl">Percentage of Expected Demand</span>
+                        <strong class="v-shift-metric-val">${w.pct}%</strong>
+                      </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="v-win-bar-track" style="height: 6px; background: #E2E8F0; border-radius: 3px; overflow: hidden;">
+                      <div class="v-win-bar-fill ${w.isPeak ? 'peak' : ''}" style="width: ${w.pct}%; height: 100%; background: ${w.isPeak ? 'var(--accent-orange)' : 'var(--primary)'};"></div>
+                    </div>
                   </div>
-                  <span class="v-win-meta">${w.servings} meals (${w.pct}%)</span>
-                </div>
-              `).join('')}
+                `).join('')}
+              </div>
+
+              <!-- Reconciled Shift Total Footer -->
+              <div class="v-shift-reconcile-footer">
+                <span><strong>Shift Sum Reconciliation:</strong> Verified matching overall kitchen forecast</span>
+                <span>Confirmed: <strong>${forecast.summary.totalConfirmed}</strong> &bull; Additional: <strong>+${forecast.summary.totalAdditionalNeeded || (forecast.summary.totalPredicted - forecast.summary.totalConfirmed)}</strong> &bull; Total Expected: <strong class="text-primary">${forecast.summary.totalPredicted} portions (100%)</strong></span>
+              </div>
             </div>
           </div>
         ` : ''}
 
         ${activePillar === 'prep' ? `
-          <!-- PILLAR B: SMART PREPARATION RECOMMENDATIONS -->
+          <!-- PILLAR B: SMART PREPARATION TARGETS -->
           <div class="v-hub-section-block">
             <div class="v-hub-block-head">
               <div>
-                <h3 class="v-hub-block-title">Smart Preparation Recommendations</h3>
-                <span class="v-hub-block-subtitle">Exact portion targets with evidence explanations & vendor one-click adoption</span>
+                <h3 class="v-hub-block-title">Smart Preparation Targets</h3>
+                <span class="v-hub-block-subtitle">Clear portion recommendations with evidence explanations & vendor explicit approval</span>
               </div>
-              <span class="v-hub-badge-decision">Vendor Consent Required</span>
+              <span class="v-hub-badge-decision">Vendor Approval Required</span>
             </div>
 
             <div class="v-ai-cards-grid">
               ${forecast.dishes.map(d => {
-      let badgeClass = 'maintain';
-      let badgeLabel = 'Target Optimal';
-      if (d.actionType === 'increase') {
-        badgeClass = 'increase';
-        badgeLabel = `+${d.delta} Prep Needed`;
-      } else if (d.actionType === 'decrease') {
-        badgeClass = 'reduce';
-        badgeLabel = `-${d.delta} Safe Trim`;
-      }
+                const stateInfo = getRecommendationState(d);
 
-      return `
-                  <div class="v-ai-dish-card">
+                return `
+                  <div class="v-ai-dish-card ${stateInfo.cardClass}">
                     <div class="v-ai-dish-head">
+                      <div class="v-ai-dish-media" style="width: 48px; height: 48px; min-width: 48px; border-radius: var(--radius-xs); overflow: hidden;">
+                        <img src="${d.image}" alt="${d.dishName}" onerror="this.onerror=null; this.src='${getImgFallback()}';" style="width: 100%; height: 100%; object-fit: cover;">
+                      </div>
                       <div class="v-ai-dish-info">
                         <span class="v-ai-dish-name">${d.dishName}</span>
-                        <span class="v-ai-dish-cat">${d.category} &bull; ₱${d.price}</span>
+                        <span class="v-ai-dish-cat">${d.category} &bull; ₱${d.price} &bull; ${d.bookingRatePct}% Booked</span>
                       </div>
-                      <span class="v-ai-rec-pill ${badgeClass}">${badgeLabel}</span>
+                      <span class="v-assistant-status-pill ${stateInfo.badgeClass}">${stateInfo.badge}</span>
                     </div>
 
-                    <div class="v-ai-stat-row">
-                      <div class="v-ai-stat-cell">
-                        <span class="v-ai-stat-lbl">Active Quota</span>
-                        <strong class="v-ai-stat-val">${d.dailyLimit}</strong>
+                    <!-- Recommendation Message Box -->
+                    <div class="v-assistant-msg-box ${stateInfo.state === 'capacity-reached' ? 'capacity' : (d.additionalNeeded > 0 ? 'warning' : '')}" style="margin: 8px 0 12px;">
+                      <p class="v-assistant-msg">${stateInfo.message}</p>
+                    </div>
+
+                    <!-- Clean 4 Primary Metrics Strip -->
+                    <div class="v-calc-grid-6" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 10px;">
+                      <div class="v-calc-cell">
+                        <span class="v-calc-lbl">Current Preparation Target</span>
+                        <strong class="v-calc-val">${d.currentLimit}</strong>
                       </div>
-                      <div class="v-ai-stat-cell">
-                        <span class="v-ai-stat-lbl">Pre-ordered</span>
-                        <strong class="v-ai-stat-val text-primary">${d.reservedServings}</strong>
+                      <div class="v-calc-cell">
+                        <span class="v-calc-lbl">Confirmed Orders</span>
+                        <strong class="v-calc-val text-primary">${d.confirmedPreorders}</strong>
                       </div>
-                      <div class="v-ai-stat-cell">
-                        <span class="v-ai-stat-lbl">AI Suggested</span>
-                        <strong class="v-ai-stat-val text-orange">${d.suggestedTarget}</strong>
+                      <div class="v-calc-cell highlight-rec">
+                        <span class="v-calc-lbl">Recommended Portions to Prepare</span>
+                        <strong class="v-calc-val ${d.additionalNeeded > 0 ? 'text-orange' : 'text-primary'}">${d.recommendedTarget}</strong>
+                      </div>
+                      <div class="v-calc-cell highlight-add">
+                        <span class="v-calc-lbl">Additional Portions Needed</span>
+                        <strong class="v-calc-val ${d.additionalNeeded > 0 ? 'text-orange' : ''}">${d.additionalNeeded > 0 ? `+${d.additionalNeeded}` : '0'}</strong>
                       </div>
                     </div>
 
-                    <p class="v-ai-explanation">${d.explanation}</p>
+                    <!-- Secondary "Why is SAPAT recommending this?" Expandable Section -->
+                    <details class="v-assistant-details" style="margin-bottom: 12px;">
+                      <summary class="v-assistant-details-summary">Why is SAPAT recommending this? (Tap for math details)</summary>
+                      <div class="v-assistant-details-body">
+                        <div class="v-formula-explainer-card" style="margin: 0 0 10px; background: var(--bg-subtle);">
+                          <span class="v-formula-math-line">${d.breakdown.formula} &rarr; ${d.breakdown.additionalFormula}</span>
+                          <p class="v-formula-rationale-text" style="margin-top: 6px;">${d.explanation}</p>
+                        </div>
 
-                    ${d.actionType !== 'maintain' ? `
+                        <!-- Full 6 Calculation Metrics Grid -->
+                        <div class="v-calc-grid-6" style="margin-top: 8px;">
+                          <div class="v-calc-cell">
+                            <span class="v-calc-lbl">Current Preparation Target</span>
+                            <strong class="v-calc-val">${d.currentLimit}</strong>
+                          </div>
+                          <div class="v-calc-cell">
+                            <span class="v-calc-lbl">Confirmed Orders</span>
+                            <strong class="v-calc-val text-primary">${d.confirmedPreorders}</strong>
+                          </div>
+                          <div class="v-calc-cell highlight-pred">
+                            <span class="v-calc-lbl">Expected Orders</span>
+                            <strong class="v-calc-val">${d.predictedDemand}</strong>
+                          </div>
+                          <div class="v-calc-cell">
+                            <span class="v-calc-lbl">Extra Portions for Unexpected Orders</span>
+                            <strong class="v-calc-val">+${d.safetyBuffer}</strong>
+                          </div>
+                          <div class="v-calc-cell highlight-rec">
+                            <span class="v-calc-lbl">Recommended Portions to Prepare</span>
+                            <strong class="v-calc-val">${d.recommendedTarget}</strong>
+                          </div>
+                          <div class="v-calc-cell highlight-add">
+                            <span class="v-calc-lbl">Additional Portions Needed</span>
+                            <strong class="v-calc-val">${d.additionalNeeded > 0 ? `+${d.additionalNeeded}` : '0'}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+
+                    ${d.additionalNeeded > 0 ? `
                       <div class="v-ai-action-footer">
-                        <button class="v-ai-apply-btn" type="button" data-action="apply-ai-target" data-dish-id="${d.dishId}" data-target="${d.suggestedTarget}">
+                        <button class="v-ai-apply-btn" type="button" data-action="apply-ai-target" data-dish-id="${d.dishId}" data-target="${d.recommendedTarget}">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                          <span>Accept & Set Target to ${d.suggestedTarget} Portions</span>
+                          <span>Adjust Daily Target to ${d.recommendedTarget} Portions (+${d.additionalNeeded})</span>
                         </button>
                       </div>
                     ` : `
                       <div class="v-ai-optimal-notice">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        <span>Current kitchen target aligns with booking rate & prevents waste.</span>
+                        <span>Current preparation target of ${d.currentLimit} portions is sufficient. No change needed.</span>
                       </div>
                     `}
                   </div>
                 `;
-    }).join('')}
+              }).join('')}
             </div>
           </div>
         ` : ''}
 
         ${activePillar === 'taste' ? `
-          <!-- PILLAR C: CUSTOMER TASTE INTELLIGENCE -->
+          <!-- PILLAR C: WHAT STUDENTS LIKE (CUSTOMER TASTE INTELLIGENCE) -->
           <div class="v-hub-section-block">
             <div class="v-hub-block-head">
               <div>
-                <h3 class="v-hub-block-title">Customer Taste Intelligence</h3>
-                <span class="v-hub-block-subtitle">Synthesized student taste preferences and actionable recipe improvements</span>
+                <h3 class="v-hub-block-title">What Students Like</h3>
+                <span class="v-hub-block-subtitle">Student Meal Feedback & Preferences</span>
               </div>
-              <span class="v-hub-badge-live">${taste.totalReviews} Student Reviews</span>
+              <span class="v-hub-badge-live">${taste.totalReviews} Verified Student Reviews</span>
             </div>
 
             <!-- Taste Score Hero Card -->
@@ -285,24 +471,40 @@ export const vendorIntelligencePage = {
                 <span class="v-taste-score-lbl">Satisfaction</span>
               </div>
               <div class="v-taste-hero-info">
-                <h4 class="v-taste-title">Student Taste Analysis & Satisfaction Profile</h4>
-                <p class="v-taste-sub">Real-time student feedback analysis aggregated from verified digital pickup passes.</p>
+                <h4 class="v-taste-title">Student Meal Satisfaction & Feedback</h4>
+                <p class="v-taste-sub">Aggregated from verified digital pickup passes after students claim their meals.</p>
               </div>
             </div>
 
-            <!-- Flavor Attributes Radar/Bars -->
+            <!-- Flavor Attributes Radar/Bars with Friendly Labels -->
             <div class="v-flavor-attributes-grid" style="margin: 14px 0;">
-              ${Object.entries(taste.flavorRatings).map(([attr, val]) => `
-                <div class="v-flavor-card">
-                  <div class="v-flavor-head">
-                    <span class="v-flavor-name">${attr.charAt(0).toUpperCase() + attr.slice(1)}</span>
-                    <strong class="v-flavor-score">${val}%</strong>
-                  </div>
-                  <div class="v-flavor-bar-track">
-                    <div class="v-flavor-bar-fill" style="width: ${val}%;"></div>
-                  </div>
+              <div class="v-flavor-card">
+                <div class="v-flavor-head">
+                  <span class="v-flavor-name">Preferred Crispiness</span>
+                  <strong class="v-flavor-score">${taste.flavorRatings.crispiness || 94}%</strong>
                 </div>
-              `).join('')}
+                <div class="v-flavor-bar-track">
+                  <div class="v-flavor-bar-fill" style="width: ${taste.flavorRatings.crispiness || 94}%;"></div>
+                </div>
+              </div>
+              <div class="v-flavor-card">
+                <div class="v-flavor-head">
+                  <span class="v-flavor-name">Garlic Flavor</span>
+                  <strong class="v-flavor-score">${taste.flavorRatings.garlic || 91}%</strong>
+                </div>
+                <div class="v-flavor-bar-track">
+                  <div class="v-flavor-bar-fill" style="width: ${taste.flavorRatings.garlic || 91}%;"></div>
+                </div>
+              </div>
+              <div class="v-flavor-card">
+                <div class="v-flavor-head">
+                  <span class="v-flavor-name">Preferred Serving Size</span>
+                  <strong class="v-flavor-score">${taste.flavorRatings.portion || 88}%</strong>
+                </div>
+                <div class="v-flavor-bar-track">
+                  <div class="v-flavor-bar-fill" style="width: ${taste.flavorRatings.portion || 88}%;"></div>
+                </div>
+              </div>
             </div>
 
             <!-- Actionable Recipe Improvement Advice -->
@@ -320,7 +522,7 @@ export const vendorIntelligencePage = {
               <div class="v-insight-box constructive">
                 <div class="v-insight-head">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                  <strong>Actionable Recipe Recommendations</strong>
+                  <strong>Suggestions to Improve Your Meals</strong>
                 </div>
                 <ul class="v-insight-list">
                   ${taste.improvementsNeeded.map(imp => `<li>${imp}</li>`).join('')}
@@ -330,19 +532,20 @@ export const vendorIntelligencePage = {
 
             <!-- Recent Verified Student Reviews -->
             <div class="v-recent-reviews-block" style="margin-top: 14px;">
-              <h4 class="v-hub-subhead-title">Verified Student Reviews</h4>
+              <h4 class="v-hub-subhead-title">Student Feedback</h4>
+              <span class="v-block-sub" style="margin-bottom: 10px; display: block;">Verified reviews from students who claimed their pre-orders</span>
               <div class="v-reviews-list">
                 ${taste.recentReviews.map(r => `
                   <div class="v-review-card">
                     <div class="v-review-top">
                       <div class="v-review-author">
-                        <span class="v-rev-avatar">${r.initials}</span>
+                        <span class="v-rev-avatar">${r.initials || (r.studentName ? r.studentName.charAt(0) : 'S')}</span>
                         <div>
                           <strong>${r.studentName}</strong>
-                          <span class="v-rev-dept">${r.dept}</span>
+                          <span class="v-rev-dept">${r.dept || 'Verified Student Pickup &bull; BSIT'}</span>
                         </div>
                       </div>
-                      <span class="v-rev-tag">${r.tag}</span>
+                      <span class="v-rev-tag">${r.tag || `${r.rating || 5}/5 Stars`}</span>
                     </div>
                     <p class="v-review-comment">"${r.comment}"</p>
                     <div class="v-review-foot">
@@ -357,14 +560,14 @@ export const vendorIntelligencePage = {
         ` : ''}
 
         ${activePillar === 'wishlist' ? `
-          <!-- PILLAR D: STUDENT MEAL REQUESTS (CAMPUS WISHLIST) -->
+          <!-- PILLAR D: MEALS STUDENTS WANT (CAMPUS WISHLIST) -->
           <div class="v-hub-section-block">
             <div class="v-hub-block-head">
               <div>
-                <h3 class="v-hub-block-title">Student Meal Requests & Wishlist</h3>
+                <h3 class="v-hub-block-title">Meals Students Want</h3>
                 <span class="v-hub-block-subtitle">High-demand dishes students have voted for that are not yet on your stall menu</span>
               </div>
-              <span class="v-hub-badge-live">Campus Vote Tallies</span>
+              <span class="v-hub-badge-live">Campus Student Votes</span>
             </div>
 
             <div class="v-wishlist-cards-stack">
@@ -374,7 +577,7 @@ export const vendorIntelligencePage = {
                     <div class="v-wishlist-rank">#${idx + 1}</div>
                     <div class="v-wishlist-info">
                       <h4 class="v-wishlist-dish-name">${meal.dishName}</h4>
-                      <span class="v-wishlist-cat">${meal.category} &bull; ${meal.topDept}</span>
+                      <span class="v-wishlist-cat">${meal.category} &bull; Requested by ${meal.topDept}</span>
                     </div>
                     <div class="v-wishlist-votes-col">
                       <strong class="v-votes-num">${meal.votes}</strong>
@@ -382,19 +585,24 @@ export const vendorIntelligencePage = {
                     </div>
                   </div>
 
-                  <p class="v-wishlist-notes">${meal.notes}</p>
+                  <!-- Conversational Advice -->
+                  <div class="v-assistant-msg-box" style="margin: 8px 0;">
+                    <p class="v-assistant-msg">${meal.votes} students have requested this meal. Consider testing it as a special menu item.</p>
+                  </div>
+
+                  <p class="v-wishlist-notes" style="margin-bottom: 10px;">Student suggestion: "${meal.notes}"</p>
 
                   <div class="v-wishlist-stats-strip">
                     <div class="v-w-stat">
-                      <span class="v-w-lbl">Suggested Price</span>
-                      <strong class="v-w-val">₱${meal.suggestedPrice}</strong>
+                      <span class="v-w-lbl">Suggested Selling Price</span>
+                      <strong class="v-w-val">₱${meal.suggestedPrice} (Estimated)</strong>
                     </div>
                     <div class="v-w-stat">
-                      <span class="v-w-lbl">Projected Launch Demand</span>
-                      <strong class="v-w-val">${meal.projectedDailyDemand} meals/day</strong>
+                      <span class="v-w-lbl">Estimated Potential Demand</span>
+                      <strong class="v-w-val">~${meal.projectedDailyDemand} meals/day</strong>
                     </div>
                     <div class="v-w-stat">
-                      <span class="v-w-lbl">Confidence</span>
+                      <span class="v-w-lbl">Reliability</span>
                       <strong class="v-w-val text-primary">${meal.confidence}</strong>
                     </div>
                   </div>
@@ -402,7 +610,7 @@ export const vendorIntelligencePage = {
                   <div class="v-wishlist-action-row" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end;">
                     <button class="v-ai-apply-btn" style="width: auto; padding: 6px 14px;" type="button" data-action="test-dish-menu" data-dish-name="${meal.dishName}" data-price="${meal.suggestedPrice}" data-category="${meal.category}">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                      <span>Pilot This Dish on Stall Menu</span>
+                      <span>Pilot This Meal on Stall Menu</span>
                     </button>
                   </div>
                 </div>
@@ -412,73 +620,101 @@ export const vendorIntelligencePage = {
         ` : ''}
 
         ${activePillar === 'performance' ? `
-          <!-- PILLARS E & F: FOOD WASTE PREVENTION & VENDOR PERFORMANCE -->
+          <!-- PILLARS E & F: FOOD WASTE & KITCHEN PERFORMANCE -->
           <div class="v-hub-section-block">
             <div class="v-hub-block-head">
               <div>
-                <h3 class="v-hub-block-title">Waste Prevention & Kitchen Efficiency</h3>
+                <h3 class="v-hub-block-title">Food Waste & Kitchen Performance</h3>
                 <span class="v-hub-block-subtitle">Historical portion outcomes, sell-through rates, and food waste prevented</span>
               </div>
-              <span class="v-hub-badge-decision">Zero Leftover Policy</span>
+              <span class="v-hub-badge-decision">Audited Kitchen Logs</span>
+            </div>
+
+            <!-- Value callout explaining how SAPAT helped avoid preparing unsold portions -->
+            <div class="v-sim-hero-banner" style="margin-bottom: 14px; background: #F0FDF4; border: 1px solid #A7F3D0;">
+              <div class="v-sim-icon-box" style="background: var(--primary); color: #fff;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div>
+                <strong class="v-sim-hero-title" style="color: var(--primary-dark);">How SAPAT Protects Kitchen Margins</strong>
+                <p class="v-sim-hero-desc" style="color: var(--text-secondary);">SAPAT helped avoid preparing portions that were unlikely to be sold, keeping food fresh and kitchen costs low.</p>
+              </div>
             </div>
 
             <!-- Top Sustainability Deck -->
             <div class="v-sust-cards-row" style="margin-bottom: 14px;">
               <div class="v-sust-card">
-                <span class="v-sust-lbl">Food Waste Avoided</span>
+                <span class="v-sust-lbl">Estimated Food Waste Prevented</span>
                 <strong class="v-sust-val">${forecast.sustainability.wastePreventedKg} kg</strong>
-                <span class="v-sust-sub">Cooking strictly to quotas</span>
+                <span class="v-sust-sub">Estimated &bull; 280g avoided waste per meal</span>
               </div>
               <div class="v-sust-card">
-                <span class="v-sust-lbl">Preparation Accuracy</span>
-                <strong class="v-sust-val">${forecast.sustainability.prepAccuracyPct}%</strong>
-                <span class="v-sust-sub">Quota to claim match</span>
+                <span class="v-sust-lbl">How Close Our Preparation Was</span>
+                <strong class="v-sust-val">${forecast.sustainability.prepAccuracyPct !== null ? `${forecast.sustainability.prepAccuracyPct}%` : 'Pending Logs'}</strong>
+                <span class="v-sust-sub">${forecast.sustainability.prepAccuracyPct !== null ? 'Historical Audit Precision' : 'Insufficient Shift Logs'}</span>
               </div>
               <div class="v-sust-card">
-                <span class="v-sust-lbl">Avoided Overages</span>
+                <span class="v-sust-lbl">Extra Portions We Avoided Preparing</span>
                 <strong class="v-sust-val">${forecast.sustainability.overproductionSavedMeals} meals</strong>
-                <span class="v-sust-sub">Portions spared</span>
+                <span class="v-sust-sub">Portions spared from surplus overproduction</span>
               </div>
             </div>
 
-            <!-- Multi-week Performance Log Table -->
+            <!-- Multi-week Actual vs Predicted Performance Tracking Table -->
             <div class="v-hub-block-head" style="margin-top: 18px;">
               <div>
-                <h4 class="v-hub-subhead-title">Weekly Batch Verification History</h4>
-                <span class="v-hub-block-subtitle">Daily audited kitchen preparation logs</span>
+                <h4 class="v-hub-subhead-title">Actual vs. Predicted Preparation Tracking</h4>
+                <span class="v-hub-block-subtitle">Audited daily logs tracking predicted demand against actual prepared, claimed, and unsold portions</span>
               </div>
+              ${forecast.historicalPerformance.hasData ? `
+                <span class="table-confidence-badge" style="font-size: 11px; padding: 4px 10px;">
+                  Avg Accuracy: <strong>${forecast.historicalPerformance.averageAccuracy}%</strong>
+                </span>
+              ` : ''}
             </div>
 
             <div class="admin-table-card" style="margin-top: 8px;">
               <div class="admin-table-responsive">
-                <table class="admin-data-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Day</th>
-                      <th>Prepared Target</th>
-                      <th>Pre-ordered</th>
-                      <th>Claimed</th>
-                      <th>Unsold Leftover</th>
-                      <th>Accuracy</th>
-                      <th>Waste Saved</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${historyLogs.map(log => `
+                ${forecast.historicalPerformance.hasData && forecast.historicalPerformance.logs.length > 0 ? `
+                  <table class="admin-data-table">
+                    <thead>
                       <tr>
-                        <td><strong>${log.date}</strong></td>
-                        <td>${log.day}</td>
-                        <td><strong>${log.prepared}</strong></td>
-                        <td>${log.preordered}</td>
-                        <td><strong class="text-primary">${log.claimed}</strong></td>
-                        <td><span class="${log.unsold <= 2 ? 'text-primary' : 'text-orange'}">${log.unsold} portions</span></td>
-                        <td><span class="table-confidence-badge">${log.accuracy}%</span></td>
-                        <td><strong class="text-primary">${log.wasteSavedKg} kg</strong></td>
+                        <th>Date & Day</th>
+                        <th>Predicted Demand</th>
+                        <th>Actual Prepared</th>
+                        <th>Sold / Claimed</th>
+                        <th>Cancelled / No-show</th>
+                        <th>Leftover Portions</th>
+                        <th>Preparation Accuracy</th>
+                        <th>Food Waste Saved</th>
                       </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      ${forecast.historicalPerformance.logs.map(log => `
+                        <tr>
+                          <td><strong>${log.date}</strong> &bull; <small class="text-muted">${log.day}</small></td>
+                          <td><strong>${log.predictedDemand}</strong></td>
+                          <td><strong>${log.prepared}</strong></td>
+                          <td><strong class="text-primary">${log.claimed}</strong></td>
+                          <td><span class="${log.cancelledNoShow > 0 ? 'text-orange' : 'text-muted'}">${log.cancelledNoShow}</span></td>
+                          <td><span class="${log.unsold <= 2 ? 'text-primary' : 'text-orange'}">${log.unsold} portions</span></td>
+                          <td><span class="table-confidence-badge">${log.accuracy}%</span></td>
+                          <td><strong class="text-primary">${log.wasteSavedKg} kg</strong></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                ` : `
+                  <div class="v-empty-table-state">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <h4>No Historical Shift Data Recorded</h4>
+                    <p>Preparation accuracy and avoided food waste are calculated dynamically from completed shifts. Accuracy will appear once service logs are recorded.</p>
+                  </div>
+                `}
               </div>
             </div>
           </div>
@@ -490,7 +726,7 @@ export const vendorIntelligencePage = {
             <div class="v-hub-block-head">
               <div>
                 <h3 class="v-hub-block-title">Live Presentation Simulation Sandbox</h3>
-                <span class="v-hub-block-subtitle">Demonstrate how SAPAT Intelligence adapts dynamically when orders and reviews arrive</span>
+                <span class="v-hub-block-subtitle">Demonstrate how SAPAT updates its recommendations when students order or leave feedback in real time</span>
               </div>
               <span class="v-hub-badge-decision">Pitch Interactive Mode</span>
             </div>
@@ -556,6 +792,25 @@ export const vendorIntelligencePage = {
   },
 
   attachEvents(container) {
+    // Context selectors
+    const acadSelect = container.querySelector('#select-academic-context');
+    if (acadSelect) {
+      acadSelect.addEventListener('change', (e) => {
+        SapatStorage.saveForecastContext(state.currentVendorId, { academicSchedule: e.target.value });
+        showToast(`Forecasting schedule set to: ${e.target.value}`, 'info');
+        this.render(container);
+      });
+    }
+
+    const weatherSelect = container.querySelector('#select-weather-context');
+    if (weatherSelect) {
+      weatherSelect.addEventListener('change', (e) => {
+        SapatStorage.saveForecastContext(state.currentVendorId, { weatherCondition: e.target.value });
+        showToast(`Forecasting weather set to: ${e.target.value}`, 'info');
+        this.render(container);
+      });
+    }
+
     container.addEventListener('click', (e) => {
       // Direct navigation
       const routeEl = e.target.closest('[data-route]');
@@ -591,13 +846,12 @@ export const vendorIntelligencePage = {
         const dishId = applyAiBtn.getAttribute('data-dish-id');
         const target = parseInt(applyAiBtn.getAttribute('data-target'), 10);
         if (dishId && !isNaN(target)) {
-          const menu = SapatStorage.getMenu();
-          const dish = menu.find(d => d.id === dishId);
-          if (dish) {
-            dish.dailyLimit = target;
-            SapatStorage.saveMenu(menu);
-            showToast(`Daily target for ${dish.name} set to ${target} portions.`, 'success');
+          const res = SapatStorage.updateDishDailyLimit(dishId, target);
+          if (res.success) {
+            showToast(`Target preparation limit updated to ${target} portions for ${res.dish.name}!`, 'success');
             this.render(container);
+          } else {
+            showToast(res.message || 'Cannot adjust limit below reserved portions', 'warning');
           }
         }
         return;
@@ -684,4 +938,3 @@ export const vendorIntelligencePage = {
     });
   }
 };
-
